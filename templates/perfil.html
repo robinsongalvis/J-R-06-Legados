@@ -265,12 +265,23 @@
         .error-msg { color: #e74c3c; font-size: 14px; margin-top: 15px; display: none; font-weight: bold; animation: shake 0.3s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-        /* --- LIGHTBOX --- */
+        /* ==========================================
+           NUEVO VISOR LIGHTBOX (PANTALLA COMPLETA SWIPE)
+           ========================================== */
         #lightbox { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(10px); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;}
         #lightbox.show { display: flex; opacity: 1; }
-        .lightbox-img { max-width: 95%; max-height: 85vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+        .lightbox-img { max-width: 95%; max-height: 85vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;}
         #lightbox.show .lightbox-img { transform: scale(1); }
-        .lightbox-close { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; transition: 0.3s; }
+        .lightbox-close { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; transition: 0.3s; z-index: 10002;}
+        
+        /* Flechas de navegación (PC) */
+        .lightbox-prev, .lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 30px; cursor: pointer; padding: 20px; z-index: 10001; transition: 0.3s; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;}
+        .lightbox-prev:hover, .lightbox-next:hover { background: rgba(0,0,0,0.8); }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        @media (max-width: 768px) {
+            .lightbox-prev, .lightbox-next { display: none; } /* En celular se ocultan las flechas para usar Swipe */
+        }
     </style>
 </head>
 <body>
@@ -469,7 +480,12 @@
     <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150"></textarea></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button></div></div>
     <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción (Nombre o Link de YouTube)</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro">{{ biografia }}</textarea></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
 
-    <div id="lightbox" onclick="cerrarLightbox()"><span class="lightbox-close">&times;</span><img class="lightbox-img" id="lightbox-img" src=""></div>
+    <div id="lightbox" onclick="cerrarLightbox(event)">
+        <span class="lightbox-close" onclick="cerrarLightbox({force: true})">&times;</span>
+        <span class="lightbox-prev" onclick="cambiarImagenLightbox(-1, event)"><i class="fas fa-chevron-left"></i></span>
+        <img class="lightbox-img" id="lightbox-img" src="">
+        <span class="lightbox-next" onclick="cambiarImagenLightbox(1, event)"><i class="fas fa-chevron-right"></i></span>
+    </div>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
@@ -478,7 +494,7 @@
         const CANCION_RAW = "{{ cancion_favorita }}";
 
         // =====================================
-        // MAGIA DEL TEMA OSCURO / CLARO (NUEVO)
+        // MAGIA DEL TEMA OSCURO / CLARO
         // =====================================
         const temaGuardado = localStorage.getItem('theme_' + ID_PERFIL);
         const celularEsOscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -516,7 +532,7 @@
 
 
         // =====================================
-        // MAGIA 1: EL REPRODUCTOR INTELIGENTE
+        // REPRODUCTOR DE YOUTUBE
         // =====================================
         window.addEventListener('DOMContentLoaded', () => {
             const contenedorCancion = document.getElementById('contenedor-cancion');
@@ -538,7 +554,7 @@
         });
 
         // =====================================
-        // MAGIA 2: BOTÓN DE COMPARTIR VIRAL
+        // COMPARTIR VIRAL
         // =====================================
         function compartirHomenaje() {
             if (navigator.share) {
@@ -554,7 +570,7 @@
         }
 
         // =====================================
-        // MAGIA DE SEGURIDAD FAMILIAR
+        // SEGURIDAD FAMILIAR
         // =====================================
         const isFamilyAdmin = sessionStorage.getItem('family_auth_' + ID_PERFIL) === 'true';
 
@@ -688,22 +704,112 @@
         function darLike(mensajeId, element) { let icon = element.querySelector('i'); let countSpan = element.querySelector('.like-count'); icon.style.transform = 'scale(1.4)'; element.classList.add('liked'); setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200); fetch(`/likear_mensaje/${mensajeId}`, { method: 'POST' }).then(res => res.json()).then(data => { countSpan.innerText = data.likes; }); }
         function enviarMensaje() { let autor = document.getElementById('m_autor').value.trim(); let texto = document.getElementById('m_texto').value.trim(); if(!autor || !texto) { alert("Por favor, escribe tu nombre y un mensaje."); return; } let btn = document.getElementById('btnEnviarMsj'); btn.innerHTML = 'Publicando...'; btn.style.opacity = '0.7'; fetch(`/dejar_mensaje/${ID_PERFIL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autor: autor, texto: texto }) }).then(() => window.location.reload()); }
 
+        // =====================================
+        // VISOR DE GALERÍA (LIGHTBOX TÁCTIL)
+        // =====================================
         let itemAEliminarId = null; let tipoEliminacion = null; let elementoSeleccionado = null;
-        function prepararEliminarMensaje(id) { itemAEliminarId = id; tipoEliminacion = 'mensaje'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; abrirModal('confirmModal'); }
-        function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); }
-        function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
+        let imagenesGaleria = [];
+        let indexImagenActual = 0;
 
+        function activarModoEliminar(id, divElement) { itemAEliminarId = id; tipoEliminacion = 'foto'; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); } elementoSeleccionado = divElement; elementoSeleccionado.classList.add('selected-for-delete'); document.getElementById('deleteTopBar').classList.add('active'); }
+        function cancelarEliminar() { itemAEliminarId = null; tipoEliminacion = null; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); elementoSeleccionado = null; } document.getElementById('deleteTopBar').classList.remove('active'); }
+
+        function interactuarFoto(src, element) { 
+            // Si el administrador está borrando fotos, no abrir el visor
+            if (isFamilyAdmin && tipoEliminacion === 'foto' && document.getElementById('deleteTopBar').classList.contains('active')) { 
+                activarModoEliminar(element.getAttribute('data-id'), element); 
+                return; 
+            } 
+            
+            // Recolectamos todas las imágenes actuales del DOM
+            const fotosEnPantalla = document.querySelectorAll('.gallery-item img');
+            imagenesGaleria = Array.from(fotosEnPantalla).map(img => img.src);
+            indexImagenActual = imagenesGaleria.indexOf(src);
+
+            const lightbox = document.getElementById('lightbox');
+            document.getElementById('lightbox-img').src = src; 
+            lightbox.classList.add('show'); 
+            document.body.style.overflow = 'hidden'; // Evita que la página haga scroll en el fondo
+        }
+
+        function cerrarLightbox(e) { 
+            // Solo cierra si toca el fondo negro oscuro o presiona la X forzada
+            if (e && e.force) {
+                // cierre directo
+            } else if (e && (e.target.id === 'lightbox-img' || e.target.closest('.lightbox-prev') || e.target.closest('.lightbox-next'))) {
+                return; // Si tocó la foto o los botones, no hagas nada
+            }
+            
+            document.getElementById('lightbox').classList.remove('show'); 
+            document.body.style.overflow = 'auto'; // Devuelve el scroll
+        }
+
+        function cambiarImagenLightbox(direccion, evento) {
+            if(evento) evento.stopPropagation(); // Evita que se cierre el lightbox al hacer clic en la flecha
+            if (imagenesGaleria.length === 0) return;
+
+            indexImagenActual += direccion;
+
+            // Lógica circular (si pasa de la última, vuelve a la primera)
+            if (indexImagenActual >= imagenesGaleria.length) indexImagenActual = 0;
+            if (indexImagenActual < 0) indexImagenActual = imagenesGaleria.length - 1;
+
+            const imgElement = document.getElementById('lightbox-img');
+            
+            // Micro-animación suave al cambiar
+            imgElement.style.opacity = '0.3';
+            setTimeout(() => {
+                imgElement.src = imagenesGaleria[indexImagenActual];
+                imgElement.style.opacity = '1';
+            }, 150);
+        }
+
+        // --- NAVEGACIÓN CON TECLADO ---
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('lightbox').classList.contains('show')) {
+                if (e.key === 'ArrowRight') cambiarImagenLightbox(1);
+                if (e.key === 'ArrowLeft') cambiarImagenLightbox(-1);
+                if (e.key === 'Escape') cerrarLightbox({force: true});
+            }
+        });
+
+        // --- NAVEGACIÓN CON DESLIZAMIENTO TÁCTIL (SWIPE) ---
+        let touchstartX = 0;
+        let touchendX = 0;
+        const lightboxArea = document.getElementById('lightbox');
+
+        lightboxArea.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        lightboxArea.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            manejarSwipe();
+        }, {passive: true});
+
+        function manejarSwipe() {
+            const umbral = 40; // Qué tan largo debe ser el deslizamiento para que cuente
+            if (touchstartX - touchendX > umbral) {
+                cambiarImagenLightbox(1); // Deslizó hacia la izquierda -> Siguiente
+            }
+            if (touchendX - touchstartX > umbral) {
+                cambiarImagenLightbox(-1); // Deslizó hacia la derecha -> Anterior
+            }
+        }
+
+        // =====================================
+        // ELIMINACIÓN Y GESTIÓN DE EDICIONES
+        // =====================================
         let pressTimer;
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('touchstart', (e) => { if(!isFamilyAdmin) return; pressTimer = setTimeout(() => { activarModoEliminar(item.getAttribute('data-id'), item); if (navigator.vibrate) navigator.vibrate(50); }, 600); });
             item.addEventListener('touchend', () => clearTimeout(pressTimer)); item.addEventListener('touchmove', () => clearTimeout(pressTimer));
         });
 
-        function activarModoEliminar(id, divElement) { itemAEliminarId = id; tipoEliminacion = 'foto'; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); } elementoSeleccionado = divElement; elementoSeleccionado.classList.add('selected-for-delete'); document.getElementById('deleteTopBar').classList.add('active'); }
-        function cancelarEliminar() { itemAEliminarId = null; tipoEliminacion = null; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); elementoSeleccionado = null; } document.getElementById('deleteTopBar').classList.remove('active'); }
-        function interactuarFoto(src, element) { if (isFamilyAdmin && tipoEliminacion === 'foto' && document.getElementById('deleteTopBar').classList.contains('active')) { activarModoEliminar(element.getAttribute('data-id'), element); return; } document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('show'); }
-        function cerrarLightbox() { document.getElementById('lightbox').classList.remove('show'); }
-        
+        function prepararEliminarMensaje(id) { itemAEliminarId = id; tipoEliminacion = 'mensaje'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; abrirModal('confirmModal'); }
+        function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); }
+        function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
+
         function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; let formData = new FormData(); formData.append("archivo", input.files[0]); fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
         function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; let formData = new FormData(); formData.append("archivo", input.files[0]); fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
         
