@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impresión QR - J&R 06 Legados</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .placa-container {
+            width: 10cm;
+            height: 12cm;
+            background-color: #F8F6F0; 
+            padding: 8px; 
+            box-sizing: border-box;
+            border: 2px solid #B89758; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .placa-inner {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #B89758;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 10px;
+            position: relative; 
+        }
+
+        /* =========================================
+           ESQUINAS REFORZADAS PARA IMPRESIÓN/LÁSER
+           ========================================= */
+        .corner {
+            position: absolute;
+            width: 12px; /* Más grandes */
+            height: 12px;
+            border: 1.5px solid #B89758; /* Más gruesas para resistir el grabado */
+        }
+        .top-left { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+        .top-right { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+        .qr-wrapper {
+            width: 68%; 
+            margin-top: -15px; /* Balance vertical corregido */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            width: 60%;
+            margin: 18px 0 18px 0; /* Espaciado ajustado */
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(184, 151, 88, 0.4); 
+        }
+
+        .divider-icon {
+            margin: 0 15px;
+            color: #B89758;
+            font-size: 10px; 
+        }
+
+        .texto-memorial {
+            font-family: 'Playfair Display', serif;
+            color: #1a1a1a; 
+            font-size: 18px; /* Un punto más grande */
+            text-align: center;
+            margin: 0;
+            letter-spacing: 1px;
+            font-style: italic; 
+            font-weight: 600;
+        }
+
+        .btn-imprimir { margin-top: 30px; background: #0A0F18; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 16px; cursor: pointer; transition: 0.3s; display: flex; gap: 10px; align-items: center; }
+        .btn-imprimir:hover { transform: translateY(-3px); background: #B89758; }
+
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background-color: white; padding: 2cm; align-items: flex-start; justify-content: flex-start; }
+            .placa-container { box-shadow: none; }
+            .btn-imprimir { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="placa-container">
+        <div class="placa-inner">
+            
+            <div class="corner top-left"></div>
+            <div class="corner top-right"></div>
+            <div class="corner bottom-left"></div>
+            <div class="corner bottom-right"></div>
+            
+            <div class="qr-wrapper">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data={{ url_perfil }}&color=1a1a1a&bgcolor=F8F6F0&ecc=H&margin=2" alt="QR Memorial">
+            </div>
+
+            <div class="divider">
+                <span class="divider-icon">♦</span>
+            </div>
+
+            <p class="texto-memorial">“Mi historia no termina aquí.”</p>
+
+        </div>
+    </div>
+
+    <button class="btn-imprimir" onclick="window.print()">
+        <i class="fas fa-print"></i> Imprimir Diseño (10x12 cm)
+    </button>
+
+</body>
+</html>

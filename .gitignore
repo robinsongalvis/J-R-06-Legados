@@ -1,0 +1,6 @@
+.env
+__pycache__/
+venv/
+*.db
+static/fotos/
+.DS_Store

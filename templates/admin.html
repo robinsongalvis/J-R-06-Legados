@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f7f9fc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>Dashboard PRO | Memorial Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(180deg, #f7f9fc, #eef2f8);
+            background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-attachment: fixed;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.02);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .glass-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: rgba(255, 255, 255, 0.9); }
+
+        .btn-premium {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white; border-radius: 14px; padding: 12px 24px;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-premium:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4); background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .btn-premium:active { transform: scale(0.96); }
+
+        .table-row-anim { transition: all 0.3s ease; border-left: 3px solid transparent;}
+        .table-row-anim:hover { background: #ffffff; transform: scale(1.01); border-left: 3px solid #3b82f6; box-shadow: 0 5px 15px rgba(0,0,0,0.05); z-index: 10; position: relative; border-radius: 8px;}
+
+        .fade-in-up { opacity: 0; transform: translateY(30px); animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-100 { animation-delay: 0.1s; } .delay-200 { animation-delay: 0.2s; } .delay-300 { animation-delay: 0.3s; }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        .qr-btn { transition: 0.3s; }
+        .qr-btn:hover { transform: scale(1.1) rotate(5deg); color: #000;}
+
+        #login-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(15px); z-index: 50; display: flex; justify-content: center; align-items: center; transition: opacity 0.6s ease, visibility 0.6s; }
+        .hide-login { opacity: 0; visibility: hidden; }
+        .login-box { animation: scaleUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .sidebar-item { border-left: 4px solid transparent; transition: all 0.3s ease; cursor: pointer; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.05); color: white; padding-left: 20px;}
+        .sidebar-active { border-left: 4px solid #3b82f6; background: rgba(255,255,255,0.1); color: white; padding-left: 20px;}
+
+        .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
+        
+        .input-pro { width: 100%; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; color: #334155; transition: all 0.3s; font-size: 14px;}
+        .input-pro:focus { background: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
+        .input-label { display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .mobile-header-safe { padding-top: calc(15px + env(safe-area-inset-top)); padding-bottom: 15px; }
+
+        /* Animación IA */
+        @keyframes pulse-ai { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .ai-loading { animation: pulse-ai 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <div id="modalDeleteProfile" class="modal-overlay fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[300] flex justify-center items-center p-4">
+        <div class="modal-content bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 text-center border border-red-100">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl md:text-4xl"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">¿Eliminar Memorial?</h2>
+            <p class="text-slate-500 mb-6 text-sm leading-relaxed">Esta acción borrará el perfil <strong id="delete-target-name" class="text-slate-700"></strong> y <span class="text-red-500 font-bold">eliminará todas sus fotos</span> de la nube. No se puede deshacer.</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="cerrarModalDelete()" class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btnConfirmDelete" class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all transform hover:-translate-y-1">Eliminar Todo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalResetPin" class="modal-overlay fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[300] flex justify-center items-center p-4">
+        <div class="modal-content bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 border border-amber-100">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl md:text-4xl"><i class="fas fa-key"></i></div>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 text-center">Restablecer PIN</h2>
+            <p class="text-slate-500 mb-6 text-sm text-center">Genera un nuevo acceso para la familia de <strong id="reset-target-name" class="text-slate-700"></strong>.</p>
+            
+            <div class="mb-6 relative bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <label class="input-label text-slate-600 mb-3"><i class="fas fa-lock mr-1"></i> Nuevo PIN (4 dígitos)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="inputNewPin" placeholder="Ej: 8421" class="input-pro text-center text-2xl font-bold tracking-widest flex-1 bg-white shadow-sm" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <button type="button" onclick="generarPinRandom()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-5 rounded-xl transition-colors font-bold text-lg shadow-sm border border-indigo-100" title="Generar Automático"><i class="fas fa-dice"></i></button>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-2 text-center"><i class="fas fa-info-circle"></i> Escríbelo manualmente o usa los dados para autogenerarlo.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="cerrarModalResetPin()" class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button id="btnConfirmReset" onclick="guardarNuevoPin()" class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all transform hover:-translate-y-1">Guardar PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-screen">
+        <div class="login-box bg-white/10 backdrop-blur-xl border border-white/20 p-8 md:p-10 rounded-3xl shadow-2xl w-[90%] max-w-[400px] text-center">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-tr from-blue-500 to-purple-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl md:text-3xl shadow-lg shadow-blue-500/50 transform rotate-3"><i class="fas fa-fingerprint"></i></div>
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Memorial Admin</h2>
+            <p class="text-blue-200 text-xs md:text-sm mb-8 font-light">Acceso seguro requerido.</p>
+            <div class="relative mb-6">
+                <i class="fas fa-lock absolute left-4 top-3.5 md:top-4 text-gray-400"></i>
+                <input type="password" id="passwordInput" placeholder="Contraseña" class="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 text-white placeholder-gray-400 rounded-xl focus:ring-2 focus:ring-blue-400 focus:bg-white/10 outline-none transition-all text-base md:text-lg">
+            </div>
+            <button onclick="verificarPassword()" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-500/30 transform hover:-translate-y-1">Ingresar al Sistema</button>
+            <p id="errorMsg" class="text-red-400 text-xs md:text-sm mt-4 hidden bg-red-900/30 py-2 rounded-lg border border-red-500/30"><i class="fas fa-exclamation-circle"></i> Contraseña incorrecta.</p>
+        </div>
+    </div>
+
+    <div class="md:hidden bg-white/70 backdrop-blur-xl border-b border-slate-200/50 text-slate-800 px-5 mobile-header-safe flex justify-between items-center shadow-sm relative z-20">
+        <div class="flex items-center gap-3 font-bold text-xl tracking-tight">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md"><i class="fas fa-leaf text-white text-sm"></i></div>
+            <span>Memorial</span>
+        </div>
+        <button onclick="cerrarSesion()" class="text-xs bg-white text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-red-500 px-3 py-2 rounded-lg transition-colors font-medium flex items-center gap-1.5"><i class="fas fa-sign-out-alt"></i> Salir</button>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden" id="dashboard-content">
+        <aside class="w-72 bg-[#0f172a] text-gray-400 hidden md:flex flex-col border-r border-white/5 shadow-2xl relative z-20">
+            <div class="p-8 border-b border-white/5">
+                <div class="flex items-center gap-3 text-white">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"><i class="fas fa-leaf text-white text-lg"></i></div>
+                    <span class="text-2xl font-bold tracking-tight">Memorial</span>
+                </div>
+            </div>
+            <nav class="flex-1 py-6 space-y-2">
+                <p class="px-8 text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Navegación</p>
+                <div onclick="switchSection('dashboard', this)" class="sidebar-item sidebar-active flex items-center gap-4 px-8 py-3 font-medium">
+                    <i class="fas fa-chart-pie w-5 text-blue-400"></i> Resumen
+                </div>
+                <div onclick="abrirModalCrear()" class="sidebar-item flex items-center gap-4 px-8 py-3 font-medium">
+                    <i class="fas fa-user-plus w-5"></i> Nuevo Memorial
+                </div>
+                <div onclick="switchSection('moderacion', this)" class="sidebar-item flex items-center gap-4 px-8 py-3 font-medium">
+                    <i class="fas fa-shield-alt w-5 text-red-400"></i> Moderación
+                </div>
+            </nav>
+            <div class="p-6 border-t border-white/5">
+                <button onclick="cerrarSesion()" class="flex items-center gap-3 text-gray-400 hover:text-white transition-all w-full px-4 py-2 hover:bg-white/5 rounded-lg"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-5 md:p-10 relative z-10 overflow-y-auto pb-24">
+            
+            <div id="sec-dashboard" class="block fade-in-up">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 md:mb-10">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Panel de Control</h2>
+                        <p class="text-slate-500 mt-1 text-sm md:text-base font-medium">Gestiona los recuerdos de forma respetuosa.</p>
+                    </div>
+                    <button onclick="abrirModalCrear()" class="btn-premium w-full sm:w-auto flex items-center justify-center gap-2 font-semibold">
+                        <i class="fas fa-plus"></i> Nuevo Memorial
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 mb-8 md:mb-10">
+                    <div class="glass-card flex items-center gap-5 p-5 md:p-6">
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0"><i class="fas fa-users"></i></div>
+                        <div><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Perfiles Activos</p><h3 class="text-3xl md:text-4xl font-bold text-slate-800" id="stat-perfiles">0</h3></div>
+                    </div>
+                    <div class="glass-card flex items-center gap-5 p-5 md:p-6 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-green-500/10 text-8xl md:text-9xl"><i class="fas fa-heart"></i></div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-200 text-green-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0 z-10"><i class="fas fa-eye"></i></div>
+                        <div class="z-10"><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Visitas Globales</p><h3 class="text-3xl md:text-4xl font-bold text-slate-800" id="stat-visitas">0</h3></div>
+                    </div>
+                    <div class="glass-card flex items-center gap-5 p-5 md:p-6 sm:col-span-2 lg:col-span-1">
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-200 text-purple-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0"><i class="fas fa-server"></i></div>
+                        <div><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Estado Nube</p><h3 class="text-xl md:text-2xl font-bold text-slate-800"><span class="w-2.5 h-2.5 inline-block bg-green-500 rounded-full mr-2 animate-pulse"></span>Conectado</h3></div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-0 overflow-hidden">
+                    <div class="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-white/50 flex justify-between items-center">
+                        <h3 class="text-lg md:text-xl font-bold text-slate-800">Directorio de Legados</h3>
+                    </div>
+                    <div class="overflow-x-auto no-scrollbar p-2 md:p-4">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="text-slate-400 text-[10px] md:text-xs uppercase tracking-widest border-b border-slate-100">
+                                    <th class="px-4 py-3 md:px-6 md:py-4 font-semibold">Memorial</th>
+                                    <th class="px-4 py-3 md:px-6 md:py-4 font-semibold">Enlace Web</th>
+                                    <th class="px-4 py-3 md:px-6 md:py-4 font-semibold text-center">Métricas</th>
+                                    <th class="px-4 py-3 md:px-6 md:py-4 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-perfiles" class="text-slate-700">
+                                <tr><td colspan="4" class="px-6 py-12 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i><br>Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-moderacion" class="hidden fade-in-up">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">Moderación <i class="fas fa-shield-alt text-red-400 ml-2"></i></h2>
+                        <p class="text-slate-500 mt-1 text-sm md:text-base font-medium">Supervisa y elimina contenido inapropiado en tiempo real.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mb-6 border-b border-slate-200">
+                    <button class="mod-tab font-bold text-blue-600 border-b-2 border-blue-600 pb-3 px-2 transition-colors" onclick="switchModTab('fotos', this)">Fotos Subidas</button>
+                    <button class="mod-tab font-bold text-slate-400 hover:text-slate-700 pb-3 px-2 transition-colors" onclick="switchModTab('mensajes', this)">Mensajes Escritos</button>
+                </div>
+
+                <div id="mod-fotos" class="mod-content block">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="grid-fotos">
+                        <div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i><p class="text-slate-500">Cargando fotos...</p></div>
+                    </div>
+                </div>
+
+                <div id="mod-mensajes" class="mod-content hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="grid-mensajes">
+                        <div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i><p class="text-slate-500">Cargando mensajes...</p></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="modalCrear" class="modal-overlay fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex justify-center items-center overflow-y-auto p-4 md:py-10">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-3xl shadow-2xl relative my-auto border border-slate-100">
+            <div class="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-100 text-blue-600 rounded-full flex justify-center items-center shrink-0"><i class="fas fa-user-plus text-sm md:text-base"></i></div>
+                    <h2 class="text-lg md:text-2xl font-bold text-slate-800">Crear Memorial</h2>
+                </div>
+                <button onclick="cerrarModalCrear()" class="text-slate-400 hover:text-red-500 transition-colors text-xl md:text-2xl p-2"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-5 md:p-8 max-h-[75vh] overflow-y-auto">
+                <form id="formCrearPerfil" onsubmit="event.preventDefault(); enviarFormularioCrear();">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-6">
+                        
+                        <div class="space-y-4 md:space-y-5">
+                            <div><label class="input-label">ID URL (Sin espacios)*</label><input type="text" id="n_id" required placeholder="ej: abuelo_carlos" class="input-pro font-mono text-blue-600" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '')"></div>
+                            <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+                                <label class="input-label text-blue-700"><i class="fas fa-key mr-1"></i> PIN Familiar*</label>
+                                <input type="text" id="n_pin" required placeholder="Ej: 1234" class="input-pro text-center tracking-widest font-bold text-lg bg-white" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            </div>
+                            <div><label class="input-label">Nombre del Difunto*</label><input type="text" id="n_nombre" required placeholder="Ej: Carlos Roberto Galvis" class="input-pro"></div>
+                            <div><label class="input-label">Fechas (Nac. - Fall.)*</label><input type="text" id="n_fechas" required placeholder="Ej: 1940 - 2021" class="input-pro"></div>
+                            <div><label class="input-label">Frase Dedicatoria</label><input type="text" id="n_memoria" placeholder="Siempre en nuestros corazones" class="input-pro italic"></div>
+                        </div>
+
+                        <div class="space-y-4 md:space-y-5">
+                            <div><label class="input-label">Esposa / Esposo</label><input type="text" id="n_esposa" placeholder="Nombre de su pareja" class="input-pro"></div>
+                            <div><label class="input-label">Hijos (Legado)</label><input type="text" id="n_hijos" placeholder="Ej: Juan, María y Pedro" class="input-pro"></div>
+                            <div class="grid grid-cols-2 gap-3 md:gap-4">
+                                <div><label class="input-label"><i class="fas fa-music mr-1"></i> Canción</label><input type="text" id="n_cancion" placeholder="Link de YouTube" class="input-pro"></div>
+                                <div><label class="input-label"><i class="fas fa-star mr-1"></i> Hobby</label><input type="text" id="n_juego" placeholder="Hobby" class="input-pro"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6 md:mb-8 bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-2xl border border-purple-100 shadow-sm relative overflow-hidden">
+                        <i class="fas fa-robot absolute -right-4 -bottom-4 text-8xl text-purple-500/5 rotate-12 pointer-events-none"></i>
+                        
+                        <div class="flex justify-between items-center mb-3 relative z-10">
+                            <label class="input-label text-purple-700 m-0 text-sm"><i class="fas fa-magic mr-1"></i> Redactor Automático IA</label>
+                            <span class="bg-purple-200 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Premium</span>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-2 relative z-10">
+                            <input type="text" id="datos_ia" placeholder="Ej: Era un abuelo alegre, siempre contaba chistes, amaba pescar..." class="input-pro flex-1 text-sm bg-white border-purple-200 focus:border-purple-500 focus:ring-purple-200">
+                            <button type="button" onclick="generarBioIA()" id="btnGenerarIA" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all text-sm whitespace-nowrap flex items-center justify-center gap-2">
+                                <i class="fas fa-sparkles"></i> Redactar Biografía
+                            </button>
+                        </div>
+                        <p class="text-[11px] md:text-xs text-purple-500 mt-2 font-medium relative z-10"><i class="fas fa-info-circle mr-1"></i> Escribe unas palabras y la Inteligencia Artificial creará la historia.</p>
+                        
+                        <div class="mt-5 relative z-10">
+                            <label class="input-label">Historia de Vida Final*</label>
+                            <textarea id="n_bio" required rows="5" placeholder="Aquí aparecerá el texto mágico, o puedes escribirlo tú mismo a mano..." class="input-pro text-sm border-purple-200"></textarea>
+                            
+                            <div class="flex flex-wrap gap-2 mt-3 justify-end">
+                                <button type="button" onclick="refinarIA('más corto, directo y resumido')" class="text-[10px] md:text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors font-medium shadow-sm"><i class="fas fa-compress-alt mr-1 text-slate-400"></i> Más corto</button>
+                                <button type="button" onclick="refinarIA('más humano, cálido, cercano y conversacional, no tan formal')" class="text-[10px] md:text-xs bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors font-medium shadow-sm"><i class="fas fa-heart mr-1 text-blue-400"></i> Más humano</button>
+                                <button type="button" onclick="refinarIA('más poético, elegante y conmemorativo')" class="text-[10px] md:text-xs bg-white border border-purple-200 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors font-medium shadow-sm"><i class="fas fa-feather-alt mr-1 text-purple-400"></i> Más poético</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row justify-end gap-3 border-t border-slate-100 pt-5 mt-2">
+                        <button type="button" onclick="cerrarModalCrear()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors">Cancelar</button>
+                        <button type="submit" id="btnCrearSubmit" class="btn-premium w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-save"></i> Guardar Memorial</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PASSWORD_ADMIN = "admin123";
+
+        // === GESTIÓN DE ACCESO ===
+        function verificarPassword() {
+            if (document.getElementById('passwordInput').value === PASSWORD_ADMIN) {
+                sessionStorage.setItem('admin_auth', 'true');
+                mostrarDashboard();
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
+                let box = document.querySelector('.login-box');
+                box.style.transform = 'translateX(10px)'; setTimeout(() => box.style.transform = 'translateX(-10px)', 100); setTimeout(() => box.style.transform = 'translateX(0)', 200);
+            }
+        }
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') verificarPassword(); });
+        window.onload = () => { if (sessionStorage.getItem('admin_auth') === 'true') mostrarDashboard(); };
+        function cerrarSesion() { sessionStorage.removeItem('admin_auth'); window.location.reload(); }
+
+        function mostrarDashboard() {
+            document.getElementById('login-screen').classList.add('hide-login');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            cargarDatos(); 
+        }
+
+        // === NAVEGACIÓN ENTRE DASHBOARD Y MODERACIÓN ===
+        function switchSection(sectionId, btnElement) {
+            // Ocultar todas las secciones
+            document.getElementById('sec-dashboard').classList.add('hidden');
+            document.getElementById('sec-dashboard').classList.remove('block');
+            document.getElementById('sec-moderacion').classList.add('hidden');
+            document.getElementById('sec-moderacion').classList.remove('block');
+            
+            // Mostrar la seleccionada
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+            document.getElementById('sec-' + sectionId).classList.add('block');
+            
+            // Estilizar los botones del menú
+            document.querySelectorAll('.sidebar-item').forEach(btn => {
+                btn.classList.remove('sidebar-active');
+            });
+            btnElement.classList.add('sidebar-active');
+
+            if (sectionId === 'dashboard') cargarDatos();
+            if (sectionId === 'moderacion') cargarModeracion();
+        }
+
+        // Tabs de la sección Moderación
+        function switchModTab(tabId, btnElement) {
+            document.querySelectorAll('.mod-content').forEach(el => {
+                el.classList.add('hidden'); el.classList.remove('block');
+            });
+            document.getElementById('mod-' + tabId).classList.remove('hidden');
+            document.getElementById('mod-' + tabId).classList.add('block');
+            
+            document.querySelectorAll('.mod-tab').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-slate-400');
+            });
+            btnElement.classList.remove('text-slate-400');
+            btnElement.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+        }
+
+        // === EL NUEVO BOTÓN MAGICO DE WHATSAPP ===
+        function enviarWhatsApp(nombre, identificador, pin) {
+            const urlCompleta = window.location.protocol + "//" + window.location.host + "/perfil/" + identificador;
+            const mensaje = `🕊️ *MEMORIAL DIGITAL*\n\nHola, hacemos entrega oficial del espacio de recuerdos en memoria de *${nombre}*.\n\n🔗 *Visítalo aquí:*\n${urlCompleta}\n\n🔑 *PIN de Seguridad:*\n${pin}\n\n_Con este PIN, la familia podrá subir fotos y escribir recuerdos en el perfil._`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
+        }
+
+        // === FUNCIONES DASHBOARD ===
+        function animarContador(id, endValue, duration) {
+            let obj = document.getElementById(id), startValue = 0, startTime = null;
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = Math.min((timestamp - startTime) / duration, 1);
+                obj.innerHTML = Math.floor((1 - Math.pow(1 - progress, 3)) * (endValue - startValue) + startValue);
+                if (progress < 1) window.requestAnimationFrame(step);
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function cargarDatos() {
+            fetch('/api/admin/estadisticas')
+                .then(response => response.json())
+                .then(data => {
+                    animarContador('stat-perfiles', data.total_perfiles, 1500);
+                    animarContador('stat-visitas', data.total_visitas, 2000);
+
+                    const tabla = document.getElementById('tabla-perfiles');
+                    tabla.innerHTML = ""; 
+
+                    if (data.perfiles.length === 0) { tabla.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-400 italic">No hay legados registrados en el sistema.</td></tr>`; return; }
+
+                    data.perfiles.forEach((perfil, index) => {
+                        let badgeColor = perfil.ultima_visita === "Nueva" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600";
+                        const fila = `
+                            <tr class="table-row-anim border-b border-slate-50 last:border-none" style="animation-delay: ${index * 0.1}s">
+                                <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-500 flex justify-center items-center font-bold font-serif shadow-sm shrink-0">${perfil.nombre.charAt(0).toUpperCase()}</div>
+                                        <div class="font-bold text-slate-800 truncate max-w-[150px] md:max-w-none" title="${perfil.nombre}">${perfil.nombre}</div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
+                                    <span class="bg-slate-100 border border-slate-200 text-slate-600 px-2 md:px-3 py-1 rounded-md text-[11px] md:text-xs font-mono shadow-sm">/${perfil.identificador}</span>
+                                </td>
+                                <td class="px-4 py-4 md:px-6 md:py-5 text-center whitespace-nowrap">
+                                    <div class="flex flex-col items-center">
+                                        <span class="font-bold text-slate-700 text-sm"><i class="fas fa-heart text-red-400 text-xs mr-1"></i> ${perfil.visitas}</span>
+                                        <span class="${badgeColor} px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold mt-1 shadow-sm uppercase tracking-wide">${perfil.ultima_visita}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 md:px-6 md:py-5 text-right whitespace-nowrap space-x-1 md:space-x-2">
+                                    <a href="/perfil/${perfil.identificador}" target="_blank" title="Ver Memorial" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-external-link-alt"></i></a>
+                                    
+                                    <button onclick="enviarWhatsApp('${perfil.nombre}', '${perfil.identificador}', '${perfil.pin}')" title="Entregar por WhatsApp" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fab fa-whatsapp"></i></button>
+
+                                    <button onclick="abrirModalResetPin('${perfil.identificador}', '${perfil.nombre}')" title="Restablecer PIN" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-key"></i></button>
+
+                                    <a href="/generar_qr/${perfil.identificador}" target="_blank" title="Descargar QR" class="qr-btn inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-slate-800 text-white hover:bg-black transition-all rounded-lg shadow-md hover:shadow-lg"><i class="fas fa-qrcode"></i></a>
+                                    
+                                    <button onclick="abrirModalDelete('${perfil.identificador}', '${perfil.nombre}')" title="Eliminar Perfil" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-trash-alt"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                        tabla.innerHTML += fila;
+                    });
+                });
+        }
+
+        // === FUNCIONES DE MODERACIÓN ===
+        function cargarModeracion() {
+            fetch('/api/admin/moderacion')
+            .then(res => res.json())
+            .then(data => {
+                // Renderizar Fotos (Con estilo Tailwind)
+                let gridFotos = document.getElementById('grid-fotos');
+                gridFotos.innerHTML = '';
+                if(data.fotos.length === 0) gridFotos.innerHTML = '<p class="text-slate-500 col-span-full">No hay fotos subidas en la plataforma.</p>';
+                data.fotos.forEach(f => {
+                    gridFotos.innerHTML += `
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100 relative group">
+                            <img src="${f.url}" class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                            <div class="p-4 relative bg-white">
+                                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1 block"><i class="fas fa-folder-open"></i> ${f.perfil}</span>
+                                <button onclick="borrarElemento('foto', ${f.id})" class="w-full mt-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
+                                    <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Renderizar Mensajes (Con estilo Tailwind)
+                let gridMensajes = document.getElementById('grid-mensajes');
+                gridMensajes.innerHTML = '';
+                if(data.mensajes.length === 0) gridMensajes.innerHTML = '<p class="text-slate-500 col-span-full">No hay mensajes escritos en la plataforma.</p>';
+                data.mensajes.forEach(m => {
+                    gridMensajes.innerHTML += `
+                        <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100 relative flex flex-col justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-3 block"><i class="fas fa-folder-open"></i> ${m.perfil}</span>
+                                <p class="font-serif italic text-slate-700 mb-4 text-sm leading-relaxed">"${m.texto}"</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 block text-right mb-4">- ${m.autor}</span>
+                                <button onclick="borrarElemento('mensaje', ${m.id})" class="w-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
+                                    <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function borrarElemento(tipo, id) {
+            if(!confirm(`¿Estás seguro de borrar este ${tipo} de la nube? No se puede recuperar.`)) return;
+            let endpoint = tipo === 'foto' ? `/eliminar_foto/${id}` : `/eliminar_mensaje/${id}`;
+            fetch(endpoint, { method: 'DELETE' }).then(() => cargarModeracion());
+        }
+
+        // === GESTIÓN DE PINES (NUEVO) ===
+        let perfilAResetear = null;
+        function abrirModalResetPin(id, nombre) {
+            perfilAResetear = id;
+            document.getElementById('reset-target-name').innerText = nombre;
+            document.getElementById('inputNewPin').value = '';
+            document.getElementById('modalResetPin').classList.add('active');
+        }
+        
+        function cerrarModalResetPin() {
+            perfilAResetear = null;
+            document.getElementById('modalResetPin').classList.remove('active');
+        }
+
+        function generarPinRandom() {
+            const randomPin = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('inputNewPin').value = randomPin;
+        }
+
+        function guardarNuevoPin() {
+            const nuevoPin = document.getElementById('inputNewPin').value;
+            if(nuevoPin.length !== 4) { alert("El PIN debe tener exactamente 4 números."); return; }
+            
+            let btn = document.getElementById('btnConfirmReset');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            fetch(`/api/admin/reset_pin/${perfilAResetear}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({nuevo_pin: nuevoPin})
+            })
+            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                alert(`¡PIN actualizado con éxito!\n\nEl nuevo PIN para la familia es: ${nuevoPin}\n\nPuedes enviarlo por WhatsApp usando el botón verde.`);
+                cerrarModalResetPin();
+                cargarDatos(); // Recargamos para que el botón de WhatsApp sepa el nuevo PIN
+                btn.innerHTML = 'Guardar PIN';
+            })
+            .catch(err => {
+                alert("Error al actualizar el PIN de seguridad.");
+                btn.innerHTML = 'Guardar PIN';
+            });
+        }
+
+        // === ELIMINACIÓN DE PERFIL GLOBAL ===
+        let perfilAEliminar = null;
+        function abrirModalDelete(id, nombre) {
+            perfilAEliminar = id; document.getElementById('delete-target-name').innerText = nombre; document.getElementById('modalDeleteProfile').classList.add('active');
+        }
+        function cerrarModalDelete() {
+            perfilAEliminar = null; document.getElementById('modalDeleteProfile').classList.remove('active'); document.getElementById('btnConfirmDelete').innerHTML = 'Eliminar Todo';
+        }
+        document.getElementById('btnConfirmDelete').addEventListener('click', function() {
+            if(!perfilAEliminar) return;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Borrando...';
+            fetch(`/api/admin/eliminar_perfil/${perfilAEliminar}`, { method: 'DELETE' })
+            .then(res => res.json()).then(data => { cerrarModalDelete(); cargarDatos(); })
+            .catch(error => { alert("Error al eliminar el perfil"); cerrarModalDelete(); });
+        });
+
+        // === CREACIÓN DE PERFIL CON IA ===
+        const modalOverlay = document.getElementById('modalCrear');
+        function abrirModalCrear() { document.getElementById('formCrearPerfil').reset(); modalOverlay.classList.add('active'); }
+        function cerrarModalCrear() { modalOverlay.classList.remove('active'); }
+
+        function generarBioIA() {
+            let inputDatos = document.getElementById('datos_ia').value;
+            if(!inputDatos) { alert("Escribe algunos detalles para que la IA se inspire."); return; }
+            ejecutarLlamadaIA(inputDatos);
+        }
+
+        function refinarIA(estilo) {
+            let textoActual = document.getElementById('n_bio').value;
+            if(!textoActual) { alert("Primero genera una biografía principal."); return; }
+            let instruccionMagica = `Reescribe y ajusta este texto para que sea ESTRICTAMENTE ${estilo}: "${textoActual}"`;
+            ejecutarLlamadaIA(instruccionMagica);
+        }
+
+        function ejecutarLlamadaIA(instruccion) {
+            let btn = document.getElementById('btnGenerarIA');
+            let txtArea = document.getElementById('n_bio');
+            
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Pensando...';
+            btn.classList.add('ai-loading');
+            btn.disabled = true;
+            
+            fetch('/api/generar_biografia', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ datos_clave: instruccion })
+            })
+            .then(res => { if(!res.ok) throw new Error("Error en IA"); return res.json(); })
+            .then(data => {
+                txtArea.value = data.biografia;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Listo!';
+                btn.classList.remove('ai-loading', 'from-purple-600', 'to-indigo-600');
+                btn.classList.add('from-green-500', 'to-emerald-500');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-sparkles"></i> Redactar Biografía';
+                    btn.classList.remove('from-green-500', 'to-emerald-500');
+                    btn.classList.add('from-purple-600', 'to-indigo-600');
+                    btn.disabled = false;
+                }, 3000);
+            })
+            .catch(err => {
+                alert("Error al conectar con la IA.");
+                btn.innerHTML = '<i class="fas fa-sparkles"></i> Redactar Biografía'; btn.classList.remove('ai-loading'); btn.disabled = false;
+            });
+        }
+
+        function enviarFormularioCrear() {
+            let btn = document.getElementById('btnCrearSubmit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...'; btn.disabled = true;
+
+            let datos = {
+                identificador: document.getElementById('n_id').value, pin_familia: document.getElementById('n_pin').value,
+                nombre: document.getElementById('n_nombre').value, fechas: document.getElementById('n_fechas').value,
+                en_memoria_de: document.getElementById('n_memoria').value, esposa: document.getElementById('n_esposa').value,
+                hijos: document.getElementById('n_hijos').value, cancion_favorita: document.getElementById('n_cancion').value,
+                juego_favorito: document.getElementById('n_juego').value, biografia: document.getElementById('n_bio').value
+            };
+
+            fetch('/crear_perfil/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+            .then(async (response) => {
+                let res = await response.json();
+                if (!response.ok) throw new Error(res.detail || "Error desconocido");
+                cerrarModalCrear(); cargarDatos(); 
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Memorial'; btn.disabled = false;
+            }).catch(error => {
+                alert("Error al crear: " + error.message);
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Memorial'; btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
