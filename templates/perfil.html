@@ -11,7 +11,7 @@
 
     <meta property="og:title" content="En memoria de {{ nombre }}">
     <meta property="og:description" content="Te invitamos a visitar este espacio dedicado a los recuerdos de {{ nombre }}.">
-    <meta property="og:image" content="{{ foto_portada }}">
+    <meta property="og:image" content="{{ foto_portada_og }}">
     <meta property="og:type" content="website">
     
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -36,24 +36,30 @@
            VARIABLES DE COLOR (EL TEMA AZUL OSCURO ELEGANTE)
            ========================================== */
         body.dark-mode {
-            --primary-bg: #0a0f18;       /* Azul marino profundo (Fondo) */
-            --text-main: #f1f5f9;        /* Blanco humo (Textos principales) */
-            --text-light: #94a3b8;       /* Gris azulado (Textos secundarios) */
-            --card-bg: #1e293b;          /* Azul pizarra (Tarjetas) */
+            --primary-bg: #0a0f18;       
+            --text-main: #f1f5f9;        
+            --text-light: #94a3b8;       
+            --card-bg: #1e293b;          
             --border-soft: rgba(255,255,255,0.05);
             --input-bg: #0f172a;
         }
 
-        * { box-sizing: border-box; }
+        * { 
+            box-sizing: border-box; 
+        }
         
         html, body { 
-            max-width: 100vw; overflow-x: hidden; -webkit-touch-callout: none; 
-            background-color: #0f172a; /* Fondo inicial para la intro */
+            max-width: 100vw; 
+            overflow-x: hidden; 
+            -webkit-touch-callout: none; 
+            background-color: #0f172a; 
             overscroll-behavior-y: none; /* <-- ¡AQUÍ ESTÁ LA MAGIA PARA EL SCROLL! */
         }
 
         body { 
-            font-family: 'Lato', sans-serif; margin: 0; color: var(--text-main); 
+            font-family: 'Lato', sans-serif; 
+            margin: 0; 
+            color: var(--text-main); 
             -webkit-font-smoothing: antialiased; 
             transition: background-color 0.5s ease, color 0.5s ease;
         }
@@ -63,9 +69,15 @@
         }
         
         .container { 
-            max-width: 600px; width: 100%; margin: 0 auto; background: var(--primary-bg); 
-            min-height: 100vh; position: relative; padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
-            box-shadow: 0 0 30px rgba(0,0,0,0.3); overflow-x: hidden;
+            max-width: 600px; 
+            width: 100%; 
+            margin: 0 auto; 
+            background: var(--primary-bg); 
+            min-height: 100vh; 
+            position: relative; 
+            padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
+            box-shadow: 0 0 30px rgba(0,0,0,0.3); 
+            overflow-x: hidden;
             transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
@@ -75,33 +87,59 @@
         @media (min-width: 768px) {
             body.intro-finished {
                 background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-                display: flex; align-items: center; justify-content: center; padding: 40px 0;
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                padding: 40px 0;
             }
             body.intro-finished.dark-mode {
                 background: linear-gradient(135deg, #05080f 0%, #0f172a 100%);
             }
             .container {
-                margin: 0; border-radius: 35px; box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-                border: 8px solid rgba(255,255,255,0.05); height: auto; min-height: auto; overflow: hidden;
+                margin: 0; 
+                border-radius: 35px; 
+                box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+                border: 8px solid rgba(255,255,255,0.05); 
+                height: auto; 
+                min-height: auto; 
+                overflow: hidden;
             }
-            .cover-header { border-top-left-radius: 27px !important; border-top-right-radius: 27px !important; }
+            .cover-header { 
+                border-top-left-radius: 27px !important; 
+                border-top-right-radius: 27px !important; 
+            }
         }
 
         .info-card, .bio-text, .stats, .message-card, .modal-body, .timeline-item::before, .upload-zone, .input-pro, .pin-input {
             transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        .admin-only { display: none !important; }
+        .admin-only { 
+            display: none !important; 
+        }
 
         /* ==========================================
            PANTALLA DE BIENVENIDA (INTRO NETFLIX)
            ========================================== */
-        #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; }
-        .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; object-fit: cover; }
-        
-        .welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%); z-index: 1; }
-        
-        .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
+        #welcome-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; 
+            overflow: hidden; display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; 
+        }
+        .welcome-bg { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; 
+            z-index: 0; object-fit: cover; 
+        }
+        .welcome-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%); z-index: 1; 
+        }
+        .light-particle { 
+            position: absolute; border-radius: 50%; 
+            background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); 
+            z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; 
+        }
         .p1 { width: 250px; height: 250px; top: 15%; left: -10%; animation-delay: 0s; }
         .p2 { width: 350px; height: 350px; bottom: 5%; right: -15%; animation-delay: 1.5s; }
         .welcome-content-wrapper { position: relative; z-index: 10; text-align: center; padding: 0 30px; }
@@ -119,22 +157,82 @@
         @keyframes fadeIn { to { opacity: 1; } } 
 
         /* ==========================================
-           HEADER: PORTADA Y CONTROLES 
+           🎬 HEADER PORTADA: EL SLIDER CINEMÁTICO 🎬
            ========================================== */
-        .cover-header { height: 280px; width: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-        .cover-bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-        .cover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, transparent 60%, var(--primary-bg) 100%); border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; z-index: 1; transition: background 0.5s ease;}
+        .cover-header { 
+            height: 280px; width: 100%; position: relative; 
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; background: #000;
+        }
         
-        .cover-controls { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 3; }
-        .glass-btn { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; color: white; font-size: 18px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.3s; }
+        .slider-container { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; 
+        }
+        .slide { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            opacity: 0; transition: opacity 1.2s ease-in-out; 
+        }
+        .slide.active { 
+            opacity: 1; z-index: 1; 
+        }
+        .cover-media { 
+            width: 100%; height: 100%; object-fit: cover; 
+        }
+        
+        .cover-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(to bottom, transparent 0%, transparent 60%, var(--primary-bg) 100%); 
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; 
+            z-index: 2; transition: background 0.5s ease; pointer-events: none;
+        }
+        
+        .cover-controls { 
+            position: absolute; top: calc(20px + env(safe-area-inset-top)); 
+            left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 10; 
+        }
+        .glass-btn { 
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; 
+            width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; 
+            color: white; font-size: 18px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.3s; 
+        }
         .glass-btn:hover { background: rgba(0, 0, 0, 0.7); transform: scale(1.1); }
         .theme-btn { background: rgba(255, 255, 255, 0.15); color: #f1c40f; border: 1px solid rgba(255, 255, 255, 0.3); }
 
+        /* Controles del Slider */
+        .slider-dots { 
+            position: absolute; bottom: 85px; left: 0; width: 100%; 
+            display: flex; justify-content: center; gap: 8px; z-index: 5; 
+        }
+        .dot { 
+            width: 6px; height: 6px; border-radius: 50%; 
+            background: rgba(255,255,255,0.4); cursor: pointer; transition: 0.3s; 
+        }
+        .dot.active { background: white; transform: scale(1.5); }
+        
+        .slider-arrows { 
+            position: absolute; top: 40%; width: 100%; display: flex; 
+            justify-content: space-between; transform: translateY(-50%); 
+            z-index: 5; padding: 0 15px; pointer-events: none;
+        }
+        .slider-arrow { 
+            pointer-events: auto; width: 35px; height: 35px; 
+            background: rgba(0,0,0,0.3); color: white; display: flex; 
+            justify-content: center; align-items: center; border-radius: 50%; 
+            cursor: pointer; backdrop-filter: blur(5px); opacity: 0.7; transition: 0.3s;
+        }
+        .slider-arrow:hover { opacity: 1; background: rgba(0,0,0,0.6); }
+        @media (max-width: 768px) { .slider-arrows { display: none; } }
+
         /* ==========================================
-           FOTO PRINCIPAL Y DATOS (FOTO Y VIDEO)
+           FOTO PRINCIPAL Y DATOS 
            ========================================== */
-        .profile-wrapper { position: relative; width: 170px; height: 170px; margin: -85px auto 0px; z-index: 3; }
-        .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color 0.5s ease;}
+        .profile-wrapper { position: relative; width: 170px; height: 170px; margin: -85px auto 0px; z-index: 10; }
+        .profile-pic { 
+            width: 160px; height: 160px; border-radius: 50%; object-fit: cover; 
+            border: 5px solid var(--primary-bg); background: var(--card-bg); 
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color 0.5s ease;
+        }
         .profile-pic:hover { transform: scale(1.05); box-shadow: 0 10px 35px rgba(0,0,0,0.2), 0 0 0 2px rgba(212,175,55,0.6); }
         .main-info { text-align: center; padding: 0 20px; width: 100%; padding-top: 15px; }
         .name { font-family: 'Playfair Display', serif; font-size: 32px; margin: 10px 0 5px; font-weight: 600; color: var(--text-main); word-wrap: break-word;}
@@ -142,35 +240,60 @@
         .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent); margin-top: 10px; font-size: 18px; word-wrap: break-word;}
 
         /* ==========================================
-           🕯️ NUEVO: ESTILOS PARA LA VELA VIRTUAL
+           🕯️ VELA VIRTUAL 
            ========================================== */
-        .candle-container { margin: 25px auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: 12px 25px; border-radius: 30px; font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px var(--border-soft); transition: all 0.3s ease; }
-        .btn-candle:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); border-color: rgba(212, 175, 55, 0.3); }
-        .btn-candle.lit { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); cursor: default; transform: none; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
-        
+        .candle-container { 
+            margin: 25px auto 10px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+        }
+        .btn-candle { 
+            background: var(--card-bg); border: 1px solid var(--border-soft); 
+            color: var(--text-main); padding: 12px 25px; border-radius: 30px; 
+            font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; 
+            cursor: pointer; display: flex; align-items: center; gap: 10px; 
+            box-shadow: 0 5px 15px var(--border-soft); transition: all 0.3s ease; 
+        }
+        .btn-candle:hover { 
+            transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); 
+            border-color: rgba(212, 175, 55, 0.3); 
+        }
+        .btn-candle.lit { 
+            background: rgba(212, 175, 55, 0.1); border-color: var(--accent); 
+            cursor: default; transform: none; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); 
+        }
         .candle-icon { font-size: 18px; color: var(--text-light); transition: 0.3s; }
-        .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
-        
+        .btn-candle.lit .candle-icon { 
+            color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; 
+            animation: flicker 2s infinite alternate; 
+        }
         .candle-count-text { margin-top: 8px; font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
+        
+        @keyframes flicker { 
+            0%, 100% { opacity: 1; transform: scale(1); } 
+            50% { opacity: 0.8; transform: scale(1.05); } 
         }
 
         /* ==========================================
            TARJETAS DE INFORMACIÓN (GRID)
            ========================================== */
         .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 25px 15px; width: 100%;}
-        .info-card { background: var(--card-bg); padding: 18px 10px; border-radius: 20px; box-shadow: 0 10px 30px var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
+        .info-card { 
+            background: var(--card-bg); padding: 18px 10px; border-radius: 20px; 
+            box-shadow: 0 10px 30px var(--border-soft); display: flex; flex-direction: column; 
+            align-items: center; text-align: center; border: 1px solid var(--border-soft); 
+            width: 100%; overflow: hidden; 
+        }
         .info-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         .info-card i { font-size: 26px; color: var(--accent); margin-bottom: 12px;}
         .info-card strong { font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: 8px;}
         .info-card span { font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;}
-
         .yt-player { width: 100%; height: 80px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border-soft); }
-        .btn-yt-rescue { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: white; background: #ff0000; text-decoration: none; font-weight: bold; padding: 8px 12px; border-radius: 8px; transition: all 0.3s; box-shadow: 0 4px 10px rgba(255,0,0,0.2); }
+        .btn-yt-rescue { 
+            display: flex; justify-content: center; align-items: center; gap: 8px; 
+            margin-top: 8px; font-size: 12px; color: white; background: #ff0000; 
+            text-decoration: none; font-weight: bold; padding: 8px 12px; border-radius: 8px; 
+            transition: all 0.3s; box-shadow: 0 4px 10px rgba(255,0,0,0.2); 
+        }
         .btn-yt-rescue:hover { background: #cc0000; transform: scale(1.02); }
 
         /* ==========================================
@@ -178,7 +301,11 @@
            ========================================== */
         .bio-section { padding: 10px 20px 40px; width: 100%; }
         .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: 26px; margin-bottom: 25px; color: var(--text-main); position: relative;}
-        .bio-text { line-height: 1.8; text-align: center; font-size: 16px; color: var(--text-light); font-weight: 300; position: relative; padding: 25px 20px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 40px var(--border-soft); font-style: italic; word-wrap: break-word;}
+        .bio-text { 
+            line-height: 1.8; text-align: center; font-size: 16px; color: var(--text-light); 
+            font-weight: 300; position: relative; padding: 25px 20px; background: var(--card-bg); 
+            border-radius: 20px; box-shadow: 0 10px 40px var(--border-soft); font-style: italic; word-wrap: break-word;
+        }
         .bio-text::before { content: "❝"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; top: -15px; left: 15px; font-family: serif; line-height: 1;}
         .bio-text::after { content: "❞"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; bottom: -45px; right: 15px; font-family: serif; line-height: 1;}
 
@@ -187,11 +314,19 @@
            ========================================== */
         .timeline-section { padding: 10px 20px 40px; width: 100%; }
         .title-with-btn { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px;}
-        .add-timeline-btn { background: rgba(212, 175, 55, 0.1); color: var(--accent); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;}
+        .add-timeline-btn { 
+            background: rgba(212, 175, 55, 0.1); color: var(--accent); border: 1px solid rgba(212, 175, 55, 0.3); 
+            border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; 
+            align-items: center; cursor: pointer; transition: 0.2s;
+        }
         .add-timeline-btn:hover { background: var(--accent); color: white;}
         .timeline { position: relative; border-left: 2px solid rgba(212, 175, 55, 0.2); padding-left: 20px; margin-left: 10px;}
         .timeline-item { position: relative; margin-bottom: 30px; padding-right: 30px;}
-        .timeline-item::before { content: ''; position: absolute; left: -27px; top: 4px; width: 12px; height: 12px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        .timeline-item::before { 
+            content: ''; position: absolute; left: -27px; top: 4px; width: 12px; height: 12px; 
+            background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; 
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); 
+        }
         .timeline-item:hover::before { background: var(--accent); transform: scale(1.2);}
         .timeline-year { font-weight: 900; color: var(--accent); font-size: 16px; letter-spacing: 1px;}
         .timeline-event { font-size: 15px; color: var(--text-light); margin-top: 5px; line-height: 1.5; word-wrap: break-word;}
@@ -207,7 +342,10 @@
            ========================================== */
         .guestbook-section { padding: 0 20px 40px; width: 100%; }
         .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; max-height: 400px; overflow-y: auto; padding: 5px; }
-        .message-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border-left: 4px solid var(--accent); box-shadow: 0 5px 15px var(--border-soft); position: relative; }
+        .message-card { 
+            background: var(--card-bg); padding: 20px; border-radius: 15px; 
+            border-left: 4px solid var(--accent); box-shadow: 0 5px 15px var(--border-soft); position: relative; 
+        }
         .message-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08);}
         .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: 14px; padding: 5px; opacity: 0.5;}
         .msg-delete-btn:hover { color: #e74c3c; opacity: 1; transform: scale(1.1);}
@@ -220,7 +358,12 @@
         .like-btn.liked i { color: #e74c3c; }
 
         .action-buttons-container { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;}
-        .btn-elegant { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: 15px 20px; border-radius: 30px; cursor: pointer; font-size: 14px; font-weight: bold; letter-spacing: 1px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px; transition: all 0.3s ease;}
+        .btn-elegant { 
+            background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; 
+            padding: 15px 20px; border-radius: 30px; cursor: pointer; font-size: 14px; font-weight: bold; 
+            letter-spacing: 1px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; 
+            justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px; transition: all 0.3s ease;
+        }
         .btn-elegant:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
         .btn-share { background: linear-gradient(135deg, #d4af37, #b5952f); }
 
@@ -228,7 +371,10 @@
            GALERÍA Y SUBIDA DE FOTOS MULTIPLE
            ========================================== */
         .gallery-container { padding: 0 2px; width: 100%;}
-        .upload-zone { border: 2px dashed var(--border-soft); border-radius: 15px; padding: 30px 20px; text-align: center; background: var(--card-bg); cursor: pointer; margin: 0 25px 25px; }
+        .upload-zone { 
+            border: 2px dashed var(--border-soft); border-radius: 15px; padding: 30px 20px; 
+            text-align: center; background: var(--card-bg); cursor: pointer; margin: 0 25px 25px; 
+        }
         .upload-zone.dragover { border-color: var(--accent); background: rgba(212, 175, 55, 0.05); }
         .upload-zone i { font-size: 40px; color: var(--text-light); margin-bottom: 10px;}
         .upload-zone:hover i { color: var(--accent); transform: translateY(-5px);}
@@ -240,7 +386,11 @@
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; pointer-events: none; }
         .gallery-item:hover { z-index: 10; border-radius: 8px;}
         .gallery-item:hover img { transform: scale(1.1); filter: brightness(1.1);}
-        .desktop-delete-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; z-index: 15; border: 1px solid rgba(255,255,255,0.3); font-size: 12px;}
+        .desktop-delete-btn { 
+            position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); 
+            color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; 
+            align-items: center; opacity: 0; transition: 0.3s; z-index: 15; border: 1px solid rgba(255,255,255,0.3); font-size: 12px;
+        }
         .gallery-item:hover .desktop-delete-btn { opacity: 1; }
         @media (max-width: 768px) { .desktop-delete-btn { display: none; } .timeline-controls { opacity: 1; } }
         .gallery-item.selected-for-delete { transform: scale(0.9); box-shadow: 0 0 0 4px #e74c3c; border-radius: 8px; z-index: 100; filter: brightness(0.6);}
@@ -256,7 +406,12 @@
         /* ==========================================
            MODALES GENERALES Y FORMULARIOS
            ========================================== */
-        .delete-top-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 65px; background: rgba(26, 37, 47, 0.95); backdrop-filter: blur(10px); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 11000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 20px rgba(0,0,0,0.3);}
+        .delete-top-bar { 
+            position: fixed; top: -70px; left: 0; width: 100%; height: 65px; 
+            background: rgba(26, 37, 47, 0.95); backdrop-filter: blur(10px); color: white; 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; 
+            z-index: 11000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
         .delete-top-bar.active { top: 0; }
         .delete-top-bar .cancel-btn { font-size: 15px; cursor: pointer; color: #bdc3c7; transition: 0.2s;}
         .delete-top-bar .trash-btn { font-size: 22px; cursor: pointer; color: #e74c3c; transition: 0.2s; padding: 10px;}
@@ -307,10 +462,10 @@
 <body>
 
     <div id="welcome-screen">
-        {% if es_video_portada %}
-            <video class="welcome-bg" src="{{ foto_portada }}" autoplay loop muted playsinline></video>
+        {% if portadas[0].es_video %}
+            <video class="welcome-bg" src="{{ portadas[0].url }}" autoplay loop muted playsinline></video>
         {% else %}
-            <div class="welcome-bg" style="background-image: url('{{ foto_portada }}');"></div>
+            <div class="welcome-bg" style="background-image: url('{{ portadas[0].url }}');"></div>
         {% endif %}
         
         <div class="welcome-overlay"></div>
@@ -375,23 +530,49 @@
 
     <div class="container">
         
-        <div class="cover-header" {% if not es_video_portada %}style="background-image: url('{{ foto_portada }}');"{% endif %}>
-            {% if es_video_portada %}
-                <video src="{{ foto_portada }}" autoplay loop muted playsinline class="cover-bg-video"></video>
-            {% endif %}
+        <div class="cover-header">
             
+            <div class="slider-container" id="coverSlider">
+                {% for portada in portadas %}
+                <div class="slide {% if loop.index0 == 0 %}active{% endif %}">
+                    {% if portada.es_video %}
+                        <video src="{{ portada.url }}" class="cover-media" loop muted playsinline {% if loop.index0 == 0 %}autoplay{% endif %}></video>
+                    {% else %}
+                        <img src="{{ portada.url }}" class="cover-media">
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
             <div class="cover-overlay"></div>
+            
             <div class="cover-controls">
                 <button class="glass-btn theme-btn" onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar Tema de Color"><i class="fas fa-moon"></i></button>
                 
                 <div style="display: flex; gap: 10px;">
                     <button class="glass-btn admin-only" onclick="abrirModal('editModal')" title="Editar Textos del Perfil"><i class="fas fa-pen"></i></button>
-                    <form id="portadaForm" class="admin-only" style="display:none;"><input type="file" id="portadaInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPortada()"></form>
-                    <button class="glass-btn admin-only" onclick="document.getElementById('portadaInput').click()" title="Cambiar Foto de Portada"><i class="fas fa-image"></i></button>
-                    <form id="fotoForm" class="admin-only" style="display:none;"><input type="file" id="fotoInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPerfil()"></form>
+                    <form id="portadaForm" class="admin-only" style="display:none;">
+                        <input type="file" id="portadaInput" accept="image/*,video/mp4,video/quicktime" multiple onchange="cambiarFotoPortada()">
+                    </form>
+                    <button class="glass-btn admin-only" onclick="document.getElementById('portadaInput').click()" title="Cambiar Slider de Portada"><i class="fas fa-images"></i></button>
+                    <form id="fotoForm" class="admin-only" style="display:none;">
+                        <input type="file" id="fotoInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPerfil()">
+                    </form>
                     <button class="glass-btn admin-only" onclick="document.getElementById('fotoInput').click()" title="Cambiar Foto Circular"><i class="fas fa-camera"></i></button>
                 </div>
             </div>
+
+            {% if portadas|length > 1 %}
+            <div class="slider-arrows">
+                <span class="slider-arrow" onclick="cambiarSlide(-1)"><i class="fas fa-chevron-left"></i></span>
+                <span class="slider-arrow" onclick="cambiarSlide(1)"><i class="fas fa-chevron-right"></i></span>
+            </div>
+            <div class="slider-dots">
+                {% for portada in portadas %}
+                <span class="dot {% if loop.index0 == 0 %}active{% endif %}" onclick="irASlide({{ loop.index0 }})"></span>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
 
         <div class="profile-wrapper" data-aos="zoom-in" data-aos-duration="1200">
@@ -420,8 +601,21 @@
         </div>
 
         <div class="cards-container">
-            {% if esposa %}<div class="info-card" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-heart"></i><strong>Compañera de vida</strong><span>{{ esposa }}</span></div>{% endif %}
-            {% if hijos %}<div class="info-card" data-aos="fade-up" data-aos-delay="200"><i class="fas fa-seedling"></i><strong>Legado</strong><span>{{ hijos }}</span></div>{% endif %}
+            {% if esposa %}
+            <div class="info-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-heart"></i>
+                <strong>Compañera de vida</strong>
+                <span>{{ esposa }}</span>
+            </div>
+            {% endif %}
+            
+            {% if hijos %}
+            <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-seedling"></i>
+                <strong>Legado</strong>
+                <span>{{ hijos }}</span>
+            </div>
+            {% endif %}
             
             {% if cancion_favorita %}
             <div class="info-card" data-aos="fade-up" data-aos-delay="300" id="card-cancion">
@@ -431,7 +625,13 @@
             </div>
             {% endif %}
             
-            {% if juego_favorito %}<div class="info-card" data-aos="fade-up" data-aos-delay="400"><i class="fas fa-star"></i><strong>Pasatiempo</strong><span>{{ juego_favorito }}</span></div>{% endif %}
+            {% if juego_favorito %}
+            <div class="info-card" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-star"></i>
+                <strong>Pasatiempo</strong>
+                <span>{{ juego_favorito }}</span>
+            </div>
+            {% endif %}
         </div>
 
         <div class="bio-section" data-aos="fade-up" data-aos-duration="1000">
@@ -520,9 +720,82 @@
 
     </div>
 
-    <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Año o Fecha</label><input type="text" id="t_anio" class="input-pro"></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
-    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150"></textarea></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button></div></div>
-    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción (Nombre o Link de YouTube)</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro">{{ biografia }}</textarea></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
+    <div id="momentoModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span>
+            <h2 id="modalMomentoTitulo">Agregar Momento</h2>
+            <input type="hidden" id="t_id" value="">
+            <div class="form-group">
+                <label>Año o Fecha</label>
+                <input type="text" id="t_anio" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="t_titulo" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="t_desc" rows="3" class="input-pro"></textarea>
+            </div>
+            <button class="btn-save" onclick="guardarMomento()">Guardar</button>
+        </div>
+    </div>
+
+    <div id="mensajeModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span>
+            <h2>Dejar un Recuerdo</h2>
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="m_autor" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Mensaje</label>
+                <textarea id="m_texto" rows="4" class="input-pro" maxlength="150"></textarea>
+            </div>
+            <button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span>
+            <h2>Editar Homenaje</h2>
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Fechas</label>
+                <input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>En Memoria de</label>
+                <input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Esposa/o</label>
+                <input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Hijos</label>
+                <input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Canción (Nombre o Link de YouTube)</label>
+                <input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Pasatiempo</label>
+                <input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro">
+            </div>
+            <div class="form-group">
+                <label>Historia</label>
+                <textarea id="e_bio" rows="4" class="input-pro">{{ biografia }}</textarea>
+            </div>
+            <button class="btn-save" onclick="guardarEdicion()">Guardar</button>
+        </div>
+    </div>
 
     <div id="lightbox" onclick="cerrarLightbox(event)">
         <span class="lightbox-close" onclick="cerrarLightbox({force: true})">&times;</span>
@@ -538,15 +811,84 @@
         const CANCION_RAW = "{{ cancion_favorita }}";
 
         // =====================================
+        // 🎬 LÓGICA DEL SLIDER DE PORTADA 🎬
+        // =====================================
+        let indiceSlideActual = 0;
+        const slidesPortada = document.querySelectorAll('#coverSlider .slide');
+        const dotsPortada = document.querySelectorAll('.slider-dots .dot');
+        let intervaloSlider;
+
+        function mostrarSlide(index) {
+            if (slidesPortada.length <= 1) return;
+            
+            // Apagar actual
+            slidesPortada[indiceSlideActual].classList.remove('active');
+            if (dotsPortada.length > 0) {
+                dotsPortada[indiceSlideActual].classList.remove('active');
+            }
+            let videoViejo = slidesPortada[indiceSlideActual].querySelector('video');
+            if (videoViejo) videoViejo.pause(); // Ahorra batería parando el video oculto
+
+            // Calcular nuevo
+            indiceSlideActual = (index + slidesPortada.length) % slidesPortada.length;
+
+            // Encender nuevo
+            slidesPortada[indiceSlideActual].classList.add('active');
+            if (dotsPortada.length > 0) {
+                dotsPortada[indiceSlideActual].classList.add('active');
+            }
+            let videoNuevo = slidesPortada[indiceSlideActual].querySelector('video');
+            if (videoNuevo) videoNuevo.play(); // Iniciar video nuevo
+        }
+
+        function cambiarSlide(direccion) {
+            mostrarSlide(indiceSlideActual + direccion);
+            reiniciarIntervaloSlider();
+        }
+
+        function irASlide(index) {
+            mostrarSlide(index);
+            reiniciarIntervaloSlider();
+        }
+
+        function reiniciarIntervaloSlider() {
+            clearInterval(intervaloSlider);
+            if (slidesPortada.length > 1) {
+                // Cambia de recuerdo cada 7 segundos automáticamente
+                intervaloSlider = setInterval(() => { cambiarSlide(1); }, 7000); 
+            }
+        }
+
+        // Iniciar el Slider
+        if (slidesPortada.length > 1) {
+            reiniciarIntervaloSlider();
+        }
+
+        // Soporte Swipe para celulares en la portada
+        let touchstartXSlider = 0;
+        const contSlider = document.getElementById('coverSlider');
+        if (contSlider && slidesPortada.length > 1) {
+            contSlider.addEventListener('touchstart', e => {
+                touchstartXSlider = e.changedTouches[0].screenX;
+            }, {passive: true});
+            
+            contSlider.addEventListener('touchend', e => {
+                let touchendXSlider = e.changedTouches[0].screenX;
+                if (touchstartXSlider - touchendXSlider > 40) cambiarSlide(1); // Swipe Izquierda
+                if (touchendXSlider - touchstartXSlider > 40) cambiarSlide(-1); // Swipe Derecha
+            }, {passive: true});
+        }
+
+        // =====================================
         // 🕯️ LÓGICA DE VELA VIRTUAL
         // =====================================
         document.addEventListener('DOMContentLoaded', () => {
             const btnVela = document.getElementById('btnEncenderVela');
             const textoVela = document.getElementById('textoVela');
             
-            // Verificamos si este celular ya encendió una vela para este difunto
+            // Verificamos si este celular ya encendió una vela
             if (localStorage.getItem('vela_' + ID_PERFIL) === 'encendida') {
-                btnVela.classList.add('lit');
+                btnVela.classList.add('lit'); 
                 textoVela.innerText = "Vela encendida";
             }
         });
@@ -555,34 +897,25 @@
             const btnVela = document.getElementById('btnEncenderVela');
             const textoVela = document.getElementById('textoVela');
             const contadorVelas = document.getElementById('contadorVelas');
-
-            // Si ya la encendió, no hacemos nada
+            
             if (localStorage.getItem('vela_' + ID_PERFIL) === 'encendida') {
                 return;
             }
-
-            // Cambiamos el diseño a "Encendida" inmediatamente para que se sienta rápido
+            
             btnVela.classList.add('lit');
             textoVela.innerText = "Vela encendida";
+            contadorVelas.innerText = parseInt(contadorVelas.innerText) + 1;
             
-            // Sumamos 1 al contador visual temporalmente
-            let totalActual = parseInt(contadorVelas.innerText);
-            contadorVelas.innerText = totalActual + 1;
-
-            // Guardamos el recuerdo en el celular
             localStorage.setItem('vela_' + ID_PERFIL, 'encendida');
             
-            // Si el teléfono tiene vibración, hacemos que palpite suavemente
             if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-
-            // Le avisamos al servidor silenciosamente
-            fetch(`/api/encender_vela/${ID_PERFIL}`, {
-                method: 'POST'
+            
+            fetch(`/api/encender_vela/${ID_PERFIL}`, { 
+                method: 'POST' 
             })
             .then(res => res.json())
-            .then(data => {
-                // Confirmamos con el dato real de la base de datos
-                contadorVelas.innerText = data.velas;
+            .then(data => { 
+                contadorVelas.innerText = data.velas; 
             })
             .catch(err => {
                 console.error("Error encendiendo vela", err);
@@ -595,8 +928,10 @@
         const temaGuardado = localStorage.getItem('theme_' + ID_PERFIL);
         const celularEsOscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         let esModoOscuro = temaGuardado === 'dark' || (!temaGuardado && celularEsOscuro);
-
-        if (esModoOscuro) { document.body.classList.add('dark-mode'); }
+        
+        if (esModoOscuro) { 
+            document.body.classList.add('dark-mode'); 
+        }
 
         function actualizarIconoYBarra() {
             const btn = document.getElementById('themeToggleBtn');
@@ -610,20 +945,19 @@
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
-            const esOscuroAhora = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme_' + ID_PERFIL, esOscuroAhora ? 'dark' : 'light');
+            localStorage.setItem('theme_' + ID_PERFIL, document.body.classList.contains('dark-mode') ? 'dark' : 'light');
             actualizarIconoYBarra();
         }
-
+        
         window.addEventListener('DOMContentLoaded', actualizarIconoYBarra);
 
         // =====================================
         // TRANSICIÓN DE LA INTRODUCCIÓN A LA APP
         // =====================================
-        setTimeout(() => {
+        setTimeout(() => { 
             document.body.style.backgroundColor = ""; 
-            document.body.classList.add('intro-finished');
-            actualizarIconoYBarra();
+            document.body.classList.add('intro-finished'); 
+            actualizarIconoYBarra(); 
         }, 4000);
 
         // =====================================
@@ -634,7 +968,6 @@
             if(contenedorCancion && CANCION_RAW) {
                 const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
                 const match = CANCION_RAW.match(ytRegex);
-                
                 if(match && match[1]) {
                     contenedorCancion.innerHTML = `
                         <iframe class="yt-player" src="https://www.youtube.com/embed/${match[1]}?controls=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -652,15 +985,15 @@
         // COMPARTIR VIRAL
         // =====================================
         function compartirHomenaje() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Memorial de {{ nombre }}',
-                    text: 'Te invito a visitar el espacio de recuerdos en memoria de {{ nombre }}.',
-                    url: window.location.href,
+            if (navigator.share) { 
+                navigator.share({ 
+                    title: 'Memorial de {{ nombre }}', 
+                    text: 'Te invito a visitar el espacio de recuerdos en memoria de {{ nombre }}.', 
+                    url: window.location.href 
                 }).catch(console.error);
-            } else {
+            } else { 
                 let mensaje = `Te invito a visitar el espacio de recuerdos de {{ nombre }}:\n\n${window.location.href}`;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank'); 
             }
         }
 
@@ -668,29 +1001,33 @@
         // SEGURIDAD FAMILIAR
         // =====================================
         const isFamilyAdmin = sessionStorage.getItem('family_auth_' + ID_PERFIL) === 'true';
-
         if (isFamilyAdmin) {
             document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('admin-only'));
             let btnLock = document.getElementById('btnAccesoFamiliar');
-            if (btnLock) { btnLock.style.display = 'none'; }
+            if (btnLock) btnLock.style.display = 'none';
         }
 
         function verificarPinFamiliar() {
             let pin = document.getElementById('f_pin').value;
             let btn = document.getElementById('btnVerificarPin');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-
-            fetch(`/api/verificar_pin/${ID_PERFIL}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pin: pin})
-            }).then(res => {
-                if(!res.ok) throw new Error("Incorrecto");
-                return res.json();
-            }).then(data => {
-                sessionStorage.setItem('family_auth_' + ID_PERFIL, 'true');
+            
+            fetch(`/api/verificar_pin/${ID_PERFIL}`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({pin: pin}) 
+            })
+            .then(res => { 
+                if(!res.ok) throw new Error("Incorrecto"); 
+                return res.json(); 
+            })
+            .then(data => { 
+                sessionStorage.setItem('family_auth_' + ID_PERFIL, 'true'); 
                 window.location.reload(); 
-            }).catch(err => {
-                document.getElementById('errorPin').style.display = 'block';
-                btn.innerHTML = 'Desbloquear Funciones';
+            })
+            .catch(err => { 
+                document.getElementById('errorPin').style.display = 'block'; 
+                btn.innerHTML = 'Desbloquear Funciones'; 
             });
         }
 
@@ -714,16 +1051,16 @@
             if (archivosAsubir.length === 0) return;
             
             document.getElementById('uploadCountText').innerText = `${archivosAsubir.length} foto(s) seleccionada(s)`;
-            const grid = document.getElementById('previewGrid');
+            const grid = document.getElementById('previewGrid'); 
             grid.innerHTML = '';
             
-            archivosAsubir.forEach(file => {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                img.className = 'preview-item';
-                grid.appendChild(img);
+            archivosAsubir.forEach(file => { 
+                const img = document.createElement('img'); 
+                img.src = URL.createObjectURL(file); 
+                img.className = 'preview-item'; 
+                grid.appendChild(img); 
             });
-
+            
             document.getElementById('uploadProgressContainer').style.display = 'none';
             document.getElementById('btnConfirmUpload').style.display = 'block';
             abrirModal('modalPreviewUpload');
@@ -732,32 +1069,30 @@
         function confirmarSubidaBatch() {
             if (archivosAsubir.length === 0) return;
             
-            const formData = new FormData();
+            const formData = new FormData(); 
             archivosAsubir.forEach(file => formData.append('archivos', file));
-
+            
             document.getElementById('btnConfirmUpload').style.display = 'none';
-            const progressContainer = document.getElementById('uploadProgressContainer');
-            const progressBar = document.getElementById('uploadProgressBar');
-            progressContainer.style.display = 'block';
-
+            document.getElementById('uploadProgressContainer').style.display = 'block';
+            
             const xhr = new XMLHttpRequest();
             xhr.open('POST', `/subir_fotos/${ID_PERFIL}`, true);
-
-            xhr.upload.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    progressBar.style.width = ((e.loaded / e.total) * 100) + '%';
-                }
+            
+            xhr.upload.onprogress = function(e) { 
+                if (e.lengthComputable) { 
+                    document.getElementById('uploadProgressBar').style.width = ((e.loaded / e.total) * 100) + '%'; 
+                } 
             };
-
+            
             xhr.onload = function() {
-                if (xhr.status === 200) {
-                    const res = JSON.parse(xhr.responseText);
-                    agregarFotosAlDOM(res.fotos);
-                    cerrarModal('modalPreviewUpload');
-                    archivosAsubir = []; fileInput.value = ''; 
-                } else {
-                    alert('Error al subir imágenes');
-                    cerrarModal('modalPreviewUpload');
+                if (xhr.status === 200) { 
+                    agregarFotosAlDOM(JSON.parse(xhr.responseText).fotos); 
+                    cerrarModal('modalPreviewUpload'); 
+                    archivosAsubir = []; 
+                    fileInput.value = ''; 
+                } else { 
+                    alert('Error al subir imágenes'); 
+                    cerrarModal('modalPreviewUpload'); 
                 }
             };
             xhr.send(formData);
@@ -766,9 +1101,9 @@
         function agregarFotosAlDOM(fotos) {
             const grid = document.getElementById('mainGalleryGrid');
             fotos.forEach(foto => {
-                const div = document.createElement('div');
-                div.className = 'gallery-item';
-                div.setAttribute('data-id', foto.id);
+                const div = document.createElement('div'); 
+                div.className = 'gallery-item'; 
+                div.setAttribute('data-id', foto.id); 
                 div.onclick = function() { interactuarFoto(foto.url, this); };
                 
                 div.innerHTML = `
@@ -780,11 +1115,14 @@
                 
                 div.addEventListener('touchstart', (e) => { 
                     if(!isFamilyAdmin) return; 
-                    pressTimer = setTimeout(() => { activarModoEliminar(foto.id, div); if (navigator.vibrate) navigator.vibrate(50); }, 600); 
+                    pressTimer = setTimeout(() => { 
+                        activarModoEliminar(foto.id, div); 
+                        if (navigator.vibrate) navigator.vibrate(50); 
+                    }, 600); 
                 });
                 div.addEventListener('touchend', () => clearTimeout(pressTimer)); 
                 div.addEventListener('touchmove', () => clearTimeout(pressTimer));
-
+                
                 grid.insertBefore(div, grid.firstChild);
             });
         }
@@ -792,162 +1130,244 @@
         function abrirModal(id) { document.getElementById(id).classList.add('show'); }
         function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        function prepararMomento(id, anio = "", titulo = "", desc = "") { document.getElementById('t_id').value = id || ""; document.getElementById('t_anio').value = anio; document.getElementById('t_titulo').value = titulo; document.getElementById('t_desc').value = desc; document.getElementById('modalMomentoTitulo').innerText = id ? "Editar Momento" : "Agregar Momento"; abrirModal('momentoModal'); }
-        function guardarMomento() { let id = document.getElementById('t_id').value; let datos = { anio: document.getElementById('t_anio').value, titulo: document.getElementById('t_titulo').value, descripcion: document.getElementById('t_desc').value }; if(!datos.anio || !datos.titulo) { return alert("Por favor, llena el año y el título."); } let url = id ? `/editar_momento/${id}` : `/agregar_momento/${ID_PERFIL}`; fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
-        function prepararEliminarMomento(id) { itemAEliminarId = id; tipoEliminacion = 'momento'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este evento de la línea de vida?"; abrirModal('confirmModal'); }
+        function prepararMomento(id, anio = "", titulo = "", desc = "") { 
+            document.getElementById('t_id').value = id || ""; 
+            document.getElementById('t_anio').value = anio; 
+            document.getElementById('t_titulo').value = titulo; 
+            document.getElementById('t_desc').value = desc; 
+            document.getElementById('modalMomentoTitulo').innerText = id ? "Editar Momento" : "Agregar Momento"; 
+            abrirModal('momentoModal'); 
+        }
         
-        function darLike(mensajeId, element) { let icon = element.querySelector('i'); let countSpan = element.querySelector('.like-count'); icon.style.transform = 'scale(1.4)'; element.classList.add('liked'); setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200); fetch(`/likear_mensaje/${mensajeId}`, { method: 'POST' }).then(res => res.json()).then(data => { countSpan.innerText = data.likes; }); }
-        function enviarMensaje() { let autor = document.getElementById('m_autor').value.trim(); let texto = document.getElementById('m_texto').value.trim(); if(!autor || !texto) { alert("Por favor, escribe tu nombre y un mensaje."); return; } let btn = document.getElementById('btnEnviarMsj'); btn.innerHTML = 'Publicando...'; btn.style.opacity = '0.7'; fetch(`/dejar_mensaje/${ID_PERFIL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autor: autor, texto: texto }) }).then(() => window.location.reload()); }
+        function guardarMomento() { 
+            let id = document.getElementById('t_id').value; 
+            let datos = { 
+                anio: document.getElementById('t_anio').value, 
+                titulo: document.getElementById('t_titulo').value, 
+                descripcion: document.getElementById('t_desc').value 
+            }; 
+            if(!datos.anio || !datos.titulo) { return alert("Por favor, llena el año y el título."); } 
+            let url = id ? `/editar_momento/${id}` : `/agregar_momento/${ID_PERFIL}`; 
+            fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+            .then(() => window.location.reload()); 
+        }
+        
+        function prepararEliminarMomento(id) { 
+            itemAEliminarId = id; 
+            tipoEliminacion = 'momento'; 
+            document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este evento de la línea de vida?"; 
+            abrirModal('confirmModal'); 
+        }
+        
+        function darLike(mensajeId, element) { 
+            let icon = element.querySelector('i'); 
+            let countSpan = element.querySelector('.like-count'); 
+            icon.style.transform = 'scale(1.4)'; 
+            element.classList.add('liked'); 
+            setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200); 
+            fetch(`/likear_mensaje/${mensajeId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => { countSpan.innerText = data.likes; }); 
+        }
+        
+        function enviarMensaje() { 
+            let autor = document.getElementById('m_autor').value.trim(); 
+            let texto = document.getElementById('m_texto').value.trim(); 
+            if(!autor || !texto) { return alert("Por favor, escribe tu nombre y un mensaje."); } 
+            let btn = document.getElementById('btnEnviarMsj'); 
+            btn.innerHTML = 'Publicando...'; 
+            btn.style.opacity = '0.7'; 
+            fetch(`/dejar_mensaje/${ID_PERFIL}`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ autor: autor, texto: texto }) 
+            }).then(() => window.location.reload()); 
+        }
 
         // =====================================
         // VISOR DE GALERÍA (LIGHTBOX TÁCTIL)
         // =====================================
-        let itemAEliminarId = null; let tipoEliminacion = null; let elementoSeleccionado = null;
-        let imagenesGaleria = [];
+        let itemAEliminarId = null; 
+        let tipoEliminacion = null; 
+        let elementoSeleccionado = null; 
+        let imagenesGaleria = []; 
         let indexImagenActual = 0;
 
-        function activarModoEliminar(id, divElement) { itemAEliminarId = id; tipoEliminacion = 'foto'; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); } elementoSeleccionado = divElement; elementoSeleccionado.classList.add('selected-for-delete'); document.getElementById('deleteTopBar').classList.add('active'); }
-        function cancelarEliminar() { itemAEliminarId = null; tipoEliminacion = null; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); elementoSeleccionado = null; } document.getElementById('deleteTopBar').classList.remove('active'); }
-
+        function activarModoEliminar(id, divElement) { 
+            itemAEliminarId = id; 
+            tipoEliminacion = 'foto'; 
+            if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); } 
+            elementoSeleccionado = divElement; 
+            elementoSeleccionado.classList.add('selected-for-delete'); 
+            document.getElementById('deleteTopBar').classList.add('active'); 
+        }
+        
+        function cancelarEliminar() { 
+            itemAEliminarId = null; 
+            tipoEliminacion = null; 
+            if(elementoSeleccionado) { 
+                elementoSeleccionado.classList.remove('selected-for-delete'); 
+                elementoSeleccionado = null; 
+            } 
+            document.getElementById('deleteTopBar').classList.remove('active'); 
+        }
+        
         function interactuarFoto(src, element) { 
-            // Si el administrador está borrando fotos, no abrir el visor
             if (isFamilyAdmin && tipoEliminacion === 'foto' && document.getElementById('deleteTopBar').classList.contains('active')) { 
                 activarModoEliminar(element.getAttribute('data-id'), element); 
                 return; 
             } 
-            
-            // Recolectamos todas las imágenes actuales del DOM
-            const fotosEnPantalla = document.querySelectorAll('.gallery-item img');
-            imagenesGaleria = Array.from(fotosEnPantalla).map(img => img.src);
-            indexImagenActual = imagenesGaleria.indexOf(src);
-
-            const lightbox = document.getElementById('lightbox');
+            const fotosEnPantalla = document.querySelectorAll('.gallery-item img'); 
+            imagenesGaleria = Array.from(fotosEnPantalla).map(img => img.src); 
+            indexImagenActual = imagenesGaleria.indexOf(src); 
             document.getElementById('lightbox-img').src = src; 
-            lightbox.classList.add('show'); 
-            document.body.style.overflow = 'hidden'; // Evita que la página haga scroll en el fondo
+            document.getElementById('lightbox').classList.add('show'); 
+            document.body.style.overflow = 'hidden'; 
         }
-
+        
         function cerrarLightbox(e) { 
-            // Solo cierra si toca el fondo negro oscuro o presiona la X forzada
-            if (e && e.force) {
-                // cierre directo
-            } else if (e && (e.target.id === 'lightbox-img' || e.target.closest('.lightbox-prev') || e.target.closest('.lightbox-next'))) {
-                return; // Si tocó la foto o los botones, no hagas nada
-            }
-            
+            if (e && e.force) { 
+            } else if (e && (e.target.id === 'lightbox-img' || e.target.closest('.lightbox-prev') || e.target.closest('.lightbox-next'))) { 
+                return; 
+            } 
             document.getElementById('lightbox').classList.remove('show'); 
-            document.body.style.overflow = 'auto'; // Devuelve el scroll
+            document.body.style.overflow = 'auto'; 
         }
-
-        function cambiarImagenLightbox(direccion, evento) {
-            if(evento) evento.stopPropagation(); // Evita que se cierre el lightbox al hacer clic en la flecha
-            if (imagenesGaleria.length === 0) return;
-
-            indexImagenActual += direccion;
-
-            // Lógica circular (si pasa de la última, vuelve a la primera)
-            if (indexImagenActual >= imagenesGaleria.length) indexImagenActual = 0;
-            if (indexImagenActual < 0) indexImagenActual = imagenesGaleria.length - 1;
-
-            const imgElement = document.getElementById('lightbox-img');
+        
+        function cambiarImagenLightbox(direccion, evento) { 
+            if(evento) evento.stopPropagation(); 
+            if (imagenesGaleria.length === 0) return; 
             
-            // Micro-animación suave al cambiar
-            imgElement.style.opacity = '0.3';
-            setTimeout(() => {
-                imgElement.src = imagenesGaleria[indexImagenActual];
-                imgElement.style.opacity = '1';
-            }, 150);
+            indexImagenActual += direccion; 
+            
+            if (indexImagenActual >= imagenesGaleria.length) indexImagenActual = 0; 
+            if (indexImagenActual < 0) indexImagenActual = imagenesGaleria.length - 1; 
+            
+            const imgElement = document.getElementById('lightbox-img'); 
+            imgElement.style.opacity = '0.3'; 
+            
+            setTimeout(() => { 
+                imgElement.src = imagenesGaleria[indexImagenActual]; 
+                imgElement.style.opacity = '1'; 
+            }, 150); 
         }
-
-        // --- NAVEGACIÓN CON TECLADO ---
-        document.addEventListener('keydown', function(e) {
-            if (document.getElementById('lightbox').classList.contains('show')) {
-                if (e.key === 'ArrowRight') cambiarImagenLightbox(1);
-                if (e.key === 'ArrowLeft') cambiarImagenLightbox(-1);
-                if (e.key === 'Escape') cerrarLightbox({force: true});
-            }
+        
+        document.addEventListener('keydown', function(e) { 
+            if (document.getElementById('lightbox').classList.contains('show')) { 
+                if (e.key === 'ArrowRight') cambiarImagenLightbox(1); 
+                if (e.key === 'ArrowLeft') cambiarImagenLightbox(-1); 
+                if (e.key === 'Escape') cerrarLightbox({force: true}); 
+            } 
         });
-
-        // --- NAVEGACIÓN CON DESLIZAMIENTO TÁCTIL (SWIPE) ---
-        let touchstartX = 0;
-        let touchendX = 0;
+        
+        let touchstartX = 0; 
+        let touchendX = 0; 
         const lightboxArea = document.getElementById('lightbox');
-
-        lightboxArea.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
+        
+        lightboxArea.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, {passive: true});
+        lightboxArea.addEventListener('touchend', e => { 
+            touchendX = e.changedTouches[0].screenX; 
+            if (touchstartX - touchendX > 40) cambiarImagenLightbox(1); 
+            if (touchendX - touchstartX > 40) cambiarImagenLightbox(-1); 
         }, {passive: true});
 
-        lightboxArea.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            manejarSwipe();
-        }, {passive: true});
-
-        function manejarSwipe() {
-            const umbral = 40; // Qué tan largo debe ser el deslizamiento para que cuente
-            if (touchstartX - touchendX > umbral) {
-                cambiarImagenLightbox(1); // Deslizó hacia la izquierda -> Siguiente
-            }
-            if (touchendX - touchstartX > umbral) {
-                cambiarImagenLightbox(-1); // Deslizó hacia la derecha -> Anterior
-            }
-        }
-
-        // =====================================
-        // ELIMINACIÓN Y GESTIÓN DE EDICIONES
-        // =====================================
         let pressTimer;
-        document.querySelectorAll('.gallery-item').forEach(item => {
-            item.addEventListener('touchstart', (e) => { if(!isFamilyAdmin) return; pressTimer = setTimeout(() => { activarModoEliminar(item.getAttribute('data-id'), item); if (navigator.vibrate) navigator.vibrate(50); }, 600); });
-            item.addEventListener('touchend', () => clearTimeout(pressTimer)); item.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        document.querySelectorAll('.gallery-item').forEach(item => { 
+            item.addEventListener('touchstart', (e) => { 
+                if(!isFamilyAdmin) return; 
+                pressTimer = setTimeout(() => { 
+                    activarModoEliminar(item.getAttribute('data-id'), item); 
+                    if (navigator.vibrate) navigator.vibrate(50); 
+                }, 600); 
+            }); 
+            item.addEventListener('touchend', () => clearTimeout(pressTimer)); 
+            item.addEventListener('touchmove', () => clearTimeout(pressTimer)); 
         });
 
-        function prepararEliminarMensaje(id) { itemAEliminarId = id; tipoEliminacion = 'mensaje'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; abrirModal('confirmModal'); }
-        function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); }
-        function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
+        function prepararEliminarMensaje(id) { 
+            itemAEliminarId = id; 
+            tipoEliminacion = 'mensaje'; 
+            document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; 
+            abrirModal('confirmModal'); 
+        }
+        
+        function abrirConfirmacionGlobal() { 
+            document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; 
+            abrirModal('confirmModal'); 
+        }
+        
+        function ejecutarEliminacionGlobal() { 
+            if(!itemAEliminarId) return; 
+            let btn = document.getElementById('btnDeleteGlobal'); 
+            btn.innerHTML = 'Borrando...'; 
+            btn.style.opacity = '0.7'; 
+            let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); 
+            fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); 
+        }
 
         function cambiarFotoPerfil() { 
             let input = document.getElementById('fotoInput'); 
             if(input.files.length === 0) return; 
-            
-            // Verificamos el tamaño para que no suban películas enteras
-            if(input.files[0].size > 15 * 1024 * 1024) { // 15MB max
-                alert("El video es muy pesado. Por favor sube uno de máximo 15MB.");
-                return;
+            if(input.files[0].size > 15 * 1024 * 1024) { 
+                alert("El video es muy pesado. Máximo 15MB."); 
+                return; 
             }
-            
             let formData = new FormData(); 
             formData.append("archivo", input.files[0]); 
-            
-            // Mostramos feedback visual porque el video tarda más
             let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]');
-            let iconOriginal = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            
             fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); 
         }
         
+        // 🎬 NUEVO UPLOADER MÚLTIPLE DE PORTADA 🎬
         function cambiarFotoPortada() { 
             let input = document.getElementById('portadaInput'); 
             if(input.files.length === 0) return; 
             
-            // Verificamos el tamaño para que no suban películas enteras
-            if(input.files[0].size > 15 * 1024 * 1024) { // 15MB max
-                alert("El video es muy pesado. Por favor sube uno de máximo 15MB.");
+            // Límite de 4 archivos
+            if(input.files.length > 4) {
+                alert("Puedes subir un máximo de 4 videos/fotos para el slider de la portada.");
                 return;
             }
             
             let formData = new FormData(); 
-            formData.append("archivo", input.files[0]); 
+            let totalSize = 0;
             
-            // Mostramos feedback visual porque el video tarda más
+            for(let i=0; i < input.files.length; i++) {
+                totalSize += input.files[i].size;
+                formData.append("archivos", input.files[i]); 
+            }
+            
+            // Máximo 40MB en total para que el servidor no sufra
+            if(totalSize > 40 * 1024 * 1024) { 
+                alert("Los archivos son muy pesados en total. Sube videos más cortos.");
+                return;
+            }
+            
             let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]');
-            let iconOriginal = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
             fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); 
         }
         
-        function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
+        function guardarEdicion() { 
+            let datos = { 
+                identificador: ID_PERFIL, 
+                nombre: document.getElementById('e_nombre').value, 
+                fechas: document.getElementById('e_fechas').value, 
+                en_memoria_de: document.getElementById('e_memoria').value, 
+                esposa: document.getElementById('e_esposa').value, 
+                hijos: document.getElementById('e_hijos').value, 
+                cancion_favorita: document.getElementById('e_cancion').value, 
+                juego_favorito: document.getElementById('e_juego').value, 
+                biografia: document.getElementById('e_bio').value 
+            }; 
+            fetch(`/editar_perfil/${ID_PERFIL}`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(datos) 
+            }).then(() => window.location.reload()); 
+        }
     </script>
     <script>
       window.onload = function() {

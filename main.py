@@ -178,7 +178,6 @@ def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, db: Session = D
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 
-# --- SUBIDAS A CLOUDINARY (SOPORTE PARA FOTOS Y VIDEOS) ---
 @app.post("/cambiar_foto_perfil/{identificador}")
 async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
@@ -188,14 +187,12 @@ async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...
     es_video = archivo.content_type.startswith('video/')
     
     if es_video:
-        # Si es un video, Cloudinary lo recibe directo y lo optimiza
         respuesta_cloud = cloudinary.uploader.upload(
             contenido, 
             folder=f"memoriales/{identificador}/perfiles",
             resource_type="video"
         )
     else:
-        # Si es imagen, usamos el compresor de siempre
         imagen_optimizada = comprimir_imagen(contenido)
         respuesta_cloud = cloudinary.uploader.upload(
             imagen_optimizada, 
@@ -207,31 +204,38 @@ async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...
     db.commit()
     return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
 
+# 🎬 NUEVO: SOPORTE MÚLTIPLE PARA PORTADAS (SLIDER) 🎬
 @app.post("/cambiar_foto_portada/{identificador}")
-async def cambiar_foto_portada(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     
-    contenido = await archivo.read()
-    es_video = archivo.content_type.startswith('video/')
+    urls_guardadas = []
     
-    if es_video:
-        respuesta_cloud = cloudinary.uploader.upload(
-            contenido, 
-            folder=f"memoriales/{identificador}/portadas",
-            resource_type="video"
-        )
-    else:
-        imagen_optimizada = comprimir_imagen(contenido)
-        respuesta_cloud = cloudinary.uploader.upload(
-            imagen_optimizada, 
-            folder=f"memoriales/{identificador}/portadas",
-            resource_type="image"
-        )
+    # Procesamos hasta un máximo de 4 archivos
+    for archivo in archivos[:4]: 
+        contenido = await archivo.read()
+        es_video = archivo.content_type.startswith('video/')
         
-    perfil.foto_portada = respuesta_cloud['secure_url']
+        if es_video:
+            respuesta_cloud = cloudinary.uploader.upload(
+                contenido, 
+                folder=f"memoriales/{identificador}/portadas",
+                resource_type="video"
+            )
+        else:
+            imagen_optimizada = comprimir_imagen(contenido)
+            respuesta_cloud = cloudinary.uploader.upload(
+                imagen_optimizada, 
+                folder=f"memoriales/{identificador}/portadas",
+                resource_type="image"
+            )
+        urls_guardadas.append(respuesta_cloud['secure_url'])
+        
+    # Unimos todas las URLs con una coma para guardarlas en la misma celda de la base de datos
+    perfil.foto_portada = ",".join(urls_guardadas)
     db.commit()
-    return {"mensaje": "Portada actualizada", "url": respuesta_cloud['secure_url']}
+    return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
 
 @app.post("/subir_fotos/{identificador}")
 async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
@@ -262,7 +266,6 @@ def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
         url_partes = foto.url_foto.split('/')
         public_id_con_ext = "/".join(url_partes[url_partes.index("memoriales"):])
         public_id = public_id_con_ext.split('.')[0]
-        # Eliminamos asumiendo que es imagen, aunque para galería mantuvimos solo imágenes por ahora
         cloudinary.uploader.destroy(public_id, resource_type="image")
     except:
         pass
@@ -323,22 +326,15 @@ def eliminar_momento(momento_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Momento eliminado"}
 
-# --- RUTA PARA ENCENDER LA VELA VIRTUAL ---
 @app.post("/api/encender_vela/{identificador}")
 def encender_vela(identificador: str, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
-    if not perfil: 
-        raise HTTPException(status_code=404, detail="Perfil no encontrado")
-    
-    if perfil.velas is None:
-        perfil.velas = 0
-        
+    if not perfil: raise HTTPException(status_code=404, detail="Perfil no encontrado")
+    if perfil.velas is None: perfil.velas = 0
     perfil.velas += 1
     db.commit()
-    
     return {"velas": perfil.velas}
 
-# --- RECUPERACIÓN DE CONTRASEÑA (PIN) ---
 class PinUpdate(BaseModel):
     nuevo_pin: str
 
@@ -346,7 +342,6 @@ class PinUpdate(BaseModel):
 def reset_pin_perfil(identificador: str, datos: PinUpdate, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
-    
     perfil.pin_familia = datos.nuevo_pin
     db.commit()
     return {"mensaje": "PIN actualizado correctamente"}
@@ -355,13 +350,11 @@ def reset_pin_perfil(identificador: str, datos: PinUpdate, db: Session = Depends
 def eliminar_perfil_completo(identificador: str, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
-    
     try:
         cloudinary.api.delete_resources_by_prefix(f"memoriales/{identificador}/")
         cloudinary.api.delete_folder(f"memoriales/{identificador}")
     except:
         pass
-        
     for foto in perfil.fotos_galeria: db.delete(foto)
     for msj in perfil.mensajes: db.delete(msj)
     for mom in perfil.momentos: db.delete(mom)
@@ -369,6 +362,7 @@ def eliminar_perfil_completo(identificador: str, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Perfil y archivos eliminados correctamente."}
 
+# 🎬 NUEVO: PREPARACIÓN DE DATOS PARA EL SLIDER EN LA VISTA 🎬
 @app.get("/perfil/{identificador}", response_class=HTMLResponse)
 def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
@@ -385,17 +379,29 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion} for m in perfil.momentos]
     
     es_video_perfil = perfil.foto_perfil.endswith('.mp4') or perfil.foto_perfil.endswith('.mov') or perfil.foto_perfil.endswith('.webm')
-    es_video_portada = perfil.foto_portada.endswith('.mp4') or perfil.foto_portada.endswith('.mov') or perfil.foto_portada.endswith('.webm')
+    
+    # Convertimos el string de comas en una lista de diccionarios inteligente
+    portadas_raw = perfil.foto_portada.split(',') if perfil.foto_portada else ["https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop"]
+    lista_portadas = []
+    for p in portadas_raw:
+        if p.strip():
+            es_vid = p.endswith(('.mp4', '.mov', '.webm'))
+            lista_portadas.append({"url": p.strip(), "es_video": es_vid})
+    
+    # Tomamos la primera para usarla como foto miniatura de WhatsApp/OG Image
+    foto_portada_og = lista_portadas[0]["url"] if lista_portadas else ""
     
     datos_diccionario = {
         "identificador": perfil.identificador, "nombre": perfil.nombre, "fechas": perfil.fechas,
-        "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, "foto_portada": perfil.foto_portada,
-        "es_video_perfil": es_video_perfil, "es_video_portada": es_video_portada, 
+        "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, 
+        "portadas": lista_portadas, # <--- ENVIAMOS EL SLIDER COMPLETO A HTML
+        "foto_portada_og": foto_portada_og,
+        "es_video_perfil": es_video_perfil, 
         "visitas": perfil.visitas, "ultima_visita": perfil.ultima_visita.strftime("%d/%m/%Y"), 
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
         "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed,
-        "velas": perfil.velas or 0 # <--- AHORA EL PERFIL SABE CUÁNTAS VELAS TIENE
+        "velas": perfil.velas or 0 
     }
 
     pagina_html = templates.TemplateResponse("perfil.html", {"request": request, **datos_diccionario})
@@ -403,26 +409,12 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         pagina_html.set_cookie(key=nombre_cookie, value="visitado", max_age=86400)
     return pagina_html
 
-
-# ----------------------------------------------------
-# GENERADOR DE PÁGINA DE IMPRESIÓN QR (HTML/VECTORES)
-# ----------------------------------------------------
 @app.get("/generar_qr/{identificador}")
 def generar_qr_elegante(identificador: str, request: Request, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
-    if not perfil:
-        raise HTTPException(status_code=404, detail="Perfil no encontrado")
-
-    # Obtenemos la URL exacta a la que llevará el QR
+    if not perfil: raise HTTPException(status_code=404, detail="Perfil no encontrado")
     url_perfil = str(request.base_url) + f"perfil/{identificador}"
-
-    # Renderizamos la nueva plantilla HTML pasándole la URL para que arme el código
-    return templates.TemplateResponse("imprimir_qr.html", {
-        "request": request,
-        "url_perfil": url_perfil,
-        "nombre": perfil.nombre
-    })
-
+    return templates.TemplateResponse("imprimir_qr.html", {"request": request, "url_perfil": url_perfil, "nombre": perfil.nombre})
 
 @app.get("/admin/", response_class=HTMLResponse)
 def panel_admin(request: Request):
@@ -435,11 +427,8 @@ def estadisticas_admin(db: Session = Depends(get_db)):
     lista_perfiles = []
     for p in perfiles:
         lista_perfiles.append({
-            "identificador": p.identificador, 
-            "nombre": p.nombre, 
-            "visitas": p.visitas,
-            "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva",
-            "pin": p.pin_familia
+            "identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas,
+            "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva", "pin": p.pin_familia
         })
     return {"total_perfiles": len(perfiles), "total_visitas": total_visitas, "perfiles": lista_perfiles}
 
@@ -447,8 +436,6 @@ def estadisticas_admin(db: Session = Depends(get_db)):
 def datos_moderacion(db: Session = Depends(get_db)):
     fotos = db.query(database.FotoGaleria).all()
     lista_fotos = [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil]
-    
     mensajes = db.query(database.MensajeRecuerdo).all()
     lista_mensajes = [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]
-    
     return {"fotos": lista_fotos, "mensajes": lista_mensajes}
