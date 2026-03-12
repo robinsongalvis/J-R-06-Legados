@@ -96,7 +96,7 @@
            PANTALLA DE BIENVENIDA (INTRO NETFLIX)
            ========================================== */
         #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; }
-        .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; }
+        .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; object-fit: cover; }
         
         .welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%); z-index: 1; }
         
@@ -120,7 +120,8 @@
         /* ==========================================
            HEADER: PORTADA Y CONTROLES 
            ========================================== */
-        .cover-header { height: 280px; width: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .cover-header { height: 280px; width: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        .cover-bg-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
         .cover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, transparent 60%, var(--primary-bg) 100%); border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; z-index: 1; transition: background 0.5s ease;}
         
         .cover-controls { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 3; }
@@ -129,7 +130,7 @@
         .theme-btn { background: rgba(255, 255, 255, 0.15); color: #f1c40f; border: 1px solid rgba(255, 255, 255, 0.3); }
 
         /* ==========================================
-           FOTO PRINCIPAL Y DATOS 
+           FOTO PRINCIPAL Y DATOS (FOTO Y VIDEO)
            ========================================== */
         .profile-wrapper { position: relative; width: 170px; height: 170px; margin: -85px auto 0px; z-index: 3; }
         .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color 0.5s ease;}
@@ -266,7 +267,7 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
         /* ==========================================
-           NUEVO VISOR LIGHTBOX (PANTALLA COMPLETA SWIPE)
+           VISOR LIGHTBOX (PANTALLA COMPLETA SWIPE)
            ========================================== */
         #lightbox { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(10px); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;}
         #lightbox.show { display: flex; opacity: 1; }
@@ -280,14 +281,19 @@
         .lightbox-prev { left: 20px; }
         .lightbox-next { right: 20px; }
         @media (max-width: 768px) {
-            .lightbox-prev, .lightbox-next { display: none; } /* En celular se ocultan las flechas para usar Swipe */
+            .lightbox-prev, .lightbox-next { display: none; } 
         }
     </style>
 </head>
 <body>
 
     <div id="welcome-screen">
-        <div class="welcome-bg" style="background-image: url('{{ foto_portada }}');"></div>
+        {% if es_video_portada %}
+            <video class="welcome-bg" src="{{ foto_portada }}" autoplay loop muted playsinline></video>
+        {% else %}
+            <div class="welcome-bg" style="background-image: url('{{ foto_portada }}');"></div>
+        {% endif %}
+        
         <div class="welcome-overlay"></div>
         <div class="light-particle p1"></div>
         <div class="light-particle p2"></div>
@@ -350,23 +356,31 @@
 
     <div class="container">
         
-        <div class="cover-header" style="background-image: url('{{ foto_portada }}');">
+        <div class="cover-header" {% if not es_video_portada %}style="background-image: url('{{ foto_portada }}');"{% endif %}>
+            {% if es_video_portada %}
+                <video src="{{ foto_portada }}" autoplay loop muted playsinline class="cover-bg-video"></video>
+            {% endif %}
+            
             <div class="cover-overlay"></div>
             <div class="cover-controls">
                 <button class="glass-btn theme-btn" onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar Tema de Color"><i class="fas fa-moon"></i></button>
                 
                 <div style="display: flex; gap: 10px;">
                     <button class="glass-btn admin-only" onclick="abrirModal('editModal')" title="Editar Textos del Perfil"><i class="fas fa-pen"></i></button>
-                    <form id="portadaForm" class="admin-only" style="display:none;"><input type="file" id="portadaInput" accept="image/*" onchange="cambiarFotoPortada()"></form>
+                    <form id="portadaForm" class="admin-only" style="display:none;"><input type="file" id="portadaInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPortada()"></form>
                     <button class="glass-btn admin-only" onclick="document.getElementById('portadaInput').click()" title="Cambiar Foto de Portada"><i class="fas fa-image"></i></button>
-                    <form id="fotoForm" class="admin-only" style="display:none;"><input type="file" id="fotoInput" accept="image/*" onchange="cambiarFotoPerfil()"></form>
+                    <form id="fotoForm" class="admin-only" style="display:none;"><input type="file" id="fotoInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPerfil()"></form>
                     <button class="glass-btn admin-only" onclick="document.getElementById('fotoInput').click()" title="Cambiar Foto Circular"><i class="fas fa-camera"></i></button>
                 </div>
             </div>
         </div>
 
         <div class="profile-wrapper" data-aos="zoom-in" data-aos-duration="1200">
-            <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto">
+            {% if es_video_perfil %}
+                <video class="profile-pic" src="{{ foto_perfil }}" autoplay loop muted playsinline></video>
+            {% else %}
+                <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto">
+            {% endif %}
         </div>
         
         <div class="main-info" data-aos="fade-up" data-aos-delay="200">
@@ -810,8 +824,47 @@
         function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); }
         function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
 
-        function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; let formData = new FormData(); formData.append("archivo", input.files[0]); fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
-        function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; let formData = new FormData(); formData.append("archivo", input.files[0]); fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
+        function cambiarFotoPerfil() { 
+            let input = document.getElementById('fotoInput'); 
+            if(input.files.length === 0) return; 
+            
+            // Verificamos el tamaño para que no suban películas enteras
+            if(input.files[0].size > 15 * 1024 * 1024) { // 15MB max
+                alert("El video es muy pesado. Por favor sube uno de máximo 15MB.");
+                return;
+            }
+            
+            let formData = new FormData(); 
+            formData.append("archivo", input.files[0]); 
+            
+            // Mostramos feedback visual porque el video tarda más
+            let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]');
+            let iconOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); 
+        }
+        
+        function cambiarFotoPortada() { 
+            let input = document.getElementById('portadaInput'); 
+            if(input.files.length === 0) return; 
+            
+            // Verificamos el tamaño para que no suban películas enteras
+            if(input.files[0].size > 15 * 1024 * 1024) { // 15MB max
+                alert("El video es muy pesado. Por favor sube uno de máximo 15MB.");
+                return;
+            }
+            
+            let formData = new FormData(); 
+            formData.append("archivo", input.files[0]); 
+            
+            // Mostramos feedback visual porque el video tarda más
+            let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]');
+            let iconOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); 
+        }
         
         function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
     </script>

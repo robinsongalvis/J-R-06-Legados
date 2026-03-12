@@ -178,19 +178,34 @@ def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, db: Session = D
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 
-# --- SUBIDAS A CLOUDINARY (CON COMPRESIÓN) ---
+# --- SUBIDAS A CLOUDINARY (SOPORTE PARA FOTOS Y VIDEOS) ---
 @app.post("/cambiar_foto_perfil/{identificador}")
 async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     
     contenido = await archivo.read()
-    imagen_optimizada = comprimir_imagen(contenido)
+    es_video = archivo.content_type.startswith('video/')
     
-    respuesta_cloud = cloudinary.uploader.upload(imagen_optimizada, folder=f"memoriales/{identificador}/perfiles")
+    if es_video:
+        # Si es un video, Cloudinary lo recibe directo y lo optimiza
+        respuesta_cloud = cloudinary.uploader.upload(
+            contenido, 
+            folder=f"memoriales/{identificador}/perfiles",
+            resource_type="video"
+        )
+    else:
+        # Si es imagen, usamos el compresor de siempre
+        imagen_optimizada = comprimir_imagen(contenido)
+        respuesta_cloud = cloudinary.uploader.upload(
+            imagen_optimizada, 
+            folder=f"memoriales/{identificador}/perfiles",
+            resource_type="image"
+        )
+        
     perfil.foto_perfil = respuesta_cloud['secure_url']
     db.commit()
-    return {"mensaje": "Foto actualizada", "url": respuesta_cloud['secure_url']}
+    return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
 
 @app.post("/cambiar_foto_portada/{identificador}")
 async def cambiar_foto_portada(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -198,9 +213,22 @@ async def cambiar_foto_portada(identificador: str, archivo: UploadFile = File(..
     if not perfil: raise HTTPException(status_code=404)
     
     contenido = await archivo.read()
-    imagen_optimizada = comprimir_imagen(contenido)
+    es_video = archivo.content_type.startswith('video/')
     
-    respuesta_cloud = cloudinary.uploader.upload(imagen_optimizada, folder=f"memoriales/{identificador}/portadas")
+    if es_video:
+        respuesta_cloud = cloudinary.uploader.upload(
+            contenido, 
+            folder=f"memoriales/{identificador}/portadas",
+            resource_type="video"
+        )
+    else:
+        imagen_optimizada = comprimir_imagen(contenido)
+        respuesta_cloud = cloudinary.uploader.upload(
+            imagen_optimizada, 
+            folder=f"memoriales/{identificador}/portadas",
+            resource_type="image"
+        )
+        
     perfil.foto_portada = respuesta_cloud['secure_url']
     db.commit()
     return {"mensaje": "Portada actualizada", "url": respuesta_cloud['secure_url']}
@@ -234,7 +262,8 @@ def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
         url_partes = foto.url_foto.split('/')
         public_id_con_ext = "/".join(url_partes[url_partes.index("memoriales"):])
         public_id = public_id_con_ext.split('.')[0]
-        cloudinary.uploader.destroy(public_id)
+        # Eliminamos asumiendo que es imagen, aunque para galería mantuvimos solo imágenes por ahora
+        cloudinary.uploader.destroy(public_id, resource_type="image")
     except:
         pass
         
@@ -340,9 +369,14 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": m.fecha_creacion.strftime("%d/%m/%Y"), "likes": m.likes} for m in reversed(perfil.mensajes)]
     momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion} for m in perfil.momentos]
     
+    # AGREGAMOS LAS VARIABLES QUE LE DICEN A HTML SI ES VIDEO O IMAGEN
+    es_video_perfil = perfil.foto_perfil.endswith('.mp4') or perfil.foto_perfil.endswith('.mov') or perfil.foto_perfil.endswith('.webm')
+    es_video_portada = perfil.foto_portada.endswith('.mp4') or perfil.foto_portada.endswith('.mov') or perfil.foto_portada.endswith('.webm')
+    
     datos_diccionario = {
         "identificador": perfil.identificador, "nombre": perfil.nombre, "fechas": perfil.fechas,
         "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, "foto_portada": perfil.foto_portada,
+        "es_video_perfil": es_video_perfil, "es_video_portada": es_video_portada, # Nuevas banderas
         "visitas": perfil.visitas, "ultima_visita": perfil.ultima_visita.strftime("%d/%m/%Y"), 
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
@@ -390,17 +424,15 @@ def estadisticas_admin(db: Session = Depends(get_db)):
             "nombre": p.nombre, 
             "visitas": p.visitas,
             "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva",
-            "pin": p.pin_familia # <--- AHORA EL PANEL SABE EL PIN
+            "pin": p.pin_familia
         })
     return {"total_perfiles": len(perfiles), "total_visitas": total_visitas, "perfiles": lista_perfiles}
 
 @app.get("/api/admin/moderacion")
 def datos_moderacion(db: Session = Depends(get_db)):
-    # Buscamos todas las fotos de todos los perfiles
     fotos = db.query(database.FotoGaleria).all()
     lista_fotos = [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil]
     
-    # Buscamos todos los mensajes de todos los perfiles
     mensajes = db.query(database.MensajeRecuerdo).all()
     lista_mensajes = [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]
     
