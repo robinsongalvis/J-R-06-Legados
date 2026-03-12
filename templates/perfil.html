@@ -869,5 +869,11 @@
         
         function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
     </script>
+    <script>
+  window.onload = function() {
+    // Hace un pequeñísimo scroll imperceptible para "despertar" el scroll del navegador
+    window.scrollBy(0, 1);
+  };
+</script>
 </body>
 </html>
