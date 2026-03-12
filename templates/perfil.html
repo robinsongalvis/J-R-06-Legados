@@ -377,7 +377,7 @@
 
         <div class="profile-wrapper" data-aos="zoom-in" data-aos-duration="1200">
             {% if es_video_perfil %}
-                <video class="profile-pic" src="{{ foto_perfil }}" autoplay loop muted playsinline></video>
+                <video class="profile-pic" src="{{ foto_perfil }}" autoplay muted playsinline onended="this.currentTime = 0;"></video>
             {% else %}
                 <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto">
             {% endif %}
