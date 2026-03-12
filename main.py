@@ -323,7 +323,22 @@ def eliminar_momento(momento_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Momento eliminado"}
 
-# --- NUEVA FUNCIÓN: RECUPERACIÓN DE CONTRASEÑA (PIN) ---
+# --- RUTA PARA ENCENDER LA VELA VIRTUAL ---
+@app.post("/api/encender_vela/{identificador}")
+def encender_vela(identificador: str, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: 
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+    
+    if perfil.velas is None:
+        perfil.velas = 0
+        
+    perfil.velas += 1
+    db.commit()
+    
+    return {"velas": perfil.velas}
+
+# --- RECUPERACIÓN DE CONTRASEÑA (PIN) ---
 class PinUpdate(BaseModel):
     nuevo_pin: str
 
@@ -369,18 +384,18 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": m.fecha_creacion.strftime("%d/%m/%Y"), "likes": m.likes} for m in reversed(perfil.mensajes)]
     momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion} for m in perfil.momentos]
     
-    # AGREGAMOS LAS VARIABLES QUE LE DICEN A HTML SI ES VIDEO O IMAGEN
     es_video_perfil = perfil.foto_perfil.endswith('.mp4') or perfil.foto_perfil.endswith('.mov') or perfil.foto_perfil.endswith('.webm')
     es_video_portada = perfil.foto_portada.endswith('.mp4') or perfil.foto_portada.endswith('.mov') or perfil.foto_portada.endswith('.webm')
     
     datos_diccionario = {
         "identificador": perfil.identificador, "nombre": perfil.nombre, "fechas": perfil.fechas,
         "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, "foto_portada": perfil.foto_portada,
-        "es_video_perfil": es_video_perfil, "es_video_portada": es_video_portada, # Nuevas banderas
+        "es_video_perfil": es_video_perfil, "es_video_portada": es_video_portada, 
         "visitas": perfil.visitas, "ultima_visita": perfil.ultima_visita.strftime("%d/%m/%Y"), 
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
-        "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed
+        "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed,
+        "velas": perfil.velas or 0 # <--- AHORA EL PERFIL SABE CUÁNTAS VELAS TIENE
     }
 
     pagina_html = templates.TemplateResponse("perfil.html", {"request": request, **datos_diccionario})

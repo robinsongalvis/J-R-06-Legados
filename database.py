@@ -1,7 +1,7 @@
 import os
 import datetime
 import ssl
-from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Text, ForeignKey, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from dotenv import load_dotenv
@@ -61,6 +61,9 @@ class PerfilDifunto(Base):
     
     visitas = Column(Integer, default=0)
     ultima_visita = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # 🕯️ NUEVO: CONTADOR DE VELAS VIRTUALES
+    velas = Column(Integer, default=0)
 
     # Relaciones con otras tablas
     fotos_galeria = relationship("FotoGaleria", back_populates="perfil")
@@ -95,3 +98,14 @@ class MomentoInolvidable(Base):
 
 # Esto crea las tablas automáticamente en Neon.tech si no existen
 Base.metadata.create_all(bind=engine)
+
+# ==========================================
+# MAGIA DE ACTUALIZACIÓN SEGURA (ALTER TABLE)
+# ==========================================
+# Esto intenta agregar la columna 'velas' a tu base de datos viva. 
+# Si la columna ya existe, falla en silencio y el servidor sigue corriendo normal.
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN velas INTEGER DEFAULT 0"))
+except Exception as e:
+    pass

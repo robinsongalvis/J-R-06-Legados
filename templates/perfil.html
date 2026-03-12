@@ -142,6 +142,24 @@
         .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent); margin-top: 10px; font-size: 18px; word-wrap: break-word;}
 
         /* ==========================================
+           🕯️ NUEVO: ESTILOS PARA LA VELA VIRTUAL
+           ========================================== */
+        .candle-container { margin: 25px auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: 12px 25px; border-radius: 30px; font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px var(--border-soft); transition: all 0.3s ease; }
+        .btn-candle:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); border-color: rgba(212, 175, 55, 0.3); }
+        .btn-candle.lit { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); cursor: default; transform: none; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        
+        .candle-icon { font-size: 18px; color: var(--text-light); transition: 0.3s; }
+        .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
+        
+        .candle-count-text { margin-top: 8px; font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* ==========================================
            TARJETAS DE INFORMACIÓN (GRID)
            ========================================== */
         .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 25px 15px; width: 100%;}
@@ -390,6 +408,17 @@
             {% if en_memoria_de %}<p class="memory-of">"{{ en_memoria_de }}"</p>{% endif %}
         </div>
 
+        <div class="candle-container" data-aos="fade-up" data-aos-delay="250">
+            <button id="btnEncenderVela" class="btn-candle" onclick="encenderVela()">
+                <i class="fas fa-fire candle-icon"></i>
+                <span id="textoVela">Encender una vela</span>
+            </button>
+            <p class="candle-count-text">
+                <i class="fas fa-burn text-yellow-500 mr-1"></i>
+                <span id="contadorVelas">{{ velas }}</span> velas iluminan este memorial
+            </p>
+        </div>
+
         <div class="cards-container">
             {% if esposa %}<div class="info-card" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-heart"></i><strong>Compañera de vida</strong><span>{{ esposa }}</span></div>{% endif %}
             {% if hijos %}<div class="info-card" data-aos="fade-up" data-aos-delay="200"><i class="fas fa-seedling"></i><strong>Legado</strong><span>{{ hijos }}</span></div>{% endif %}
@@ -509,6 +538,58 @@
         const CANCION_RAW = "{{ cancion_favorita }}";
 
         // =====================================
+        // 🕯️ LÓGICA DE VELA VIRTUAL
+        // =====================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnVela = document.getElementById('btnEncenderVela');
+            const textoVela = document.getElementById('textoVela');
+            
+            // Verificamos si este celular ya encendió una vela para este difunto
+            if (localStorage.getItem('vela_' + ID_PERFIL) === 'encendida') {
+                btnVela.classList.add('lit');
+                textoVela.innerText = "Vela encendida";
+            }
+        });
+
+        function encenderVela() {
+            const btnVela = document.getElementById('btnEncenderVela');
+            const textoVela = document.getElementById('textoVela');
+            const contadorVelas = document.getElementById('contadorVelas');
+
+            // Si ya la encendió, no hacemos nada
+            if (localStorage.getItem('vela_' + ID_PERFIL) === 'encendida') {
+                return;
+            }
+
+            // Cambiamos el diseño a "Encendida" inmediatamente para que se sienta rápido
+            btnVela.classList.add('lit');
+            textoVela.innerText = "Vela encendida";
+            
+            // Sumamos 1 al contador visual temporalmente
+            let totalActual = parseInt(contadorVelas.innerText);
+            contadorVelas.innerText = totalActual + 1;
+
+            // Guardamos el recuerdo en el celular
+            localStorage.setItem('vela_' + ID_PERFIL, 'encendida');
+            
+            // Si el teléfono tiene vibración, hacemos que palpite suavemente
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+            // Le avisamos al servidor silenciosamente
+            fetch(`/api/encender_vela/${ID_PERFIL}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Confirmamos con el dato real de la base de datos
+                contadorVelas.innerText = data.velas;
+            })
+            .catch(err => {
+                console.error("Error encendiendo vela", err);
+            });
+        }
+
+        // =====================================
         // MAGIA DEL TEMA OSCURO / CLARO
         // =====================================
         const temaGuardado = localStorage.getItem('theme_' + ID_PERFIL);
@@ -544,7 +625,6 @@
             document.body.classList.add('intro-finished');
             actualizarIconoYBarra();
         }, 4000);
-
 
         // =====================================
         // REPRODUCTOR DE YOUTUBE
@@ -870,10 +950,9 @@
         function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
     </script>
     <script>
-  window.onload = function() {
-    // Hace un pequeñísimo scroll imperceptible para "despertar" el scroll del navegador
-    window.scrollBy(0, 1);
-  };
-</script>
+      window.onload = function() {
+        window.scrollBy(0, 1);
+      };
+    </script>
 </body>
 </html>
