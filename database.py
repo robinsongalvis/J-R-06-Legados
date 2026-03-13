@@ -117,15 +117,28 @@ class MomentoInolvidable(Base):
 Base.metadata.create_all(bind=engine)
 
 # ==========================================
-# MAGIA DE ACTUALIZACIÓN SEGURA (ALTER TABLE)
+# MAGIA DE ACTUALIZACIÓN SEGURA INDIVIDUAL
 # ==========================================
-# Esto intenta agregar las nuevas columnas a tu base de datos viva. 
-# Si las columnas ya existen, falla en silencio y el servidor sigue corriendo normal.
 try:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN velas INTEGER DEFAULT 0"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
         conn.execute(text("ALTER TABLE fotos_galeria ADD COLUMN likes INTEGER DEFAULT 0"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN interacciones_hoy INTEGER DEFAULT 0"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN dia_interacciones VARCHAR DEFAULT ''"))
-except Exception as e:
+except Exception:
     pass
