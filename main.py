@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, 
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from io import BytesIO
+import io # <-- LA PIEZA CLAVE PARA QUE CLOUDINARY ACEPTE LOS ARCHIVOS
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import datetime
@@ -73,19 +73,20 @@ def get_db():
     try: yield db
     finally: db.close()
 
-# --- COMPRESOR MÁGICO CORREGIDO ---
+# --- COMPRESOR MÁGICO REPARADO PARA CLOUDINARY ---
 def comprimir_imagen(file_content):
     try:
-        img = Image.open(BytesIO(file_content))
+        img = Image.open(io.BytesIO(file_content))
         img = ImageOps.exif_transpose(img)
         if img.mode in ("RGBA", "P"): img = img.convert("RGB")
         img.thumbnail((1600, 1600)) 
-        buffer = BytesIO()
+        buffer = io.BytesIO()
         img.save(buffer, format="JPEG", optimize=True, quality=80)
-        return buffer.getvalue() # <-- EL TRUCO: Devolver los bytes crudos
+        buffer.seek(0)
+        return buffer # Empaque perfecto para Cloudinary
     except Exception as e:
-        print(f"Error al comprimir: {e}")
-        return file_content # Si la compresión falla, manda la foto original intacta
+        print(f"Aviso en compresión: {e}")
+        return io.BytesIO(file_content)
 
 def registrar_interaccion(perfil, db):
     hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
@@ -138,7 +139,7 @@ def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, db: Session = D
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 
-# --- RUTAS DE SUBIDA DE FOTOS MEJORADAS CON PROTECCIÓN DE ERRORES ---
+# --- SUBIDAS CLOUDINARY 100% REPARADAS ---
 @app.post("/cambiar_foto_perfil/{identificador}")
 async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
@@ -146,14 +147,19 @@ async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...
     try:
         contenido = await archivo.read()
         es_video = archivo.content_type.startswith('video/')
-        if es_video: respuesta_cloud = cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/perfiles", resource_type="video")
-        else: respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/perfiles", resource_type="image")
+        if es_video: 
+            file_obj = io.BytesIO(contenido)
+            respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/perfiles", resource_type="video")
+        else: 
+            file_obj = comprimir_imagen(contenido)
+            respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/perfiles", resource_type="image")
+        
         perfil.foto_perfil = respuesta_cloud['secure_url']
         db.commit()
         return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
     except Exception as e:
-        print(f"Error fatal al subir Perfil a Cloudinary: {e}")
-        raise HTTPException(status_code=500, detail="Error de Cloudinary")
+        print(f"Error en Cloudinary Perfil: {e}")
+        raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.post("/cambiar_foto_portada/{identificador}")
 async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
@@ -163,14 +169,18 @@ async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = 
     try:
         for archivo in archivos[:4]: 
             contenido = await archivo.read()
-            if archivo.content_type.startswith('video/'): urls_guardadas.append(cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/portadas", resource_type="video")['secure_url'])
-            else: urls_guardadas.append(cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
+            if archivo.content_type.startswith('video/'): 
+                file_obj = io.BytesIO(contenido)
+                urls_guardadas.append(cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/portadas", resource_type="video")['secure_url'])
+            else: 
+                file_obj = comprimir_imagen(contenido)
+                urls_guardadas.append(cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
         perfil.foto_portada = ",".join(urls_guardadas)
         db.commit()
         return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
     except Exception as e:
-        print(f"Error fatal al subir Portada a Cloudinary: {e}")
-        raise HTTPException(status_code=500, detail="Error de Cloudinary")
+        print(f"Error en Cloudinary Portada: {e}")
+        raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.post("/subir_fotos/{identificador}")
 async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
@@ -179,17 +189,21 @@ async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...)
     fotos_guardadas = []
     try:
         for archivo in archivos:
-            respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(await archivo.read()), folder=f"memoriales/{identificador}/galeria")
+            contenido = await archivo.read()
+            file_obj = comprimir_imagen(contenido)
+            respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/galeria", resource_type="image")
+            
             nueva_foto = database.FotoGaleria(url_foto=respuesta_cloud['secure_url'], perfil_id=perfil.id)
             db.add(nueva_foto)
             db.commit()
             db.refresh(nueva_foto)
             fotos_guardadas.append({"id": nueva_foto.id, "url": respuesta_cloud['secure_url']})
+        
         registrar_interaccion(perfil, db)
         return {"fotos": fotos_guardadas}
     except Exception as e:
-        print(f"Error fatal al subir Galeria a Cloudinary: {e}")
-        raise HTTPException(status_code=500, detail="Error de Cloudinary")
+        print(f"Error en Cloudinary Galería: {e}")
+        raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.delete("/eliminar_foto/{foto_id}")
 def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
@@ -283,7 +297,6 @@ def comentar_foto(foto_id: int, comentario: ComentarioNuevo, db: Session = Depen
     if foto.perfil: registrar_interaccion(foto.perfil, db)
     return {"mensaje": "Comentario agregado"}
 
-# --- RUTAS DE ADMINISTRACIÓN ---
 class PinUpdate(BaseModel): nuevo_pin: str
 @app.put("/api/admin/reset_pin/{identificador}")
 def reset_pin_perfil(identificador: str, datos: PinUpdate, db: Session = Depends(get_db)):
