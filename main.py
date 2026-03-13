@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import datetime
 import os
 import socket
-import random # <-- NUEVO: Para la foto aleatoria
+import random
 from typing import List
 import requests
 
@@ -65,7 +65,6 @@ class PinRequest(BaseModel):
 class DatosIA(BaseModel):
     datos_clave: str
 
-# NUEVO: MODELO DE COMENTARIO CORTO DE FOTO
 class ComentarioNuevo(BaseModel):
     texto: str
 
@@ -74,13 +73,7 @@ def get_db():
     try: yield db
     finally: db.close()
 
-def obtener_ip_local():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try: s.connect(('8.8.8.8', 80)); ip = s.getsockname()[0]
-    except Exception: ip = '127.0.0.1'
-    finally: s.close()
-    return ip
-
+# --- COMPRESOR MÁGICO CORREGIDO ---
 def comprimir_imagen(file_content):
     try:
         img = Image.open(BytesIO(file_content))
@@ -89,12 +82,11 @@ def comprimir_imagen(file_content):
         img.thumbnail((1600, 1600)) 
         buffer = BytesIO()
         img.save(buffer, format="JPEG", optimize=True, quality=80)
-        buffer.seek(0)
-        return buffer
+        return buffer.getvalue() # <-- EL TRUCO: Devolver los bytes crudos
     except Exception as e:
-        return BytesIO(file_content) 
+        print(f"Error al comprimir: {e}")
+        return file_content # Si la compresión falla, manda la foto original intacta
 
-# --- FUNCIÓN INTERNA: REGISTRAR INTERACCIÓN DIARIA ---
 def registrar_interaccion(perfil, db):
     hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
     if perfil.dia_interacciones != hoy_str:
@@ -129,7 +121,6 @@ def verificar_pin(identificador: str, req: PinRequest, db: Session = Depends(get
     if perfil.pin_familia == req.pin: return {"success": True}
     raise HTTPException(status_code=401, detail="PIN incorrecto")
 
-# --- GESTIÓN DE PERFILES Y CLOUDINARY ---
 @app.post("/crear_perfil/")
 def crear_perfil(perfil: PerfilDatos, db: Session = Depends(get_db)):
     existente = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == perfil.identificador).first()
@@ -147,45 +138,58 @@ def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, db: Session = D
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 
+# --- RUTAS DE SUBIDA DE FOTOS MEJORADAS CON PROTECCIÓN DE ERRORES ---
 @app.post("/cambiar_foto_perfil/{identificador}")
 async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
-    contenido = await archivo.read()
-    es_video = archivo.content_type.startswith('video/')
-    if es_video: respuesta_cloud = cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/perfiles", resource_type="video")
-    else: respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/perfiles", resource_type="image")
-    perfil.foto_perfil = respuesta_cloud['secure_url']
-    db.commit()
-    return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
+    try:
+        contenido = await archivo.read()
+        es_video = archivo.content_type.startswith('video/')
+        if es_video: respuesta_cloud = cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/perfiles", resource_type="video")
+        else: respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/perfiles", resource_type="image")
+        perfil.foto_perfil = respuesta_cloud['secure_url']
+        db.commit()
+        return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
+    except Exception as e:
+        print(f"Error fatal al subir Perfil a Cloudinary: {e}")
+        raise HTTPException(status_code=500, detail="Error de Cloudinary")
 
 @app.post("/cambiar_foto_portada/{identificador}")
 async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     urls_guardadas = []
-    for archivo in archivos[:4]: 
-        contenido = await archivo.read()
-        if archivo.content_type.startswith('video/'): urls_guardadas.append(cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/portadas", resource_type="video")['secure_url'])
-        else: urls_guardadas.append(cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
-    perfil.foto_portada = ",".join(urls_guardadas)
-    db.commit()
-    return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
+    try:
+        for archivo in archivos[:4]: 
+            contenido = await archivo.read()
+            if archivo.content_type.startswith('video/'): urls_guardadas.append(cloudinary.uploader.upload(contenido, folder=f"memoriales/{identificador}/portadas", resource_type="video")['secure_url'])
+            else: urls_guardadas.append(cloudinary.uploader.upload(comprimir_imagen(contenido), folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
+        perfil.foto_portada = ",".join(urls_guardadas)
+        db.commit()
+        return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
+    except Exception as e:
+        print(f"Error fatal al subir Portada a Cloudinary: {e}")
+        raise HTTPException(status_code=500, detail="Error de Cloudinary")
 
 @app.post("/subir_fotos/{identificador}")
 async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     fotos_guardadas = []
-    for archivo in archivos:
-        respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(await archivo.read()), folder=f"memoriales/{identificador}/galeria")
-        nueva_foto = database.FotoGaleria(url_foto=respuesta_cloud['secure_url'], perfil_id=perfil.id)
-        db.add(nueva_foto)
-        db.commit()
-        db.refresh(nueva_foto)
-        fotos_guardadas.append({"id": nueva_foto.id, "url": respuesta_cloud['secure_url']})
-    registrar_interaccion(perfil, db)
-    return {"fotos": fotos_guardadas}
+    try:
+        for archivo in archivos:
+            respuesta_cloud = cloudinary.uploader.upload(comprimir_imagen(await archivo.read()), folder=f"memoriales/{identificador}/galeria")
+            nueva_foto = database.FotoGaleria(url_foto=respuesta_cloud['secure_url'], perfil_id=perfil.id)
+            db.add(nueva_foto)
+            db.commit()
+            db.refresh(nueva_foto)
+            fotos_guardadas.append({"id": nueva_foto.id, "url": respuesta_cloud['secure_url']})
+        registrar_interaccion(perfil, db)
+        return {"fotos": fotos_guardadas}
+    except Exception as e:
+        print(f"Error fatal al subir Galeria a Cloudinary: {e}")
+        raise HTTPException(status_code=500, detail="Error de Cloudinary")
 
 @app.delete("/eliminar_foto/{foto_id}")
 def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
@@ -259,14 +263,13 @@ def encender_vela(identificador: str, db: Session = Depends(get_db)):
     registrar_interaccion(perfil, db)
     return {"velas": perfil.velas}
 
-# --- NUEVAS RUTAS PARA LA GALERÍA INTERACTIVA ---
 @app.post("/api/likear_foto/{foto_id}")
 def likear_foto(foto_id: int, db: Session = Depends(get_db)):
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     if foto.likes is None: foto.likes = 0
     foto.likes += 1
-    db.commit() # Hacemos commit explícito de los likes
+    db.commit() 
     if foto.perfil: registrar_interaccion(foto.perfil, db)
     return {"likes": foto.likes}
 
@@ -303,13 +306,12 @@ def eliminar_perfil_completo(identificador: str, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Perfil eliminado."}
 
-# 🎬 CONSTRUCCIÓN DE LA VISTA PRINCIPAL CON DATOS ENRIQUECIDOS 🎬
+# 🎬 CONSTRUCCIÓN DE LA VISTA PRINCIPAL 🎬
 @app.get("/perfil/{identificador}", response_class=HTMLResponse)
 def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: return HTMLResponse(content="<h1>Error 404: Perfil no encontrado</h1>", status_code=404)
 
-    # Lógica de reset diario de interacciones
     hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
     if getattr(perfil, 'dia_interacciones', '') != hoy_str:
         perfil.interacciones_hoy = 0
@@ -320,21 +322,18 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     if not request.cookies.get(nombre_cookie):
         perfil.visitas += 1
         perfil.ultima_visita = datetime.datetime.utcnow()
-        registrar_interaccion(perfil, db) # Contar como interacción
+        registrar_interaccion(perfil, db) 
 
     fotos_db = list(reversed(perfil.fotos_galeria))
     
-    # Preparar feed de fotos avanzado (con likes y comentarios)
     fotos_feed = []
     total_corazones_galeria = 0
     for foto in fotos_db:
         corazones = foto.likes or 0
         total_corazones_galeria += corazones
-        # Tomamos los últimos 3 comentarios
         comentarios_feed = [{"texto": c.texto} for c in list(foto.comentarios)[-3:]]
         fotos_feed.append({"id": foto.id, "url": foto.url_foto, "likes": corazones, "comentarios": comentarios_feed})
 
-    # Matemáticas de la galería
     foto_aleatoria = random.choice(fotos_feed) if fotos_feed else None
     foto_mas_recordada = max(fotos_feed, key=lambda f: f["likes"]) if fotos_feed and total_corazones_galeria > 0 else None
 
@@ -353,8 +352,6 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
         "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed, "velas": perfil.velas or 0,
-        
-        # NUEVAS VARIABLES AL HTML
         "interacciones_hoy": perfil.interacciones_hoy,
         "total_corazones_galeria": total_corazones_galeria,
         "foto_aleatoria": foto_aleatoria,
