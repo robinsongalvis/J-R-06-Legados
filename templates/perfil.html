@@ -491,7 +491,7 @@
             <p class="total-likes-text">❤️ {{ total_corazones_galeria }} recuerdos compartidos</p>
         </div>
 
-        <div id="dropZone" class="upload-zone admin-only"><i class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
+        <div id="dropZone" class="upload-zone admin-only"><i id="dropZone" class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
         
         <div class="gallery-container">
             <div class="gallery-grid" id="mainGalleryGrid">
@@ -518,7 +518,21 @@
     <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Año o Fecha</label><input type="text" id="t_anio" class="input-pro"></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
     <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150"></textarea></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button></div></div>
     <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro">{{ biografia }}</textarea></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
+<div id="modalPreviewUpload" class="system-modal">
+        <div class="modal-body" style="text-align: center;">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
+            <h2>Confirmar Subida</h2>
+            <p id="uploadCountText" style="color: var(--text-light); font-size: 15px; margin-bottom: 15px;"></p>
+            
+            <div id="previewGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
 
+            <div id="uploadProgressContainer" style="display: none; width: 100%; background: var(--border-soft); border-radius: 10px; height: 10px; margin-bottom: 20px; overflow: hidden;">
+                <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.3s;"></div>
+            </div>
+
+            <button id="btnConfirmUpload" class="btn-save" onclick="confirmarSubidaBatch()">Subir Fotos</button>
+        </div>
+    </div>
     <div id="lightbox">
         <div class="lb-header-bar">
             <span class="lb-close" onclick="cerrarLightbox()">&times;</span>
@@ -850,7 +864,7 @@
         function activarModoEliminar(id, divElement) { itemAEliminarId = id; tipoEliminacion = 'foto'; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); } elementoSeleccionado = divElement; elementoSeleccionado.classList.add('selected-for-delete'); document.getElementById('deleteTopBar').classList.add('active'); }
         function cancelarEliminar() { itemAEliminarId = null; tipoEliminacion = null; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); elementoSeleccionado = null; } document.getElementById('deleteTopBar').classList.remove('active'); }
         function prepararEliminarMensaje(id) { itemAEliminarId = id; tipoEliminacion = 'mensaje'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; abrirModal('confirmModal'); }
-        function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); }
+        function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); } 
         function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
         function abrirModal(id) { document.getElementById(id).classList.add('show'); }
         function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
