@@ -62,8 +62,12 @@ class PerfilDifunto(Base):
     visitas = Column(Integer, default=0)
     ultima_visita = Column(DateTime, default=datetime.datetime.utcnow)
     
-    # 🕯️ NUEVO: CONTADOR DE VELAS VIRTUALES
+    # 🕯️ CONTADOR DE VELAS VIRTUALES
     velas = Column(Integer, default=0)
+
+    # ❤️ NUEVO: MÉTRICAS DE INTERACCIÓN DIARIA
+    interacciones_hoy = Column(Integer, default=0)
+    dia_interacciones = Column(String, default="")
 
     # Relaciones con otras tablas
     fotos_galeria = relationship("FotoGaleria", back_populates="perfil")
@@ -76,6 +80,19 @@ class FotoGaleria(Base):
     url_foto = Column(String)
     perfil_id = Column(Integer, ForeignKey("perfiles.id"))
     perfil = relationship("PerfilDifunto", back_populates="fotos_galeria")
+    
+    # ❤️ NUEVO: CORAZONES Y COMENTARIOS DE LA GALERÍA
+    likes = Column(Integer, default=0)
+    comentarios = relationship("ComentarioFoto", back_populates="foto", cascade="all, delete-orphan")
+
+# 💬 NUEVA TABLA: COMENTARIOS CORTOS POR FOTO
+class ComentarioFoto(Base):
+    __tablename__ = "comentarios_foto"
+    id = Column(Integer, primary_key=True, index=True)
+    texto = Column(String(120))
+    fecha_creacion = Column(DateTime, default=datetime.datetime.utcnow)
+    foto_id = Column(Integer, ForeignKey("fotos_galeria.id"))
+    foto = relationship("FotoGaleria", back_populates="comentarios")
 
 class MensajeRecuerdo(Base):
     __tablename__ = "mensajes_recuerdo"
@@ -102,10 +119,13 @@ Base.metadata.create_all(bind=engine)
 # ==========================================
 # MAGIA DE ACTUALIZACIÓN SEGURA (ALTER TABLE)
 # ==========================================
-# Esto intenta agregar la columna 'velas' a tu base de datos viva. 
-# Si la columna ya existe, falla en silencio y el servidor sigue corriendo normal.
+# Esto intenta agregar las nuevas columnas a tu base de datos viva. 
+# Si las columnas ya existen, falla en silencio y el servidor sigue corriendo normal.
 try:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN velas INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE fotos_galeria ADD COLUMN likes INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN interacciones_hoy INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN dia_interacciones VARCHAR DEFAULT ''"))
 except Exception as e:
     pass
