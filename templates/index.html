@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legados Angels - Trascendiendo Contigo</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #0a0a0f;
+            --gold-bright: #FFD700;
+            --tech-blue: #4d94ff;
+            --gradient-gold-text: linear-gradient(135deg, #FFFFFF 0%, #FFF5CC 30%, var(--gold-bright) 100%);
+            --glass-bg: rgba(10, 10, 15, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --font-title: 'Playfair Display', serif;
+            --font-body: 'Poppins', sans-serif;
+            --ease-apple: cubic-bezier(0.165, 0.84, 0.44, 1);
+            --transition-smooth: all 0.6s var(--ease-apple);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+        body { background-color: var(--bg-deep); color: #dddddd; font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        a { text-decoration: none; color: inherit; transition: var(--transition-smooth); }
+        ul { list-style: none; }
+
+        .reveal { opacity: 0; transform: translateY(40px) scale(0.98); transition: opacity 1s var(--ease-apple), transform 1s var(--ease-apple); }
+        .reveal.active { opacity: 1; transform: translateY(0) scale(1); }
+        .gradient-text { background: var(--gradient-gold-text); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; }
+
+        /* BOTONES */
+        .btn {
+            padding: 14px 30px; border-radius: 30px; font-weight: 600; font-size: 15px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; transition: var(--transition-smooth); border: none;
+        }
+        
+        .btn-gold {
+            background-color: var(--gold-bright); color: var(--bg-deep);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15);
+            position: relative; overflow: hidden; font-family: var(--font-body);
+        }
+
+        .btn-gold::before {
+            content: ''; position: absolute; width: 200%; height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+            transform: rotate(25deg); top: -100%; left: -100%; transition: 0.6s ease;
+        }
+
+        .btn-gold:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3); }
+        .btn-gold:hover::before { top: 100%; left: 100%; }
+
+        .btn-secondary { background: transparent; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.4); transform: translateY(-2px); }
+
+        /* NAVEGACIÓN */
+        header.main-nav {
+            position: fixed; top: 0; width: 100%; height: 80px; background-color: var(--glass-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 60px; z-index: 1000; transition: var(--transition-smooth);
+        }
+        header.main-nav.scrolled { height: 65px; border-color: rgba(255, 215, 0, 0.1); }
+        .logo { font-family: var(--font-title); font-size: 26px; color: var(--gold-bright); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .logo span { font-weight: 300; color: #ffffff; }
+        .nav-links { display: flex; gap: 30px; font-weight: 300; font-size: 14px; }
+        .nav-links a { position: relative; color: rgba(255,255,255,0.8); }
+        .nav-links a:hover { color: #ffffff; }
+
+        /* HERO SECTION */
+        section.hero {
+            height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            position: relative; padding: 0 20px; overflow: hidden; background: var(--bg-deep);
+        }
+
+        .hero::after {
+            content: ''; position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255,215,0,0.25), transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            filter: blur(120px); animation: pulseGlow 6s infinite ease-in-out;
+            z-index: 0; pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.8; pointer-events: none; }
+        .hero-content { position: relative; z-index: 3; max-width: 900px; }
+
+        .hero h1 {
+            font-family: var(--font-title); font-size: 68px; margin-bottom: 25px; line-height: 1.1; letter-spacing: -1.5px;
+            animation: floatText 6s ease-in-out infinite;
+        }
+
+        @keyframes floatText {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .hero p { font-size: 18px; font-weight: 300; color: rgba(221, 221, 221, 0.7); max-width: 600px; margin: 0 auto 50px auto; }
+        .hero-cta { display: flex; gap: 20px; justify-content: center; }
+
+        /* CARACTERÍSTICAS */
+        section.characteristics { padding: 120px 60px; background-color: var(--bg-deep); position: relative; }
+        .section-title { text-align: center; font-family: var(--font-title); font-size: 42px; margin-bottom: 80px; letter-spacing: -1px; }
+        .characteristics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1200px; margin: 0 auto; }
+        
+        .characteristic-card {
+            background: rgba(10, 10, 15, 0.5); border-radius: 20px; padding: 50px; border: 1px solid var(--glass-border);
+            transition: transform 0.4s var(--ease-apple), border-color 0.4s ease;
+            cursor: pointer; position: relative; text-align: center; overflow: hidden;
+        }
+
+        .characteristic-card:hover { transform: translateY(-10px); border-color: rgba(255, 215, 0, 0.3); }
+        .card-icon { font-size: 32px; color: var(--gold-bright); margin-bottom: 30px; opacity: 0.9; pointer-events: none;}
+        .characteristic-card h3, .characteristic-card p { pointer-events: none; }
+        .characteristic-card h3 { font-family: var(--font-title); color: #ffffff; font-size: 26px; margin-bottom: 20px; letter-spacing: -0.5px; }
+        .characteristic-card p { color: rgba(221, 221, 221, 0.6); font-size: 15px; font-weight: 300; }
+
+        /* =========================================
+           NUEVA SECCIÓN: CÓMO FUNCIONA (QR)
+           ========================================= */
+        section.how-it-works {
+            padding: 100px 60px;
+            background: radial-gradient(circle at right, rgba(255, 215, 0, 0.03) 0%, rgba(10, 10, 15, 1) 60%);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .how-container {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .how-text {
+            flex: 1;
+        }
+
+        .how-text h2 {
+            font-family: var(--font-title);
+            font-size: 38px;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background: var(--gold-bright);
+            color: var(--bg-deep);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .step-content h4 {
+            font-size: 20px;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            font-size: 15px;
+            color: rgba(221, 221, 221, 0.7);
+            line-height: 1.5;
+        }
+
+        .how-image-container {
+            flex: 1;
+            position: relative;
+        }
+
+        /* Estilo para las imágenes que agregaste */
+        .mockup-img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid var(--glass-border);
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Brillo sutil detrás de la imagen */
+        .how-image-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255,215,0,0.15), transparent 70%);
+            transform: translate(-50%, -50%);
+            filter: blur(50px);
+            z-index: 1;
+        }
+
+        /* BUZÓN A LA ETERNIDAD */
+        section.memory-box {
+            padding: 100px 20px; text-align: center; border-top: 1px solid var(--glass-border);
+        }
+        .memory-container { max-width: 600px; margin: 0 auto; background: var(--glass-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .memory-container h2 { font-family: var(--font-title); color: var(--gold-bright); font-size: 32px; margin-bottom: 10px; }
+        .memory-container p { font-size: 14px; color: #888; margin-bottom: 30px; }
+        .memory-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 20px; border-radius: 12px; font-family: var(--font-body); resize: none; height: 120px; margin-bottom: 20px; font-size: 16px; transition: 0.3s; }
+        .memory-input:focus { border-color: var(--gold-bright); background: rgba(255,255,255,0.05); }
+
+        /* CTA FINAL */
+        section.cta { padding: 100px 60px; background: linear-gradient(135deg, rgba(77, 148, 255, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%); border-top: 1px solid var(--glass-border); text-align: center; }
+        .cta h2 { font-family: var(--font-title); color: #ffffff; font-size: 38px; margin-bottom: 20px; }
+        .cta p { color: rgba(221, 221, 221, 0.7); font-size: 16px; margin-bottom: 50px; }
+        .btn-whatsapp { background-color: #25D366; color: white; padding: 16px 35px; border-radius: 30px; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; font-size: 16px; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2); transition: var(--transition-smooth); }
+        .btn-whatsapp:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4); }
+
+        footer { padding: 40px; text-align: center; color: #555; font-size: 13px; }
+
+        @media (max-width: 900px) {
+            .how-container { flex-direction: column; gap: 40px; }
+            .how-text { order: 2; }
+            .how-image-container { order: 1; width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            header.main-nav .btn { display: none; } 
+            header.main-nav { padding: 0 20px; justify-content: center; } 
+            .hero h1 { font-size: 40px; }
+            .hero-cta { flex-direction: column; }
+            .characteristics-grid { grid-template-columns: 1fr; }
+            section.how-it-works { padding: 80px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="main-nav" id="mainNav">
+        <a href="#" class="logo"><span>LEGADOS</span> ANGELS</a>
+        <ul class="nav-links">
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#caracteristicas">Características</a></li>
+            <li><a href="#como-funciona">Cómo Funciona</a></li>
+            <li><a href="#buzon">Buzón Eterno</a></li>
+        </ul>
+        <a href="#contacto" class="btn btn-gold">Crear Memorial</a>
+    </header>
+
+    <section class="hero" id="inicio">
+        <canvas id="particleCanvas"></canvas>
+        <div class="hero-content" id="heroContent">
+            <h1>No desaparecen...<br><span class="gradient-text">trascienden contigo</span></h1>
+            <p>Un espacio donde los recuerdos siguen vivos, donde las historias se transforman en legado eterno.</p>
+            <div class="hero-cta">
+                <a href="#contacto" class="btn btn-gold">Crear Memorial</a>
+                <a href="#como-funciona" class="btn btn-secondary">Explorar Historias</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="characteristics" id="caracteristicas">
+        <h2 class="section-title reveal gradient-text">Un Legado Evolucionado</h2>
+        <div class="characteristics-grid">
+            <div class="characteristic-card reveal">
+                <div class="card-icon">✧</div>
+                <h3>Memoria Eterna</h3>
+                <p>Protegemos historias y anécdotas en un refugio digital inmutable.</p>
+            </div>
+            <div class="characteristic-card reveal">
+                <div class="card-icon">⚲</div>
+                <h3>Galería Emocional</h3>
+                <p>Visualiza recuerdos en alta definición. Un espacio inmersivo y seguro.</p>
+            </div>
+            <div class="characteristic-card reveal">
+                <div class="card-icon">〰</div>
+                <h3>Voces que Permanecen</h3>
+                <p>Integramos tecnología de audio para preservar sus mensajes y risas.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works reveal" id="como-funciona">
+        <div class="how-container">
+            <div class="how-text">
+                <h2>¿Cómo acceder a los <span class="gradient-text">recuerdos</span>?</h2>
+                
+                <div class="step-list">
+                    <div class="step-item reveal">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Instalación Respetuosa</h4>
+                            <p>Colocamos un código especial, elegante y discreto en la lápida, florero o placa conmemorativa.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-item reveal">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Escanear con tu Celular</h4>
+                            <p>Cualquier familiar o amigo que visite el lugar solo necesita abrir la cámara de su celular y apuntar al código. Sin aplicaciones extrañas.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-item reveal">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Viajan Contigo</h4>
+                            <p>Al instante, se abre un espacio sagrado con fotos, videos y la música que amaba. Los recuerdos ya no se quedan solo en la tumba, ahora viven en la nube y viajan contigo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="how-image-container reveal">
+                <img src="escaner.png" alt="Escaneando el código de la lápida" class="mockup-img">
+                <p style="text-align: center; margin-top: 15px; font-size: 13px; color: #888; font-style: italic;">Ejemplo real del código en la lápida.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="memory-box reveal" id="buzon">
+        <div class="memory-container">
+            <h2>¿Qué le dirías hoy?</h2>
+            <p>Escribe lo que siente tu corazón. Un espacio seguro para liberar tus emociones y comenzar a honrar su memoria.</p>
+            <textarea id="mensajeBuzon" class="memory-input" placeholder="Escribe tu mensaje al cielo..."></textarea>
+            <button id="btnEnviarBuzon" class="btn btn-gold" style="width: 100%;">Guardar en su memoria</button>
+        </div>
+    </section>
+
+    <section class="cta reveal" id="contacto">
+        <h2>Empieza hoy a construir un legado</h2>
+        <p>Hablemos directamente por WhatsApp.</p>
+        <a href="https://wa.me/573203574674?text=Hola%20Legados%20Angels,%20quiero%20crear%20un%20memorial" target="_blank" class="btn-whatsapp">
+            📱 Pedir un Memorial
+        </a>
+    </section>
+
+    <footer>&copy; 2026 Legados Angels. Simacota, Santander.</footer>
+
+    <script>
+        // Reveal en scroll
+        const revealElements = document.querySelectorAll(".reveal");
+        const revealOnScroll = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add("active"); });
+        }, { threshold: 0.15 });
+        revealElements.forEach(element => revealOnScroll.observe(element));
+
+        // Parallax Hero y Nav
+        window.addEventListener("scroll", () => {
+            const scrollPos = window.pageYOffset;
+            if (window.innerWidth > 768) {
+                document.getElementById("heroContent").style.transform = `translateY(${scrollPos * 0.4}px)`;
+                document.getElementById("heroContent").style.opacity = 1 - (scrollPos / 700);
+            }
+            document.getElementById("mainNav").classList.toggle("scrolled", scrollPos > 50);
+        });
+
+        // Hover Inteligente en Cards
+        document.querySelectorAll(".characteristic-card").forEach(card => {
+            card.addEventListener("mousemove", e => {
+                let rect = card.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
+                card.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,215,0,0.15), rgba(10,10,15,0.8))`;
+            });
+            card.addEventListener("mouseleave", () => {
+                card.style.background = "rgba(10, 10, 15, 0.5)";
+            });
+        });
+
+        // Partículas conectadas
+        const canvas = document.getElementById("particleCanvas");
+        const ctx = canvas.getContext("2d");
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        const particlesArray = [];
+        const numberOfParticles = Math.min(Math.floor(window.innerWidth * window.innerHeight / 10000), 80);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25; this.speedY = Math.random() * 0.5 - 0.25;
+            }
+            update() {
+                this.y -= this.speedY; this.x += this.speedX;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+            }
+            draw() {
+                ctx.fillStyle = "rgba(255, 215, 0, 0.3)";
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        function initParticles() { for (let i = 0; i < numberOfParticles; i++) particlesArray.push(new Particle()); }
+        
+        function connectParticles() {
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let dx = particlesArray[a].x - particlesArray[b].x;
+                    let dy = particlesArray[a].y - particlesArray[b].y;
+                    let distance = dx * dx + dy * dy;
+
+                    if (distance < 12000) {
+                        ctx.strokeStyle = `rgba(255,215,0,${0.1 - distance/120000})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update(); particlesArray[i].draw();
+            }
+            connectParticles(); 
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles(); animateParticles();
+
+        // =========================================
+        // LÓGICA DEL BUZÓN HACIA WHATSAPP
+        // =========================================
+        const btnBuzon = document.getElementById('btnEnviarBuzon');
+        const inputBuzon = document.getElementById('mensajeBuzon');
+
+        btnBuzon.addEventListener('click', () => {
+            const mensajeUsuario = inputBuzon.value.trim();
+            const numeroWhatsApp = "573203574674"; 
+            
+            let mensajeFinal = "Hola Legados Angels, quiero crear un memorial.";
+            
+            if (mensajeUsuario !== "") {
+                mensajeFinal = `Hola Legados Angels, quiero comenzar un memorial. Este es un mensaje que escribí para mi ser querido:\n\n"${mensajeUsuario}"\n\n¿Cuáles son los siguientes pasos?`;
+            }
+
+            const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeFinal)}`;
+            window.open(urlWhatsApp, '_blank');
+        });
+    </script>
+</body>
+</html>

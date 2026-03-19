@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" id="theme-color-meta" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -43,21 +43,26 @@
 
         * { box-sizing: border-box; }
         
+        /* FIX SAFARI DEFINITIVO: Evita rebotes sin romper el scroll */
         html, body { 
-            max-width: 100vw; overflow-x: hidden; -webkit-touch-callout: none; background-color: #0f172a; 
+            max-width: 100vw; 
+            overflow-x: hidden; 
+            overscroll-behavior-y: none; /* ← LA VERDADERA MAGIA ANTI-REBOTE DE iOS */
+            -webkit-touch-callout: none; 
+            background-color: #0f172a; 
         }
 
         body { 
             font-family: 'Lato', sans-serif; margin: 0; color: var(--text-main); 
             -webkit-font-smoothing: antialiased; transition: background-color 0.5s ease, color 0.5s ease; 
-            overflow-y: auto; 
         }
         
         body.intro-finished { background-color: var(--primary-bg); }
         
         .container { 
             max-width: 600px; width: 100%; margin: 0 auto; background: var(--primary-bg); 
-            min-height: 100vh; position: relative; padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
+            min-height: 100dvh; 
+            position: relative; padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
             box-shadow: 0 0 30px rgba(0,0,0,0.3); 
             transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; 
         }
@@ -77,7 +82,7 @@
         /* ==========================================
            PANTALLA DE BIENVENIDA 
            ========================================== */
-        #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; }
+        #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; }
         .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; object-fit: cover; }
         .welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%); z-index: 1; }
         .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
@@ -184,7 +189,6 @@
         .item-likes-overlay i { color: #fff; }
         .item-likes-overlay.has-likes i { color: #e74c3c; }
 
-        /* Animación del Corazón al hacer Doble Toque */
         .pop-heart { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); 
             color: #e74c3c; font-size: 50px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); 
@@ -199,10 +203,10 @@
         }
 
         /* ==========================================
-           EL NUEVO VISOR LIGHTBOX (CON COMENTARIOS Y ZOOM)
+           EL NUEVO VISOR LIGHTBOX (REESCRITO CON FIXES)
            ========================================== */
         #lightbox { 
-            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; 
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100dvh; 
             background-color: rgba(0,0,0,0.95); backdrop-filter: blur(10px); flex-direction: column; 
             opacity: 0; transition: opacity 0.4s ease;
         }
@@ -211,9 +215,15 @@
         .lb-header-bar { width: 100%; padding: 15px 25px; display: flex; justify-content: flex-end; z-index: 10002; }
         .lb-close { color: white; font-size: 35px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         
-        .lb-content-area { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; width: 100%; }
-        .lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #lightbox.show .lightbox-img { transform: scale(1); }
+        .lb-content-area { 
+            flex: 1; display: flex; align-items: center; justify-content: center; position: relative; 
+            overflow: hidden; width: 100%; touch-action: pinch-zoom pan-x;
+        }
+        .lightbox-img { 
+            max-width: 100%; max-height: 100%; object-fit: contain; 
+            transform: scale(1); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            touch-action: pinch-zoom; will-change: transform;
+        }
 
         .lb-footer-panel { 
             background: var(--card-bg); border-top-left-radius: 25px; border-top-right-radius: 25px; 
@@ -240,7 +250,7 @@
         @media (max-width: 768px) { .lightbox-prev, .lightbox-next { display: none; } }
 
         /* ==========================================
-           RESTO DEL DISEÑO Y MODALES (Sin cambios visuales)
+           RESTO DEL DISEÑO Y MODALES
            ========================================== */
         .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 25px 15px; width: 100%;}
         .info-card { background: var(--card-bg); padding: 18px 10px; border-radius: 20px; box-shadow: 0 10px 30px var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
@@ -518,7 +528,7 @@
     <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Año o Fecha</label><input type="text" id="t_anio" class="input-pro"></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
     <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150"></textarea></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button></div></div>
     <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro">{{ biografia }}</textarea></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
-<div id="modalPreviewUpload" class="system-modal">
+    <div id="modalPreviewUpload" class="system-modal">
         <div class="modal-body" style="text-align: center;">
             <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
             <h2>Confirmar Subida</h2>
@@ -533,6 +543,7 @@
             <button id="btnConfirmUpload" class="btn-save" onclick="confirmarSubidaBatch()">Subir Fotos</button>
         </div>
     </div>
+    
     <div id="lightbox">
         <div class="lb-header-bar">
             <span class="lb-close" onclick="cerrarLightbox()">&times;</span>
@@ -679,25 +690,37 @@
         });
 
         // =====================================
-        // ❤️ NUEVO: SISTEMA DE GALERÍA INTERACTIVA Y ZOOM
+        // ❤️ LIGHTBOX REESCRITO + FIXES iOS
         // =====================================
         let indexImagenActual = 0;
         let isFamilyAdmin = sessionStorage.getItem('family_auth_' + ID_PERFIL) === 'true';
         let itemAEliminarId = null; let tipoEliminacion = null; let elementoSeleccionado = null;
+        
+        let scrollPosition = 0;
 
-        // Permite el zoom del dispositivo SOLO cuando el lightbox está abierto
-        function togglePinchZoom(habilitar) {
-            let meta = document.querySelector('meta[name="viewport"]');
-            if(habilitar) {
-                meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover');
-            } else {
-                meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-            }
+        function lockBodyScroll() {
+            scrollPosition = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollPosition}px`;
+            document.body.style.width = '100%';
         }
 
-        // Cuando tocas una imagen de la galería o destacados
+        function unlockBodyScroll() {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo(0, scrollPosition);
+        }
+
+        function resetZoom() {
+            const img = document.getElementById('lightbox-img');
+            img.style.transform = 'scale(1)';
+        }
+
         function interactuarFotoGrid(fotoId, htmlElement) {
-            if (isFamilyAdmin && document.getElementById('deleteTopBar').classList.contains('active')) { activarModoEliminar(fotoId, htmlElement); return; }
+            if (isFamilyAdmin && document.getElementById('deleteTopBar').classList.contains('active')) { 
+                activarModoEliminar(fotoId, htmlElement); return; 
+            }
             abrirLightboxPorId(fotoId);
         }
 
@@ -705,36 +728,21 @@
             indexImagenActual = galeriaDB.findIndex(f => f.id == fotoId);
             if(indexImagenActual === -1) return;
             
+            resetZoom();
             actualizarUI_Lightbox();
             document.getElementById('lightbox').classList.add('show');
-            document.body.style.overflow = 'hidden'; 
-            
-            // Habilitamos el zoom para que el usuario pueda pellizcar la foto
-            togglePinchZoom(true);
+            lockBodyScroll(); 
         }
 
         function cerrarLightbox() {
             document.getElementById('lightbox').classList.remove('show');
-            document.body.style.overflow = 'auto';
-            document.getElementById('lb-input-group').style.display = 'none'; // ocultamos caja comentario
-            // Bloqueamos el zoom de nuevo
-            togglePinchZoom(false);
+            document.getElementById('lb-input-group').style.display = 'none';
+            unlockBodyScroll(); 
+            resetZoom();
         }
 
-        function cambiarImagenLightbox(direccion, evento) {
-            if(evento) evento.stopPropagation();
-            if (galeriaDB.length === 0) return;
-            indexImagenActual += direccion;
-            if (indexImagenActual >= galeriaDB.length) indexImagenActual = 0;
-            if (indexImagenActual < 0) indexImagenActual = galeriaDB.length - 1;
-            
-            const imgElement = document.getElementById('lightbox-img');
-            imgElement.style.opacity = '0.3';
-            setTimeout(() => { actualizarUI_Lightbox(); imgElement.style.opacity = '1'; }, 150);
-        }
-
-        // Pinta la foto, los likes y comentarios correspondientes en el Lightbox
         function actualizarUI_Lightbox() {
+            resetZoom(); 
             let fotoActual = galeriaDB[indexImagenActual];
             document.getElementById('lightbox-img').src = fotoActual.url;
             document.getElementById('lb-like-count').innerText = fotoActual.likes;
@@ -746,7 +754,6 @@
                 btnLike.classList.remove('liked');
             }
 
-            // Pintar comentarios
             let cajaComentarios = document.getElementById('lb-comments-list');
             cajaComentarios.innerHTML = '';
             if(fotoActual.comentarios.length === 0) {
@@ -761,21 +768,34 @@
             }
         }
 
-        // Lógica de Likear (Corazón)
+        function cambiarImagenLightbox(direccion, evento) {
+            if(evento) evento.stopPropagation();
+            if (galeriaDB.length === 0) return;
+            indexImagenActual += direccion;
+            if (indexImagenActual >= galeriaDB.length) indexImagenActual = 0;
+            if (indexImagenActual < 0) indexImagenActual = galeriaDB.length - 1;
+            
+            const img = document.getElementById('lightbox-img');
+            img.style.transition = 'none';
+            resetZoom();
+            img.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            img.style.opacity = '0.3';
+            setTimeout(() => { actualizarUI_Lightbox(); img.style.opacity = '1'; }, 150);
+        }
+
+        // Lógica de Likear
         function likearFotoActual() {
             let fotoActual = galeriaDB[indexImagenActual];
-            if (localStorage.getItem('liked_foto_' + fotoActual.id)) return; // Ya dio like
+            if (localStorage.getItem('liked_foto_' + fotoActual.id)) return; 
             
-            // Animación del corazón gigante en pantalla
             let popHeart = document.getElementById('lb-pop-heart');
             popHeart.classList.remove('animate');
-            void popHeart.offsetWidth; // reset anim
+            void popHeart.offsetWidth; 
             popHeart.classList.add('animate');
             
             if (navigator.vibrate) navigator.vibrate(50);
             localStorage.setItem('liked_foto_' + fotoActual.id, 'true');
             
-            // Actualización visual instantánea
             fotoActual.likes += 1;
             document.getElementById('lb-like-count').innerText = fotoActual.likes;
             document.getElementById('btn-like-lb').classList.add('liked');
@@ -786,14 +806,11 @@
                 miniaturaGrid.innerHTML = `<i class="fas fa-heart"></i> <span>${fotoActual.likes}</span>`;
             }
 
-            // Petición silenciosa al servidor
             fetch(`/api/likear_foto/${fotoActual.id}`, {method: 'POST'});
         }
 
-        // MAGIA DEL DOBLE TOQUE en el Lightbox
         let lbTouchTime = 0;
         document.getElementById('lb-content-area').addEventListener('click', function(e) {
-            // Ignora si tocaron las flechas de PC
             if(e.target.closest('.lightbox-prev') || e.target.closest('.lightbox-next')) return;
             
             if (lbTouchTime === 0) {
@@ -802,13 +819,12 @@
             } else {
                 if (((new Date().getTime()) - lbTouchTime) < 300) {
                     e.preventDefault();
-                    likearFotoActual(); // Dispara el like
+                    likearFotoActual(); 
                     lbTouchTime = 0;
                 }
             }
         });
 
-        // Comentarios
         function toggleCajaComentario() {
             let box = document.getElementById('lb-input-group');
             box.style.display = box.style.display === 'none' || box.style.display === '' ? 'flex' : 'none';
@@ -834,13 +850,21 @@
             });
         }
 
-        // Navegación Swipe en Lightbox
-        let touchstartX = 0; let touchendX = 0;
-        document.getElementById('lb-content-area').addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, {passive: true});
-        document.getElementById('lb-content-area').addEventListener('touchend', e => { 
-            touchendX = e.changedTouches[0].screenX; 
-            if (touchstartX - touchendX > 40) cambiarImagenLightbox(1); 
-            if (touchendX - touchstartX > 40) cambiarImagenLightbox(-1); 
+        // JS FIX: Swipe Inteligente (Versión Mejorada y Robusta)
+        let touchstartXLB = 0;
+        document.getElementById('lb-content-area').addEventListener('touchstart', e => { 
+            touchstartXLB = e.changedTouches[0].screenX; 
+        }, {passive: true});
+
+        document.getElementById('lb-content-area').addEventListener('touchend', e => {
+            const touchendX = e.changedTouches[0].screenX;
+            const img = document.getElementById('lightbox-img');
+            const currentScale = parseFloat(img.style.transform.replace(/[^0-9.]/g, '')) || 1;
+            
+            if (currentScale > 1.05) return; // no swipe si está zoomeado
+            
+            if (touchstartXLB - touchendX > 40) cambiarImagenLightbox(1);
+            if (touchendX - touchstartXLB > 40) cambiarImagenLightbox(-1);
         }, {passive: true});
         
         document.addEventListener('keydown', function(e) { 

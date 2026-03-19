@@ -32,11 +32,14 @@ import database
 
 app = FastAPI(title="Memorial Digital QR")
 
+
 os.makedirs("static", exist_ok=True) 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
-
+@app.get("/", response_class=HTMLResponse)
+async def inicio(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 # --- MODELOS DE DATOS ---
 class PerfilDatos(BaseModel):
     identificador: str
