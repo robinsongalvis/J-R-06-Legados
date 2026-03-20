@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legados Angels - Trascendiendo Contigo</title>
     
+    <meta property="og:title" content="Legados Angels - Trascendiendo Contigo">
+    <meta property="og:description" content="Un espacio donde los recuerdos siguen vivos. Transforma las historias de tus seres queridos en un legado eterno que viaja contigo.">
+    <meta property="og:image" content="https://aquamarine-kashata-3f413d.netlify.app/portada-compartir.jpg"> 
+    <meta property="og:url" content="https://aquamarine-kashata-3f413d.netlify.app/">
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Legados Angels - Trascendiendo Contigo">
+    <meta name="twitter:description" content="Un espacio donde los recuerdos siguen vivos. Transforma las historias en un legado eterno.">
+    <meta name="twitter:image" content="https://aquamarine-kashata-3f413d.netlify.app/portada-compartir.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -108,6 +118,50 @@
         .hero p { font-size: 18px; font-weight: 300; color: rgba(221, 221, 221, 0.7); max-width: 600px; margin: 0 auto 50px auto; }
         .hero-cta { display: flex; gap: 20px; justify-content: center; }
 
+        /* =========================================
+           ANIMACIÓN DEL INDICADOR DE SCROLL
+           ========================================= */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .scroll-indicator:hover {
+            opacity: 1;
+        }
+
+        .scroll-indicator span {
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .scroll-arrow {
+            width: 16px;
+            height: 16px;
+            border-right: 2px solid var(--gold-bright);
+            border-bottom: 2px solid var(--gold-bright);
+            transform: rotate(45deg);
+            animation: floatDown 2s ease-in-out infinite;
+        }
+
+        @keyframes floatDown {
+            0%, 100% { transform: translateY(0) rotate(45deg); }
+            50% { transform: translateY(10px) rotate(45deg); }
+        }
+
         /* CARACTERÍSTICAS */
         section.characteristics { padding: 120px 60px; background-color: var(--bg-deep); position: relative; }
         .section-title { text-align: center; font-family: var(--font-title); font-size: 42px; margin-bottom: 80px; letter-spacing: -1px; }
@@ -125,9 +179,7 @@
         .characteristic-card h3 { font-family: var(--font-title); color: #ffffff; font-size: 26px; margin-bottom: 20px; letter-spacing: -0.5px; }
         .characteristic-card p { color: rgba(221, 221, 221, 0.6); font-size: 15px; font-weight: 300; }
 
-        /* =========================================
-           NUEVA SECCIÓN: CÓMO FUNCIONA (QR)
-           ========================================= */
+        /* CÓMO FUNCIONA */
         section.how-it-works {
             padding: 100px 60px;
             background: radial-gradient(circle at right, rgba(255, 215, 0, 0.03) 0%, rgba(10, 10, 15, 1) 60%);
@@ -197,7 +249,6 @@
             position: relative;
         }
 
-        /* Estilo para las imágenes que agregaste */
         .mockup-img {
             width: 100%;
             max-width: 500px;
@@ -210,7 +261,6 @@
             z-index: 2;
         }
 
-        /* Brillo sutil detrás de la imagen */
         .how-image-container::after {
             content: '';
             position: absolute;
@@ -249,14 +299,18 @@
             .how-image-container { order: 1; width: 100%; }
         }
 
+        /* =========================================
+           CORRECCIÓN PARA MÓVILES (BOTÓN REBELDE ELIMINADO)
+           ========================================= */
         @media (max-width: 768px) {
-            .nav-links { display: none; }
-            header.main-nav .btn { display: none; } 
-            header.main-nav { padding: 0 20px; justify-content: center; } 
+            .nav-links { display: none !important; }
+            header.main-nav .btn { display: none !important; } /* <-- ESTA ES LA MAGIA ANTI-BOTÓN */
+            header.main-nav { padding: 0 20px; justify-content: center !important; } 
             .hero h1 { font-size: 40px; }
             .hero-cta { flex-direction: column; }
             .characteristics-grid { grid-template-columns: 1fr; }
             section.how-it-works { padding: 80px 20px; }
+            .scroll-indicator { bottom: 25px; } 
         }
     </style>
 </head>
@@ -283,6 +337,11 @@
                 <a href="#como-funciona" class="btn btn-secondary">Explorar Historias</a>
             </div>
         </div>
+
+        <a href="#caracteristicas" class="scroll-indicator">
+            <span>Descubre</span>
+            <div class="scroll-arrow"></div>
+        </a>
     </section>
 
     <section class="characteristics" id="caracteristicas">
@@ -378,6 +437,9 @@
             if (window.innerWidth > 768) {
                 document.getElementById("heroContent").style.transform = `translateY(${scrollPos * 0.4}px)`;
                 document.getElementById("heroContent").style.opacity = 1 - (scrollPos / 700);
+                
+                const indicator = document.querySelector('.scroll-indicator');
+                if(indicator) { indicator.style.opacity = scrollPos > 100 ? '0' : '0.7'; }
             }
             document.getElementById("mainNav").classList.toggle("scrolled", scrollPos > 50);
         });
@@ -455,9 +517,7 @@
 
         initParticles(); animateParticles();
 
-        // =========================================
         // LÓGICA DEL BUZÓN HACIA WHATSAPP
-        // =========================================
         const btnBuzon = document.getElementById('btnEnviarBuzon');
         const inputBuzon = document.getElementById('mensajeBuzon');
 
