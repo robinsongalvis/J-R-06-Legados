@@ -116,33 +116,73 @@
         .bar { width: 25px; height: 3px; background-color: var(--gold-bright); transition: 0.3s; border-radius: 3px; }
 
         /* CORRECCIÓN PARA MÓVILES */
-        @media (max-width: 768px) {
-            header.main-nav { padding: 0 20px !important; justify-content: space-between !important; }
-            
-            /* Ocultar botones de PC */
-            .desktop-buttons { display: none !important; }
-            .btn-erp-admin { display: none !important; } 
-            
-            /* Mostrar el botón hamburguesa */
-            .menu-toggle { display: flex; }
+        /* CORRECCIÓN FINAL PARA MÓVILES */
+@media (max-width: 768px) {
+    /* Forzamos al header a separar logo y menú */
+    header.main-nav { 
+        padding: 0 20px !important; 
+        display: flex !important;
+        justify-content: space-between !important; 
+        align-items: center !important;
+        height: 80px;
+    }
 
-            /* Estilo del menú desplegable */
-            .nav-links {
-                position: absolute; top: 80px; left: 0; width: 100%;
-                background-color: var(--bg-deep); border-bottom: 2px solid var(--gold-bright);
-                flex-direction: column; text-align: center; padding: 20px 0; gap: 20px;
-                display: none !important; /* Oculto hasta que le den clic */
-                box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            }
-            
-            /* Esta clase se activa con Javascript */
-            .nav-links.active { display: flex !important; }
+    /* Evitamos que el logo se centre a la fuerza */
+    header.main-nav .logo {
+        margin: 0 !important;
+        text-align: left !important;
+        flex: 1;
+    }
+    
+    /* Ocultar botones de PC */
+    .desktop-buttons { display: none !important; }
+    
+    /* Mostrar y posicionar el botón hamburguesa */
+    .menu-toggle { 
+        display: flex !important; 
+        margin-left: auto; /* Lo empuja a la derecha */
+        padding: 10px;
+        z-index: 1100;
+    }
 
-            .mobile-admin-link {
-                display: block; color: var(--gold-bright); font-weight: 500;
-                margin-top: 10px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-        }
+    /* Estilo del menú desplegable mejorado */
+    .nav-links {
+        position: fixed; /* Cambiado a fixed para que no lo tape nada */
+        top: 80px; 
+        left: 0; 
+        width: 100%;
+        height: auto;
+        background-color: rgba(10, 10, 10, 0.98); /* Fondo más sólido */
+        backdrop-filter: blur(15px);
+        border-bottom: 2px solid var(--gold-bright);
+        flex-direction: column; 
+        text-align: center; 
+        padding: 30px 0; 
+        gap: 25px;
+        display: none !important; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        z-index: 1050;
+    }
+    
+    .nav-links.active { 
+        display: flex !important; 
+    }
+
+    .nav-links li a {
+        font-size: 18px;
+        display: block;
+        width: 100%;
+    }
+
+    .mobile-admin-link {
+        margin-top: 15px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .mobile-admin-link a {
+        color: var(--gold-bright) !important;
+    }
+}
         /* NAVEGACIÓN */
         header.main-nav {
             position: fixed; top: 0; width: 100%; height: 80px; background-color: var(--glass-bg);
@@ -390,38 +430,17 @@
 <body>
 
 <header class="main-nav" id="mainNav">
-        <a href="#" class="logo"><span>LEGADOS</span> ANGELS</a>
-        
-        <div class="menu-toggle" id="mobile-menu">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </div>
+    <a href="#" class="logo"><span>LEGADOS</span> ANGELS</a>
+    
+    <div class="menu-toggle" id="mobile-menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </div>
 
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#inicio">Inicio</a></li>
-            <li><a href="#caracteristicas">Características</a></li>
-            <li><a href="#como-funciona">Cómo Funciona</a></li>
-            <li><a href="#buzon">Buzón Eterno</a></li>
-            
-            <li class="mobile-admin-link">
-                <a href="/admin/">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    Portal Admin
-                </a>
-            </li>
+    <ul class="nav-links" id="navLinks">
         </ul>
-        
-        <div style="display: flex; gap: 15px; align-items: center;" class="desktop-buttons">
-            <a href="/admin/" class="btn-erp-admin">
-                Portal Admin
-            </a>
-            <a href="#contacto" class="btn btn-gold">Crear Memorial</a>
-        </div>
-    </header>
+</header>
 
     <section class="hero" id="inicio">
         <canvas id="particleCanvas"></canvas>
@@ -630,6 +649,21 @@
             const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeFinal)}`;
             window.open(urlWhatsApp, '_blank');
         });
+
+    // LÓGICA DEL MENÚ HAMBURGUESA
+    const mobileMenu = document.getElementById('mobile-menu');
+    const navLinksMenu = document.getElementById('navLinks');
+
+    mobileMenu.addEventListener('click', () => {
+        navLinksMenu.classList.toggle('active');
+    });
+
+    // Cerrar menú al hacer clic en un enlace (opcional pero recomendado)
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinksMenu.classList.remove('active');
+        });
+    });
     </script>
 </body>
 </html>
