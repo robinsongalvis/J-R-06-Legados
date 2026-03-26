@@ -155,18 +155,114 @@
 
         @keyframes floatDown { 0%, 100% { transform: translateY(0) rotate(45deg); } 50% { transform: translateY(10px) rotate(45deg); } }
 
-        /* CARACTERÍSTICAS */
-        section.characteristics { padding: 120px 60px; background-color: var(--bg-deep); position: relative; }
-        .section-title { text-align: center; font-family: var(--font-title); font-size: 42px; margin-bottom: 80px; letter-spacing: -1px; }
-        .characteristics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1200px; margin: 0 auto; }
-        
-        .characteristic-card { background: rgba(10, 10, 15, 0.5); border-radius: 20px; padding: 50px; border: 1px solid var(--glass-border); transition: transform 0.4s var(--ease-apple), border-color 0.4s ease; cursor: pointer; position: relative; text-align: center; overflow: hidden; }
-        .characteristic-card:hover { transform: translateY(-10px); border-color: rgba(255, 215, 0, 0.3); }
-        .card-icon { font-size: 32px; color: var(--gold-bright); margin-bottom: 30px; opacity: 0.9; pointer-events: none;}
-        .characteristic-card h3, .characteristic-card p { pointer-events: none; }
-        .characteristic-card h3 { font-family: var(--font-title); color: #ffffff; font-size: 26px; margin-bottom: 20px; letter-spacing: -0.5px; }
-        .characteristic-card p { color: rgba(221, 221, 221, 0.6); font-size: 15px; font-weight: 300; }
+     /* =========================================
+           CARACTERÍSTICAS (LIQUID GLASS EFFECT)
+        ========================================= */
+        section.characteristics { 
+            padding: 120px 60px; 
+            background-color: var(--bg-deep); 
+            position: relative; 
+            overflow: hidden; /* Para que los orbes no se salgan de la sección */
+        }
 
+        /* Orbes de luz líquida en el fondo */
+        section.characteristics::before,
+        section.characteristics::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px); /* Desenfoque extremo para que parezca luz */
+            z-index: 0;
+            animation: floatLiquid 12s infinite alternate ease-in-out;
+        }
+
+        section.characteristics::before {
+            width: 350px; height: 350px;
+            background: rgba(255, 215, 0, 0.12); /* Luz dorada sutil */
+            top: 10%; left: 15%;
+        }
+
+        section.characteristics::after {
+            width: 300px; height: 300px;
+            background: rgba(77, 148, 255, 0.08); /* Luz azul tecnológica */
+            bottom: 10%; right: 15%;
+            animation-delay: -6s; /* Se mueve a destiempo del otro */
+        }
+
+        @keyframes floatLiquid {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -40px) scale(1.1); }
+        }
+
+        .section-title { 
+            text-align: center; 
+            font-family: var(--font-title); 
+            font-size: 42px; 
+            margin-bottom: 80px; 
+            letter-spacing: -1px; 
+            position: relative;
+            z-index: 2; /* Para que quede por encima de la luz */
+        }
+
+        .characteristics-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 40px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            position: relative;
+            z-index: 2; /* Tarjetas por encima de los orbes */
+        }
+        
+        /* LAS TARJETAS DE CRISTAL */
+        .characteristic-card {
+            background: rgba(255, 255, 255, 0.03); /* Cristal casi transparente */
+            backdrop-filter: blur(20px); /* El efecto esmerilado */
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; 
+            padding: 50px; 
+            /* El truco del cristal: bordes superior e izquierdo más iluminados */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); /* Sombra de profundidad */
+            transition: all 0.5s var(--ease-apple); 
+            cursor: pointer; 
+            text-align: center; 
+        }
+
+        .characteristic-card:hover { 
+            transform: translateY(-10px); 
+            background: rgba(255, 255, 255, 0.06); /* Se aclara un poco al pasar el mouse */
+            border-color: rgba(255, 215, 0, 0.3); /* Borde dorado al hacer hover */
+            box-shadow: 0 15px 40px 0 rgba(255, 215, 0, 0.08); /* Brillo dorado debajo */
+        }
+
+        .card-icon { 
+            font-size: 32px; 
+            color: var(--gold-bright); 
+            margin-bottom: 30px; 
+            opacity: 0.9; 
+            pointer-events: none;
+        }
+
+        .characteristic-card h3, .characteristic-card p { 
+            pointer-events: none; 
+        }
+
+        .characteristic-card h3 { 
+            font-family: var(--font-title); 
+            color: #ffffff; 
+            font-size: 26px; 
+            margin-bottom: 20px; 
+            letter-spacing: -0.5px; 
+        }
+
+        .characteristic-card p { 
+            color: rgba(221, 221, 221, 0.7); 
+            font-size: 15px; 
+            font-weight: 300; 
+        }
         /* CÓMO FUNCIONA */
         section.how-it-works { padding: 100px 60px; background: radial-gradient(circle at right, rgba(255, 215, 0, 0.03) 0%, rgba(10, 10, 15, 1) 60%); border-top: 1px solid var(--glass-border); }
         .how-container { display: flex; align-items: center; gap: 60px; max-width: 1200px; margin: 0 auto; }
@@ -360,18 +456,9 @@
             document.getElementById("mainNav").classList.toggle("scrolled", scrollPos > 50);
         });
 
-        // Hover Inteligente en Cards
-        document.querySelectorAll(".characteristic-card").forEach(card => {
-            card.addEventListener("mousemove", e => {
-                let rect = card.getBoundingClientRect();
-                let x = e.clientX - rect.left;
-                let y = e.clientY - rect.top;
-                card.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,215,0,0.15), rgba(10,10,15,0.8))`;
-            });
             card.addEventListener("mouseleave", () => {
                 card.style.background = "rgba(10, 10, 15, 0.5)";
             });
-        });
 
         // Partículas conectadas
         const canvas = document.getElementById("particleCanvas");
