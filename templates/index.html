@@ -321,9 +321,9 @@
 
 <header class="main-nav" id="mainNav">
         
-       <div class="logo" id="secretLogo" style="cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation;" oncontextmenu="return false;">
+       <div class="logo" id="secretLogo" style="cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;" oncontextmenu="return false;">
             <span>LEGADOS</span> ANGELS
-        </div>
+        </div> 
         <ul class="nav-links" id="navLinks">
             <li><a href="#inicio">Inicio</a></li>
             <li><a href="#caracteristicas">Características</a></li>
@@ -536,28 +536,49 @@
             const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeFinal)}`;
             window.open(urlWhatsApp, '_blank');
         });
-        // LÓGICA DEL EASTER EGG (Mantener presionado 1.5 segundos)
+        // LÓGICA DEL EASTER EGG (Blindado para iPhone y Android)
         const secretLogo = document.getElementById('secretLogo');
         let pressTimer;
 
-        const startPress = () => {
+        const startPress = (e) => {
+            // ¡MAGIA NEGRA!: Esto bloquea la lupa de iOS y el menú de Android
+            if (e.type === 'touchstart') {
+                e.preventDefault(); 
+            }
+            
+            // Feedback Visual: Se hunde
+            secretLogo.style.transform = 'scale(0.92)';
+            secretLogo.style.opacity = '0.6';
+            secretLogo.style.transition = 'all 1.5s ease-out';
+
             pressTimer = setTimeout(() => {
-                window.location.href = '/admin/';
-            }, 1500); // 1500 milisegundos = 1.5 segundos
+                // Feedback Háptico para Android
+                if (navigator.vibrate) {
+                    navigator.vibrate([50, 100, 50]); 
+                }
+                
+                // Redirección forzada (Usamos 'replace' para evitar fallos de caché)
+                window.location.replace('/admin/');
+            }, 1500); 
         };
 
         const cancelPress = () => {
             clearTimeout(pressTimer);
+            // Vuelve a la normalidad
+            secretLogo.style.transform = 'scale(1)';
+            secretLogo.style.opacity = '1';
+            secretLogo.style.transition = 'all 0.3s ease';
         };
 
-        // Eventos para Celular (Toque en pantalla)
-        secretLogo.addEventListener('touchstart', startPress, {passive: true});
-        secretLogo.addEventListener('touchend', cancelPress);
-        
-        // Eventos para PC (Clic del mouse)
+        // Eventos para Celular (El 'passive: false' es VITAL aquí)
+        secretLogo.addEventListener('touchstart', startPress, { passive: false });
+        secretLogo.addEventListener('touchend', cancelPress, { passive: false });
+        secretLogo.addEventListener('touchcancel', cancelPress);
+
+        // Eventos para PC
         secretLogo.addEventListener('mousedown', startPress);
         secretLogo.addEventListener('mouseup', cancelPress);
         secretLogo.addEventListener('mouseleave', cancelPress);
-    </script>
+        </script>
 </body>
 </html>
