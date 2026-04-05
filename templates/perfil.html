@@ -486,7 +486,7 @@
                 <button class="add-timeline-btn admin-only" onclick="prepararMomento(null)"><i class="fas fa-plus"></i></button>
             </div>
             
-            <div class="collapsible-wrapper" id="timelineWrapper" {% if momentos|length > 2 %}onclick="expandirTimeline()"{% endif %}>
+            <div class="collapsible-wrapper" id="timelineWrapper">
                 <div class="timeline">
                     {% for mom in momentos %}
                     <div class="timeline-item" data-aos="fade-left" data-aos-delay="0">
@@ -500,17 +500,20 @@
                     {% endfor %}
                 </div>
                 {% if momentos|length > 2 %}
-                <div class="collapsible-fade"></div>
+                <div class="collapsible-fade" onclick="toggleTimeline()"></div>
+                <div style="text-align:center; padding-top: 5px; padding-bottom: 15px;">
+                    <button class="btn-ver-mas" id="btnTimelineMenos" onclick="toggleTimeline(event)" style="display:none; margin: 0 auto;">Ocultar momentos <i class="fas fa-chevron-up"></i></button>
+                </div>
                 {% endif %}
             </div>
             {% if momentos|length > 2 %}
-            <button class="btn-ver-mas" id="btnTimelineMas" onclick="expandirTimeline()">Ver todos los momentos ({{ momentos|length }})</button>
+            <button class="btn-ver-mas" id="btnTimelineMas" onclick="toggleTimeline()">Ver todos los momentos ({{ momentos|length }})</button>
             {% endif %}
         </div>
 
         <div class="guestbook-section" data-aos="fade-up">
             <h2 class="section-title">Recuerdos</h2>
-            <div class="collapsible-wrapper" id="recuerdosWrapper" {% if mensajes|length > 2 %}onclick="expandirRecuerdos()"{% endif %}>
+            <div class="collapsible-wrapper" id="recuerdosWrapper">
                 <div class="messages-list">
                     {% for msj in mensajes %}
                     <div class="message-card">
@@ -524,11 +527,14 @@
                     {% endfor %}
                 </div>
                 {% if mensajes|length > 2 %}
-                <div class="collapsible-fade"></div>
+                <div class="collapsible-fade" onclick="toggleRecuerdos()"></div>
+                <div style="text-align:center; padding-top: 5px; padding-bottom: 15px;">
+                    <button class="btn-ver-mas" id="btnRecuerdosMenos" onclick="toggleRecuerdos(event)" style="display:none; margin: 0 auto;">Ocultar recuerdos <i class="fas fa-chevron-up"></i></button>
+                </div>
                 {% endif %}
             </div>
             {% if mensajes|length > 2 %}
-            <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="expandirRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
+            <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="toggleRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
             {% endif %}
             
             <div class="action-buttons-container" style="margin-top: 15px;">
@@ -1072,25 +1078,43 @@
             });
         }
         // =====================================
-        // ✨ CONTROLES DE COLAPRO (MOSTRAR MÁS)
+        // ✨ CONTROLES DE COLAPRO (MOSTRAR/OCULTAR MÁS)
         // =====================================
-        function expandirTimeline() {
+        function toggleTimeline(e) {
+            if(e) e.stopPropagation();
             var wrap = document.getElementById('timelineWrapper');
-            if(wrap && !wrap.classList.contains('expanded')) {
-                wrap.classList.add('expanded');
-                wrap.onclick = null;
-                let btn = document.getElementById('btnTimelineMas');
-                if(btn) btn.style.display = 'none';
+            let btnMas = document.getElementById('btnTimelineMas');
+            let btnMenos = document.getElementById('btnTimelineMenos');
+            if(wrap) {
+                if(wrap.classList.contains('expanded')) {
+                    wrap.classList.remove('expanded');
+                    if(btnMas) btnMas.style.display = 'block';
+                    if(btnMenos) btnMenos.style.display = 'none';
+                    wrap.scrollTop = 0; 
+                } else {
+                    wrap.classList.add('expanded');
+                    if(btnMas) btnMas.style.display = 'none';
+                    if(btnMenos) btnMenos.style.display = 'block';
+                }
             }
         }
 
-        function expandirRecuerdos() {
+        function toggleRecuerdos(e) {
+            if(e) e.stopPropagation();
             var wrap = document.getElementById('recuerdosWrapper');
-            if(wrap && !wrap.classList.contains('expanded')) {
-                wrap.classList.add('expanded');
-                wrap.onclick = null;
-                let btn = document.getElementById('btnRecuerdosMas');
-                if(btn) btn.style.display = 'none';
+            let btnMas = document.getElementById('btnRecuerdosMas');
+            let btnMenos = document.getElementById('btnRecuerdosMenos');
+            if(wrap) {
+                if(wrap.classList.contains('expanded')) {
+                    wrap.classList.remove('expanded');
+                    if(btnMas) btnMas.style.display = 'block';
+                    if(btnMenos) btnMenos.style.display = 'none';
+                    wrap.scrollTop = 0; 
+                } else {
+                    wrap.classList.add('expanded');
+                    if(btnMas) btnMas.style.display = 'none';
+                    if(btnMenos) btnMenos.style.display = 'block';
+                }
             }
         }
     </script>
