@@ -147,13 +147,20 @@
         .hero p { font-size: 18px; font-weight: 300; color: rgba(221, 221, 221, 0.7); max-width: 600px; margin: 0 auto 50px auto; }
         .hero-cta { display: flex; gap: 20px; justify-content: center; }
 
-        /* ANIMACIÓN DEL INDICADOR DE SCROLL */
-        .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; opacity: 0.7; transition: opacity 0.3s ease; cursor: pointer; }
-        .scroll-indicator:hover { opacity: 1; }
-        .scroll-indicator span { font-size: 11px; font-weight: 300; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; color: rgba(255, 255, 255, 0.7); }
-        .scroll-arrow { width: 16px; height: 16px; border-right: 2px solid var(--gold-bright); border-bottom: 2px solid var(--gold-bright); transform: rotate(45deg); animation: floatDown 2s ease-in-out infinite; }
+        /* ANIMACIÓN DEL INDICADOR DE SCROLL ULTRA VISIBLE */
+        .scroll-indicator-pulse { position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center; text-decoration: none; cursor: pointer; opacity: 0.9; transition: var(--transition-smooth); }
+        .scroll-indicator-pulse:hover { opacity: 1; transform: translateX(-50%) translateY(-5px); }
+        
+        .mouse-icon { width: 30px; height: 50px; border: 2px solid var(--gold-bright); border-radius: 20px; display: flex; justify-content: center; position: relative; margin-bottom: 12px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        .mouse-wheel { width: 4px; height: 10px; background: white; border-radius: 4px; margin-top: 8px; animation: swipeDown 1.5s infinite cubic-bezier(0.15, 0.41, 0.69, 0.94); }
+        
+        @keyframes swipeDown { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(18px); opacity: 0; } }
+        
+        .pulse-text-wrap { display: flex; flex-direction: column; align-items: center; }
+        .scroll-indicator-pulse span { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-bright); animation: pulseText 2s infinite; text-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        .scroll-indicator-pulse small { font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-body); }
 
-        @keyframes floatDown { 0%, 100% { transform: translateY(0) rotate(45deg); } 50% { transform: translateY(10px) rotate(45deg); } }
+        @keyframes pulseText { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
 
      /* =========================================
            CARACTERÍSTICAS (LIQUID GLASS EFFECT)
@@ -320,7 +327,7 @@
             .hero-cta { flex-direction: column; }
             .characteristics-grid { grid-template-columns: 1fr; }
             section.how-it-works { padding: 80px 20px; }
-            .scroll-indicator { bottom: 25px; } 
+            .scroll-indicator-pulse { bottom: 25px; transform: translateX(-50%) scale(0.85); } 
         }
     </style>
 </head>
@@ -359,9 +366,12 @@
             </div>
         </div>
 
-        <a href="#caracteristicas" class="scroll-indicator">
-            <span>Descubre</span>
-            <div class="scroll-arrow"></div>
+        <a href="#caracteristicas" class="scroll-indicator-pulse">
+            <div class="mouse-icon"><div class="mouse-wheel"></div></div>
+            <div class="pulse-text-wrap">
+                <span>Desliza para empezar</span>
+                <small>el viaje al recuerdo</small>
+            </div>
         </a>
     </section>
 
@@ -459,8 +469,8 @@
                 document.getElementById("heroContent").style.transform = `translateY(${scrollPos * 0.4}px)`;
                 document.getElementById("heroContent").style.opacity = 1 - (scrollPos / 700);
                 
-                const indicator = document.querySelector('.scroll-indicator');
-                if(indicator) { indicator.style.opacity = scrollPos > 100 ? '0' : '0.7'; }
+                const indicator = document.querySelector('.scroll-indicator-pulse');
+                if(indicator) { indicator.style.opacity = scrollPos > 100 ? '0' : '0.9'; }
             }
             document.getElementById("mainNav").classList.toggle("scrolled", scrollPos > 50);
         });
