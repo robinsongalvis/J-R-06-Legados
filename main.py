@@ -68,6 +68,10 @@ class PinRequest(BaseModel):
 class DatosIA(BaseModel):
     datos_clave: str
 
+class DatosHomenaje(BaseModel):
+    perfil_nombre: str
+    parentezco_o_anecdota: str
+
 class ComentarioNuevo(BaseModel):
     texto: str
 
@@ -115,6 +119,24 @@ def generar_biografia(datos: DatosIA):
         respuesta = requests.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
         if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
         return {"biografia": respuesta.json()['candidates'][0]['content']['parts'][0]['text']}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error general de la IA")
+
+@app.post("/api/generar_homenaje")
+def generar_homenaje(datos: DatosHomenaje):
+    try:
+        url_modelos = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY_GEMINI}"
+        res_modelos = requests.get(url_modelos)
+        if res_modelos.status_code != 200: raise HTTPException(status_code=500, detail="Error API Key")
+        lista_modelos = res_modelos.json().get("models", [])
+        modelo_elegido = next((m.get("name") for m in lista_modelos if "generateContent" in m.get("supportedGenerationMethods", []) and "gemini" in m.get("name", "").lower()), None)
+        if not modelo_elegido: raise HTTPException(status_code=500, detail="Sin modelos")
+        instruccion = f"Escribe o redacta un hermoso y breve mensaje de condolencia o recuerdo para la persona fallecida '{datos.perfil_nombre}'. Mi relación o anécdota con él/ella es la siguiente: '{datos.parentezco_o_anecdota}'. Quiero publicarlo en su libro de recuerdos (Guestbook). Que el mensaje sea corto (máximo 40 palabras), poético, profundamente empático y cálido, en primera persona hacia él o ella. Omite saludos o despedidas largas. Entrega sólo el texto final sin comillas ni aclaraciones."
+        url_generar = f"https://generativelanguage.googleapis.com/v1beta/{modelo_elegido}:generateContent?key={API_KEY_GEMINI}"
+        respuesta = requests.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
+        if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
+        texto_generado = respuesta.json()['candidates'][0]['content']['parts'][0]['text'].strip().replace('"', '')
+        return {"homenaje": texto_generado[:150]}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error general de la IA")
 
