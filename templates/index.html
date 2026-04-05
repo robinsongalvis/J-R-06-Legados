@@ -294,6 +294,8 @@
 
         footer { padding: 40px; text-align: center; color: #555; font-size: 13px; }
 
+        .mobile-menu-btn { display: none; color: white; font-size: 28px; cursor: pointer; user-select: none; }
+
         @media (max-width: 900px) {
             .how-container { flex-direction: column; gap: 40px; }
             .how-text { order: 2; }
@@ -304,10 +306,15 @@
            ESTILOS PARA MÓVILES (Minimalista)
         ========================================= */
         @media (max-width: 768px) {
-            header.main-nav { padding: 0 20px !important; justify-content: center !important; }
-            .nav-links { display: none !important; }
-            .desktop-buttons { display: none !important; }
-            .logo { font-size: 22px; text-align: center; }
+            header.main-nav { padding: 0 20px !important; flex-wrap: wrap; justify-content: space-between !important; height: auto !important; min-height: 80px; align-content: center; }
+            header.main-nav.scrolled { min-height: 65px; align-content: center; }
+            .mobile-menu-btn { display: block; line-height: 1; }
+            .nav-links { display: none !important; width: 100%; flex-direction: column; gap: 15px; padding-top: 20px; text-align: center; margin: 0; }
+            .desktop-buttons { display: none !important; width: 100%; flex-direction: column; gap: 15px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 15px; }
+            header.main-nav.menu-open .nav-links, header.main-nav.menu-open .desktop-buttons { display: flex !important; }
+            header.main-nav.menu-open { background: var(--bg-deep) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+            
+            .logo { font-size: 22px; text-align: left; }
             
             .hero h1 { font-size: 40px; }
             .hero-cta { flex-direction: column; }
@@ -324,16 +331,19 @@
        <div class="logo" id="secretLogo" style="cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;" oncontextmenu="return false;">
             <span>LEGADOS</span> ANGELS
         </div> 
+
+        <div class="mobile-menu-btn" onclick="document.getElementById('mainNav').classList.toggle('menu-open')">☰</div>
+
         <ul class="nav-links" id="navLinks">
-            <li><a href="#inicio">Inicio</a></li>
-            <li><a href="#caracteristicas">Características</a></li>
-            <li><a href="#como-funciona">Cómo Funciona</a></li>
-            <li><a href="#buzon">Buzón Eterno</a></li>
+            <li><a href="#inicio" onclick="document.getElementById('mainNav').classList.remove('menu-open')">Inicio</a></li>
+            <li><a href="#caracteristicas" onclick="document.getElementById('mainNav').classList.remove('menu-open')">Características</a></li>
+            <li><a href="#como-funciona" onclick="document.getElementById('mainNav').classList.remove('menu-open')">Cómo Funciona</a></li>
+            <li><a href="#buzon" onclick="document.getElementById('mainNav').classList.remove('menu-open')">Buzón Eterno</a></li>
         </ul>
         
         <div class="desktop-buttons">
             <a href="/admin/" class="btn-erp-admin">Portal Admin</a>
-            <a href="#contacto" class="btn btn-gold">Crear Memorial</a>
+            <a href="#contacto" class="btn btn-gold" onclick="document.getElementById('mainNav').classList.remove('menu-open')">Crear Memorial</a>
         </div>
 
     </header>
@@ -454,10 +464,6 @@
             }
             document.getElementById("mainNav").classList.toggle("scrolled", scrollPos > 50);
         });
-
-            card.addEventListener("mouseleave", () => {
-                card.style.background = "rgba(10, 10, 15, 0.5)";
-            });
 
         // Partículas conectadas
         const canvas = document.getElementById("particleCanvas");
