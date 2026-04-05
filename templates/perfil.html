@@ -293,7 +293,14 @@
         .tl-ctrl-btn { color: var(--text-light); cursor: pointer; font-size: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; padding: 6px; backdrop-filter: blur(5px);}
 
         .guestbook-section { padding: 0 20px 40px; width: 100%; }
-        .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; max-height: 400px; overflow-y: auto; padding: 5px; }
+        .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding: 5px; }
+        
+        .collapsible-wrapper { max-height: 280px; overflow: hidden; position: relative; transition: max-height 0.6s ease-in-out; cursor: pointer; }
+        .collapsible-wrapper.expanded { max-height: 8000px; cursor: default; }
+        .collapsible-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, rgba(15,23,42,0) 0%, var(--primary-bg) 100%); pointer-events: none; z-index: 5; transition: opacity 0.4s; }
+        .collapsible-wrapper.expanded .collapsible-fade { opacity: 0; }
+        .btn-ver-mas { display: block; margin: 5px auto 20px; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: 10px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-ver-mas:hover { background: var(--accent); color: white; transform: translateY(-2px); }
         .message-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border-left: 4px solid var(--accent); box-shadow: 0 5px 15px var(--border-soft); position: relative; }
         .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: 14px; padding: 5px; opacity: 0.5;}
         .message-text { font-style: italic; color: var(--text-light); font-size: 15px; line-height: 1.5; margin-bottom: 15px; padding-right: 15px; word-wrap: break-word;}
@@ -470,40 +477,58 @@
             <div class="bio-text" id="biografiaTexto">{{ biografia }}</div>
         </div>
 
-        <div class="timeline-section">
+        <div class="timeline-section" id="timelineSection">
             <div class="title-with-btn" data-aos="fade-up">
                 <h2 class="section-title" style="margin:0;">Momentos Inolvidables</h2>
                 <button class="add-timeline-btn admin-only" onclick="prepararMomento(null)"><i class="fas fa-plus"></i></button>
             </div>
-            <div class="timeline">
-                {% for mom in momentos %}
-                <div class="timeline-item" data-aos="fade-left" data-aos-delay="{{ loop.index0 * 100 }}">
-                    <div class="timeline-icon" title="Icono Integrado"><i class="fas {{ mom.icono }}"></i></div>
-                    <div class="timeline-controls admin-only"><button class="tl-ctrl-btn" onclick="prepararMomento('{{ mom.id }}', '{{ mom.anio }}', '{{ mom.titulo }}', '{{ mom.descripcion }}')"><i class="fas fa-pen"></i></button><button class="tl-ctrl-btn delete" onclick="prepararEliminarMomento('{{ mom.id }}')"><i class="fas fa-trash"></i></button></div>
-                    <div class="timeline-year">{{ mom.anio }}</div>
-                    <div class="timeline-event"><strong>{{ mom.titulo }}</strong>{{ mom.descripcion }}</div>
+            
+            <div class="collapsible-wrapper" id="timelineWrapper" {% if momentos|length > 2 %}onclick="expandirTimeline()"{% endif %}>
+                <div class="timeline">
+                    {% for mom in momentos %}
+                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="0">
+                        <div class="timeline-icon" title="Icono Integrado"><i class="fas {{ mom.icono }}"></i></div>
+                        <div class="timeline-controls admin-only"><button class="tl-ctrl-btn" onclick="event.stopPropagation(); prepararMomento('{{ mom.id }}', '{{ mom.anio }}', '{{ mom.titulo }}', '{{ mom.descripcion }}')"><i class="fas fa-pen"></i></button><button class="tl-ctrl-btn delete" onclick="event.stopPropagation(); prepararEliminarMomento('{{ mom.id }}')"><i class="fas fa-trash"></i></button></div>
+                        <div class="timeline-year">{{ mom.anio }}</div>
+                        <div class="timeline-event"><strong>{{ mom.titulo }}</strong>{{ mom.descripcion }}</div>
+                    </div>
+                    {% else %}
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Aún no hay momentos agregados.</p>
+                    {% endfor %}
                 </div>
-                {% else %}
-                <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Aún no hay momentos agregados.</p>
-                {% endfor %}
+                {% if momentos|length > 2 %}
+                <div class="collapsible-fade"></div>
+                {% endif %}
             </div>
+            {% if momentos|length > 2 %}
+            <button class="btn-ver-mas" id="btnTimelineMas" onclick="expandirTimeline()">Ver todos los momentos ({{ momentos|length }})</button>
+            {% endif %}
         </div>
 
         <div class="guestbook-section" data-aos="fade-up">
             <h2 class="section-title">Recuerdos</h2>
-            <div class="messages-list">
-                {% for msj in mensajes %}
-                <div class="message-card">
-                    <div class="msg-delete-btn admin-only" onclick="prepararEliminarMensaje('{{ msj.id }}')"><i class="fas fa-times"></i></div>
-                    <div class="message-text">"{{ msj.texto }}"</div>
-                    <span class="message-author">- {{ msj.autor }}</span>
-                    <div class="message-footer"><span><i class="far fa-clock"></i> {{ msj.fecha }}</span><div class="like-btn {% if msj.likes > 0 %}liked{% endif %}" onclick="darLikeMensaje('{{ msj.id }}', this)"><i class="fas fa-heart"></i> <span class="like-count">{{ msj.likes }}</span></div></div>
+            <div class="collapsible-wrapper" id="recuerdosWrapper" {% if mensajes|length > 2 %}onclick="expandirRecuerdos()"{% endif %}>
+                <div class="messages-list">
+                    {% for msj in mensajes %}
+                    <div class="message-card">
+                        <div class="msg-delete-btn admin-only" onclick="event.stopPropagation(); prepararEliminarMensaje('{{ msj.id }}')"><i class="fas fa-times"></i></div>
+                        <div class="message-text">"{{ msj.texto }}"</div>
+                        <span class="message-author">- {{ msj.autor }}</span>
+                        <div class="message-footer"><span><i class="far fa-clock"></i> {{ msj.fecha }}</span><div class="like-btn {% if msj.likes > 0 %}liked{% endif %}" onclick="event.stopPropagation(); darLikeMensaje('{{ msj.id }}', this)"><i class="fas fa-heart"></i> <span class="like-count">{{ msj.likes }}</span></div></div>
+                    </div>
+                    {% else %}
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Sé el primero en dejar un recuerdo.</p>
+                    {% endfor %}
                 </div>
-                {% else %}
-                <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Sé el primero en dejar un recuerdo.</p>
-                {% endfor %}
+                {% if mensajes|length > 2 %}
+                <div class="collapsible-fade"></div>
+                {% endif %}
             </div>
-            <div class="action-buttons-container">
+            {% if mensajes|length > 2 %}
+            <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="expandirRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
+            {% endif %}
+            
+            <div class="action-buttons-container" style="margin-top: 15px;">
                 <button class="btn-elegant" onclick="abrirModal('mensajeModal')"><i class="fas fa-pen-fancy"></i> Escribir un Mensaje</button>
                 <button class="btn-elegant btn-share" onclick="compartirHomenaje()"><i class="fas fa-share-alt"></i> Compartir Homenaje</button>
             </div>
@@ -1042,6 +1067,28 @@
                 btn.innerHTML = 'Redactar con IA'; 
                 btn.disabled = false;
             });
+        }
+        // =====================================
+        // ✨ CONTROLES DE COLAPRO (MOSTRAR MÁS)
+        // =====================================
+        function expandirTimeline() {
+            var wrap = document.getElementById('timelineWrapper');
+            if(wrap && !wrap.classList.contains('expanded')) {
+                wrap.classList.add('expanded');
+                wrap.onclick = null;
+                let btn = document.getElementById('btnTimelineMas');
+                if(btn) btn.style.display = 'none';
+            }
+        }
+
+        function expandirRecuerdos() {
+            var wrap = document.getElementById('recuerdosWrapper');
+            if(wrap && !wrap.classList.contains('expanded')) {
+                wrap.classList.add('expanded');
+                wrap.onclick = null;
+                let btn = document.getElementById('btnRecuerdosMas');
+                if(btn) btn.style.display = 'none';
+            }
         }
     </script>
 </body>
