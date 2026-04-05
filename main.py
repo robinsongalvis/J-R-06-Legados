@@ -11,6 +11,32 @@ import socket
 import random
 from typing import List
 import requests
+import re
+
+def parse_date_for_sorting(date_str):
+    if not date_str: return (9999, 12, 31)
+    date_str = str(date_str).lower()
+    match_year = re.search(r'\b(18|19|20)\d{2}\b', date_str)
+    year = int(match_year.group()) if match_year else 9999
+    meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    month = 12
+    for i, m in enumerate(meses):
+        if m in date_str:
+            month = i + 1
+            break
+    match_day = re.search(r'\b([1-9]|[12]\d|3[01])\b', date_str)
+    day = int(match_day.group()) if match_day else 31
+    return (year, month, day)
+
+def obtener_icono_momento(titulo):
+    t = str(titulo).lower()
+    if any(x in t for x in ["nace", "nacimiento", "bebe", "hijo", "hija", "nieto", "nieta"]): return "fa-baby"
+    if any(x in t for x in ["boda", "matrimonio", "esposo", "esposa", "casaron"]): return "fa-ring"
+    if any(x in t for x in ["viaje", "conoció", "viajó", "paseo", "vacaciones"]): return "fa-plane"
+    if any(x in t for x in ["grado", "graduacion", "estudio", "universidad", "colegio"]): return "fa-graduation-cap"
+    if any(x in t for x in ["trabajo", "empresa", "negocio", "fundo"]): return "fa-briefcase"
+    if any(x in t for x in ["fallece", "adios", "muerte", "partida", "cielo"]): return "fa-dove"
+    return "fa-star"
 
 import cloudinary
 import cloudinary.uploader
@@ -230,6 +256,21 @@ async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...)
         print(f"Error en Cloudinary Galería: {e}")
         raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
+@app.post("/subir_audio_voz/{identificador}")
+async def subir_audio_voz(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    try:
+        contenido = await archivo.read()
+        file_obj = io.BytesIO(contenido)
+        respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/audio", resource_type="video") # Cloudinary procesa audio como video
+        perfil.audio_voz = respuesta_cloud['secure_url']
+        db.commit()
+        return {"mensaje": "Audio subido correctamente", "url": respuesta_cloud['secure_url']}
+    except Exception as e:
+        print(f"Error en Audio: {e}")
+        raise HTTPException(status_code=500, detail="Fallo la subida de audio.")
+
 @app.delete("/eliminar_foto/{foto_id}")
 def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
@@ -376,7 +417,9 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     foto_mas_recordada = max(fotos_feed, key=lambda f: f["likes"]) if fotos_feed and total_corazones_galeria > 0 else None
 
     mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": m.fecha_creacion.strftime("%d/%m/%Y"), "likes": m.likes} for m in reversed(perfil.mensajes)]
-    momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion} for m in perfil.momentos]
+    momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion, "icono": obtener_icono_momento(m.titulo)} for m in perfil.momentos]
+    momentos_feed.sort(key=lambda x: parse_date_for_sorting(x["anio"])) # ✅ CRONOLOGÍA AUTOMÁTICA
+    
     es_video_perfil = perfil.foto_perfil.endswith(('.mp4', '.mov', '.webm'))
     
     portadas_raw = perfil.foto_portada.split(',') if perfil.foto_portada else ["https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop"]
@@ -393,7 +436,8 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         "interacciones_hoy": perfil.interacciones_hoy,
         "total_corazones_galeria": total_corazones_galeria,
         "foto_aleatoria": foto_aleatoria,
-        "foto_mas_recordada": foto_mas_recordada
+        "foto_mas_recordada": foto_mas_recordada,
+        "audio_voz": getattr(perfil, 'audio_voz', '') # ✅ AUDIO REAL
     }
 
     pagina_html = templates.TemplateResponse("perfil.html", {"request": request, **datos_diccionario})

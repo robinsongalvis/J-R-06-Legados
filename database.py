@@ -62,6 +62,8 @@ class PerfilDifunto(Base):
     visitas = Column(Integer, default=0)
     ultima_visita = Column(DateTime, default=datetime.datetime.utcnow)
     
+    audio_voz = Column(String, default="")
+    
     # 🕯️ CONTADOR DE VELAS VIRTUALES
     velas = Column(Integer, default=0)
 
@@ -140,5 +142,11 @@ except Exception:
 try:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN dia_interacciones VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN audio_voz VARCHAR DEFAULT ''"))
 except Exception:
     pass
