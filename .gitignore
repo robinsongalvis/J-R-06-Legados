@@ -2,5 +2,8 @@
 __pycache__/
 venv/
 *.db
-static/fotos/
+static/fotos/*
+!static/fotos/portada-compartir.jpg
+!static/fotos/escaner.png
 .DS_Store
+.aider*
