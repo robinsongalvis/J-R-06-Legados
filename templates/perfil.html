@@ -46,17 +46,19 @@
         /* ==========================================
            FIX DEFINITIVO SCROLL: LIBERTAD TOTAL AL BODY
            ========================================== */
+        html, body {
+            overflow-x: hidden; /* Previene scroll horizontal en iOS que traba la vista */
+        }
+        
         html {
             scroll-behavior: smooth;
             -webkit-text-size-adjust: 100%;
-            touch-action: manipulation; /* Evita delays táctiles */
         }
         
         body { 
             font-family: 'Lato', sans-serif; 
             margin: 0; 
             padding: 0;
-            /* CERO restricciones de alto, ancho u overflow aquí. Todo libre. */
             background-color: #0f172a; 
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased; 
@@ -75,7 +77,6 @@
             padding-bottom: calc(80px + env(safe-area-inset-bottom)); 
             box-shadow: 0 0 30px rgba(0,0,0,0.3); 
             transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; 
-            overflow-x: hidden; /* El control de bordes va AQUÍ, no en el body */
         }
 
         @media (min-width: 768px) {
@@ -861,13 +862,22 @@
             });
         }
 
-        // JS FIX: Swipe Inteligente (Versión Mejorada y Robusta)
+        // JS FIX: Swipe Inteligente (Versión Mejorada y Robusta para iOS Multi-Touch)
         let touchstartXLB = 0;
+        let isMultiTouchLB = false;
+        
         document.getElementById('lb-content-area').addEventListener('touchstart', e => { 
+            if (e.touches.length > 1) {
+                isMultiTouchLB = true;
+                return;
+            }
+            isMultiTouchLB = false;
             touchstartXLB = e.changedTouches[0].screenX; 
         }, {passive: true});
 
         document.getElementById('lb-content-area').addEventListener('touchend', e => {
+            if (isMultiTouchLB) return; // Evita cambiar imagen si se hizo un gesto de zoom con dos dedos
+            
             const touchendX = e.changedTouches[0].screenX;
             const img = document.getElementById('lightbox-img');
             const currentScale = parseFloat(img.style.transform.replace(/[^0-9.]/g, '')) || 1;
