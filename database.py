@@ -26,10 +26,13 @@ elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    # Creamos el túnel seguro
+    # Creamos el túnel seguro SSL
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    # En producción: verificación SSL completa (default)
+    # Para desarrollo local: DB_SSL_REQUIRED=false deshabilita verificación
+    if os.getenv("DB_SSL_REQUIRED", "true").lower() == "false":
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"ssl_context": ctx})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

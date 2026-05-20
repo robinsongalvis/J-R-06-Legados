@@ -380,7 +380,11 @@
     </div>
 
     <script>
-        const PASSWORD_ADMIN = "admin123";
+        // === UTILIDAD XSS ===
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
 
         // === GESTIÓN DEL MENÚ MÓVIL ===
         function toggleMobileMenu() {
@@ -390,20 +394,27 @@
             overlay.classList.toggle('active');
         }
 
-        // === GESTIÓN DE ACCESO ===
+        // === GESTIÓN DE ACCESO (BACKEND REAL) ===
         function verificarPassword() {
-            if (document.getElementById('passwordInput').value === PASSWORD_ADMIN) {
-                sessionStorage.setItem('admin_auth', 'true');
+            const password = document.getElementById('passwordInput').value;
+            fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({password: password})
+            }).then(res => {
+                if (!res.ok) throw new Error('Wrong password');
+                return res.json();
+            }).then(() => {
                 mostrarDashboard();
-            } else {
+            }).catch(() => {
                 document.getElementById('errorMsg').classList.remove('hidden');
                 let box = document.querySelector('.login-box');
                 box.style.transform = 'translateX(10px)'; setTimeout(() => box.style.transform = 'translateX(-10px)', 100); setTimeout(() => box.style.transform = 'translateX(0)', 200);
-            }
+            });
         }
         document.getElementById('passwordInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') verificarPassword(); });
-        window.onload = () => { if (sessionStorage.getItem('admin_auth') === 'true') mostrarDashboard(); };
-        function cerrarSesion() { sessionStorage.removeItem('admin_auth'); window.location.reload(); }
+        window.onload = () => { fetch('/api/admin/estadisticas').then(res => { if (res.ok) mostrarDashboard(); }).catch(() => {}); };
+        function cerrarSesion() { fetch('/api/admin/logout', {method: 'POST'}).then(() => window.location.reload()); }
 
         function mostrarDashboard() {
             document.getElementById('login-screen').classList.add('hide-login');
@@ -456,9 +467,9 @@
         }
 
         // === EL NUEVO BOTÓN MAGICO DE WHATSAPP ===
-        function enviarWhatsApp(nombre, identificador, pin) {
+        function enviarWhatsApp(nombre, identificador) {
             const urlCompleta = window.location.protocol + "//" + window.location.host + "/perfil/" + identificador;
-            const mensaje = `🕊️ *MEMORIAL DIGITAL*\n\nHola, hacemos entrega oficial del espacio de recuerdos en memoria de *${nombre}*.\n\n🔗 *Visítalo aquí:*\n${urlCompleta}\n\n🔑 *PIN de Seguridad:*\n${pin}\n\n_Con este PIN, la familia podrá subir fotos y escribir recuerdos en el perfil._`;
+            const mensaje = `🕊️ *MEMORIAL DIGITAL*\n\nHola, hacemos entrega oficial del espacio de recuerdos en memoria de *${nombre}*.\n\n🔗 *Visítalo aquí:*\n${urlCompleta}\n\n_El PIN de seguridad se entregará por separado._`;
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
         }
 
@@ -492,8 +503,8 @@
                             <tr class="table-row-anim border-b border-slate-50 last:border-none" style="animation-delay: ${index * 0.1}s">
                                 <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-500 flex justify-center items-center font-bold font-serif shadow-sm shrink-0">${perfil.nombre.charAt(0).toUpperCase()}</div>
-                                        <div class="font-bold text-slate-800 truncate max-w-[150px] md:max-w-none" title="${perfil.nombre}">${perfil.nombre}</div>
+                                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-500 flex justify-center items-center font-bold font-serif shadow-sm shrink-0">${escapeHtml(perfil.nombre).charAt(0).toUpperCase()}</div>
+                                        <div class="font-bold text-slate-800 truncate max-w-[150px] md:max-w-none" title="${escapeHtml(perfil.nombre)}">${escapeHtml(perfil.nombre)}</div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
@@ -508,13 +519,13 @@
                                 <td class="px-4 py-4 md:px-6 md:py-5 text-right whitespace-nowrap space-x-1 md:space-x-2">
                                     <a href="/perfil/${perfil.identificador}" target="_blank" title="Ver Memorial" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-external-link-alt"></i></a>
                                     
-                                    <button onclick="enviarWhatsApp('${perfil.nombre}', '${perfil.identificador}', '${perfil.pin}')" title="Entregar por WhatsApp" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fab fa-whatsapp"></i></button>
+                                    <button onclick="enviarWhatsApp(this.getAttribute('data-nombre'), this.getAttribute('data-id'))" data-nombre="${escapeHtml(perfil.nombre)}" data-id="${escapeHtml(perfil.identificador)}" title="Entregar por WhatsApp" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fab fa-whatsapp"></i></button>
 
-                                    <button onclick="abrirModalResetPin('${perfil.identificador}', '${perfil.nombre}')" title="Restablecer PIN" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-key"></i></button>
+                                    <button onclick="abrirModalResetPin(this.getAttribute('data-id'), this.getAttribute('data-nombre'))" data-nombre="${escapeHtml(perfil.nombre)}" data-id="${escapeHtml(perfil.identificador)}" title="Restablecer PIN" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-key"></i></button>
 
                                     <a href="/generar_qr/${perfil.identificador}" target="_blank" title="Descargar QR" class="qr-btn inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-slate-800 text-white hover:bg-black transition-all rounded-lg shadow-md hover:shadow-lg"><i class="fas fa-qrcode"></i></a>
                                     
-                                    <button onclick="abrirModalDelete('${perfil.identificador}', '${perfil.nombre}')" title="Eliminar Perfil" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-trash-alt"></i></button>
+                                    <button onclick="abrirModalDelete(this.getAttribute('data-id'), this.getAttribute('data-nombre'))" data-nombre="${escapeHtml(perfil.nombre)}" data-id="${escapeHtml(perfil.identificador)}" title="Eliminar Perfil" class="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-trash-alt"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -534,9 +545,9 @@
                 data.fotos.forEach(f => {
                     gridFotos.innerHTML += `
                         <div class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100 relative group">
-                            <img src="${f.url}" class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                            <img src="${escapeHtml(f.url)}" class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
                             <div class="p-4 relative bg-white">
-                                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1 block"><i class="fas fa-folder-open"></i> ${f.perfil}</span>
+                                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1 block"><i class="fas fa-folder-open"></i> ${escapeHtml(f.perfil)}</span>
                                 <button onclick="borrarElemento('foto', ${f.id})" class="w-full mt-3 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
                                     <i class="fas fa-trash-alt mr-1"></i> Eliminar
                                 </button>
@@ -552,11 +563,11 @@
                     gridMensajes.innerHTML += `
                         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100 relative flex flex-col justify-between">
                             <div>
-                                <span class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-3 block"><i class="fas fa-folder-open"></i> ${m.perfil}</span>
-                                <p class="font-serif italic text-slate-700 mb-4 text-sm leading-relaxed">"${m.texto}"</p>
+                                <span class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-3 block"><i class="fas fa-folder-open"></i> ${escapeHtml(m.perfil)}</span>
+                                <p class="font-serif italic text-slate-700 mb-4 text-sm leading-relaxed">"${escapeHtml(m.texto)}"</p>
                             </div>
                             <div>
-                                <span class="text-xs font-bold text-slate-400 block text-right mb-4">- ${m.autor}</span>
+                                <span class="text-xs font-bold text-slate-400 block text-right mb-4">- ${escapeHtml(m.autor)}</span>
                                 <button onclick="borrarElemento('mensaje', ${m.id})" class="w-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
                                     <i class="fas fa-trash-alt mr-1"></i> Eliminar
                                 </button>

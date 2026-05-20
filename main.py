@@ -1,17 +1,23 @@
 from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, Response
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import io # <-- LA PIEZA CLAVE PARA QUE CLOUDINARY ACEPTE LOS ARCHIVOS
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from pydantic import BaseModel
 import datetime
 import os
 import socket
 import random
 from typing import List
-import requests
 import re
+import hashlib
+import hmac
+import json
+import base64
+import time
+from collections import defaultdict
+import httpx
 
 def parse_date_for_sorting(date_str):
     if not date_str: return (9999, 12, 31)
@@ -58,6 +64,90 @@ import database
 
 app = FastAPI(title="Memorial Digital QR")
 
+# ==========================================
+# 🛡️ SEGURIDAD: AUTENTICACIÓN Y PROTECCIÓN
+# ==========================================
+SECRET_KEY = os.getenv("SECRET_KEY")
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")
+ALLOW_INSECURE_DEV_AUTH = os.getenv("ALLOW_INSECURE_DEV_AUTH", "false").lower() == "true"
+# IMPORTANTE: ALLOW_INSECURE_DEV_AUTH=true JAMAS debe usarse en Render o en cualquier entorno de Produccion.
+# Es exclusivamente para pruebas locales donde no se disponga de variables de entorno configuradas.
+
+if not SECRET_KEY:
+    if ALLOW_INSECURE_DEV_AUTH:
+        SECRET_KEY = "dev-inseguro-cambiar-en-produccion"
+    else:
+        raise ValueError("FATAL ERROR: SECRET_KEY env var missing. Refusing to start.")
+
+if not ADMIN_PASSWORD_HASH:
+    if ALLOW_INSECURE_DEV_AUTH:
+        ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
+    else:
+        raise ValueError("FATAL ERROR: ADMIN_PASSWORD_HASH env var missing. Refusing to start.")
+
+def _firmar_cookie(data: dict) -> str:
+    """Crea una cookie firmada con HMAC-SHA256"""
+    data["t"] = int(time.time())
+    payload = base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    sig = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+def _verificar_cookie(cookie_val: str, max_age: int = 86400):
+    """Verifica una cookie firmada. Retorna dict o None."""
+    try:
+        payload, sig = cookie_val.rsplit(".", 1)
+        expected = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        data = json.loads(base64.urlsafe_b64decode(payload))
+        if time.time() - data.get("t", 0) > max_age:
+            return None
+        return data
+    except Exception:
+        return None
+
+def verificar_admin(request: Request):
+    """Dependency: Verifica que el request venga de un admin autenticado via cookie."""
+    cookie = request.cookies.get("admin_session")
+    if not cookie:
+        raise HTTPException(status_code=401, detail="No autorizado")
+    data = _verificar_cookie(cookie)
+    if not data or data.get("role") != "admin":
+        raise HTTPException(status_code=401, detail="Sesión expirada o inválida")
+    return True
+
+def _es_admin(request: Request) -> bool:
+    """Verifica si el request viene de un admin, sin lanzar excepción."""
+    cookie = request.cookies.get("admin_session")
+    if not cookie:
+        return False
+    data = _verificar_cookie(cookie)
+    return data is not None and data.get("role") == "admin"
+
+def validar_pin_o_admin(request: Request, perfil):
+    """Permite acceso si es admin autenticado O si tiene el PIN familiar correcto."""
+    if _es_admin(request):
+        return  # Admin autenticado, acceso permitido
+    pin = request.headers.get("x-family-pin", "")
+    if not pin or pin != perfil.pin_familia:
+        raise HTTPException(status_code=403, detail="PIN familiar requerido o incorrecto")
+
+# ==========================================
+# ⏱️ RATE LIMITER IN-MEMORY (MVP)
+# Para producción multi-instancia usar Redis.
+# ==========================================
+_rate_store = defaultdict(list)
+
+def rate_limit_check(request: Request, endpoint: str, max_calls: int = 10, window: int = 60):
+    """Limita las llamadas por IP a un endpoint específico."""
+    ip = request.client.host if request.client else "unknown"
+    key = f"{ip}:{endpoint}"
+    now = time.time()
+    _rate_store[key] = [t for t in _rate_store[key] if now - t < window]
+    if len(_rate_store[key]) >= max_calls:
+        raise HTTPException(status_code=429, detail="Demasiadas solicitudes. Intenta más tarde.")
+    _rate_store[key].append(now)
+
 
 os.makedirs("static", exist_ok=True) 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -101,6 +191,12 @@ class DatosHomenaje(BaseModel):
 class ComentarioNuevo(BaseModel):
     texto: str
 
+class AdminLogin(BaseModel):
+    password: str
+
+class PinUpdate(BaseModel):
+    nuevo_pin: str
+
 def get_db():
     db = database.SessionLocal()
     try: yield db
@@ -130,39 +226,76 @@ def registrar_interaccion(perfil, db):
         perfil.interacciones_hoy += 1
     db.commit()
 
-# --- RUTAS DE IA Y SEGURIDAD ---
+# ==========================================
+# 🔐 AUTENTICACIÓN ADMIN: LOGIN / LOGOUT
+# ==========================================
+@app.post("/api/admin/login")
+def admin_login(datos: AdminLogin):
+    hash_input = hashlib.sha256(datos.password.encode()).hexdigest()
+    if not hmac.compare_digest(hash_input, ADMIN_PASSWORD_HASH):
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+    token = _firmar_cookie({"role": "admin"})
+    response = JSONResponse(content={"mensaje": "Acceso concedido"})
+    response.set_cookie(
+        key="admin_session", value=token,
+        httponly=True, samesite="lax",
+        max_age=86400,
+        secure=os.getenv("COOKIE_SECURE", "false").lower() == "true"
+    )
+    return response
+
+@app.post("/api/admin/logout")
+def admin_logout():
+    response = JSONResponse(content={"mensaje": "Sesión cerrada"})
+    response.delete_cookie(
+        key="admin_session",
+        httponly=True,
+        samesite="lax",
+        secure=os.getenv("COOKIE_SECURE", "false").lower() == "true"
+    )
+    return response
+
+# --- RUTAS DE IA (ASYNC CON HTTPX) ---
 @app.post("/api/generar_biografia")
-def generar_biografia(datos: DatosIA):
+async def generar_biografia(datos: DatosIA, request: Request):
+    rate_limit_check(request, "generar_ia", max_calls=5, window=60)
     try:
-        url_modelos = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY_GEMINI}"
-        res_modelos = requests.get(url_modelos)
-        if res_modelos.status_code != 200: raise HTTPException(status_code=500, detail="Error API Key")
-        lista_modelos = res_modelos.json().get("models", [])
-        modelo_elegido = next((m.get("name") for m in lista_modelos if "generateContent" in m.get("supportedGenerationMethods", []) and "gemini" in m.get("name", "").lower()), None)
-        if not modelo_elegido: raise HTTPException(status_code=500, detail="Sin modelos")
-        instruccion = f"Actúa como un escritor profesional especializado en homenajes y obituarios. Redacta una biografía breve, respetuosa, poética y muy emotiva para un memorial digital basada en estos datos: '{datos.datos_clave}'. No uses lenguaje robótico ni frases cliché. Hazlo sonar humano, reconfortante y divide el texto en 2 o 3 párrafos cortos. No pongas título."
-        url_generar = f"https://generativelanguage.googleapis.com/v1beta/{modelo_elegido}:generateContent?key={API_KEY_GEMINI}"
-        respuesta = requests.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
-        if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
-        return {"biografia": respuesta.json()['candidates'][0]['content']['parts'][0]['text']}
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            url_modelos = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY_GEMINI}"
+            res_modelos = await client.get(url_modelos)
+            if res_modelos.status_code != 200: raise HTTPException(status_code=500, detail="Error API Key")
+            lista_modelos = res_modelos.json().get("models", [])
+            modelo_elegido = next((m.get("name") for m in lista_modelos if "generateContent" in m.get("supportedGenerationMethods", []) and "gemini" in m.get("name", "").lower()), None)
+            if not modelo_elegido: raise HTTPException(status_code=500, detail="Sin modelos")
+            instruccion = f"Actúa como un escritor profesional especializado en homenajes y obituarios. Redacta una biografía breve, respetuosa, poética y muy emotiva para un memorial digital basada en estos datos: '{datos.datos_clave}'. No uses lenguaje robótico ni frases cliché. Hazlo sonar humano, reconfortante y divide el texto en 2 o 3 párrafos cortos. No pongas título."
+            url_generar = f"https://generativelanguage.googleapis.com/v1beta/{modelo_elegido}:generateContent?key={API_KEY_GEMINI}"
+            respuesta = await client.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
+            if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
+            return {"biografia": respuesta.json()['candidates'][0]['content']['parts'][0]['text']}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error general de la IA")
 
 @app.post("/api/generar_homenaje")
-def generar_homenaje(datos: DatosHomenaje):
+async def generar_homenaje(datos: DatosHomenaje, request: Request):
+    rate_limit_check(request, "generar_ia", max_calls=5, window=60)
     try:
-        url_modelos = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY_GEMINI}"
-        res_modelos = requests.get(url_modelos)
-        if res_modelos.status_code != 200: raise HTTPException(status_code=500, detail="Error API Key")
-        lista_modelos = res_modelos.json().get("models", [])
-        modelo_elegido = next((m.get("name") for m in lista_modelos if "generateContent" in m.get("supportedGenerationMethods", []) and "gemini" in m.get("name", "").lower()), None)
-        if not modelo_elegido: raise HTTPException(status_code=500, detail="Sin modelos")
-        instruccion = f"Escribe o redacta un hermoso y breve mensaje de condolencia o recuerdo para la persona fallecida '{datos.perfil_nombre}'. Mi relación o anécdota con él/ella es la siguiente: '{datos.parentezco_o_anecdota}'. Quiero publicarlo en su libro de recuerdos (Guestbook). Que el mensaje sea corto (máximo 40 palabras), poético, profundamente empático y cálido, en primera persona hacia él o ella. Omite saludos o despedidas largas. Entrega sólo el texto final sin comillas ni aclaraciones."
-        url_generar = f"https://generativelanguage.googleapis.com/v1beta/{modelo_elegido}:generateContent?key={API_KEY_GEMINI}"
-        respuesta = requests.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
-        if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
-        texto_generado = respuesta.json()['candidates'][0]['content']['parts'][0]['text'].strip().replace('"', '')
-        return {"homenaje": texto_generado[:150]}
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            url_modelos = f"https://generativelanguage.googleapis.com/v1beta/models?key={API_KEY_GEMINI}"
+            res_modelos = await client.get(url_modelos)
+            if res_modelos.status_code != 200: raise HTTPException(status_code=500, detail="Error API Key")
+            lista_modelos = res_modelos.json().get("models", [])
+            modelo_elegido = next((m.get("name") for m in lista_modelos if "generateContent" in m.get("supportedGenerationMethods", []) and "gemini" in m.get("name", "").lower()), None)
+            if not modelo_elegido: raise HTTPException(status_code=500, detail="Sin modelos")
+            instruccion = f"Escribe o redacta un hermoso y breve mensaje de condolencia o recuerdo para la persona fallecida '{datos.perfil_nombre}'. Mi relación o anécdota con él/ella es la siguiente: '{datos.parentezco_o_anecdota}'. Quiero publicarlo en su libro de recuerdos (Guestbook). Que el mensaje sea corto (máximo 40 palabras), poético, profundamente empático y cálido, en primera persona hacia él o ella. Omite saludos o despedidas largas. Entrega sólo el texto final sin comillas ni aclaraciones."
+            url_generar = f"https://generativelanguage.googleapis.com/v1beta/{modelo_elegido}:generateContent?key={API_KEY_GEMINI}"
+            respuesta = await client.post(url_generar, headers={'Content-Type': 'application/json'}, json={"contents": [{"parts": [{"text": instruccion}]}]})
+            if respuesta.status_code != 200: raise HTTPException(status_code=500, detail="Error de Google")
+            texto_generado = respuesta.json()['candidates'][0]['content']['parts'][0]['text'].strip().replace('"', '')
+            return {"homenaje": texto_generado[:150]}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error general de la IA")
 
@@ -173,8 +306,9 @@ def verificar_pin(identificador: str, req: PinRequest, db: Session = Depends(get
     if perfil.pin_familia == req.pin: return {"success": True}
     raise HTTPException(status_code=401, detail="PIN incorrecto")
 
+# --- CRUD PROTEGIDO POR ADMIN ---
 @app.post("/crear_perfil/")
-def crear_perfil(perfil: PerfilDatos, db: Session = Depends(get_db)):
+def crear_perfil(perfil: PerfilDatos, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     existente = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == perfil.identificador).first()
     if existente: raise HTTPException(status_code=400, detail="Ese identificador ya existe.")
     nuevo_difunto = database.PerfilDifunto(identificador=perfil.identificador, nombre=perfil.nombre, fechas=perfil.fechas, biografia=perfil.biografia, foto_perfil="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png", foto_portada="https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop", en_memoria_de=perfil.en_memoria_de, esposa=perfil.esposa, hijos=perfil.hijos, cancion_favorita=perfil.cancion_favorita, juego_favorito=perfil.juego_favorito, pin_familia=perfil.pin_familia)
@@ -182,19 +316,22 @@ def crear_perfil(perfil: PerfilDatos, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": f"Perfil creado."}
 
+# --- CRUD PROTEGIDO POR PIN FAMILIAR (o Admin) ---
 @app.put("/editar_perfil/{identificador}")
-def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, db: Session = Depends(get_db)):
+def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, request: Request, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     perfil.nombre = datos_nuevos.nombre; perfil.fechas = datos_nuevos.fechas; perfil.biografia = datos_nuevos.biografia; perfil.en_memoria_de = datos_nuevos.en_memoria_de; perfil.esposa = datos_nuevos.esposa; perfil.hijos = datos_nuevos.hijos; perfil.cancion_favorita = datos_nuevos.cancion_favorita; perfil.juego_favorito = datos_nuevos.juego_favorito
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 
-# --- SUBIDAS CLOUDINARY 100% REPARADAS ---
+# --- SUBIDAS CLOUDINARY 100% REPARADAS (PROTEGIDAS POR PIN) ---
 @app.post("/cambiar_foto_perfil/{identificador}")
-async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+async def cambiar_foto_perfil(identificador: str, request: Request, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     try:
         contenido = await archivo.read()
         es_video = archivo.content_type.startswith('video/')
@@ -213,9 +350,10 @@ async def cambiar_foto_perfil(identificador: str, archivo: UploadFile = File(...
         raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.post("/cambiar_foto_portada/{identificador}")
-async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
+async def cambiar_foto_portada(identificador: str, request: Request, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     urls_guardadas = []
     try:
         for archivo in archivos[:4]: 
@@ -234,9 +372,10 @@ async def cambiar_foto_portada(identificador: str, archivos: List[UploadFile] = 
         raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.post("/subir_fotos/{identificador}")
-async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
+async def subir_fotos(identificador: str, request: Request, archivos: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     fotos_guardadas = []
     try:
         for archivo in archivos:
@@ -257,9 +396,10 @@ async def subir_fotos(identificador: str, archivos: List[UploadFile] = File(...)
         raise HTTPException(status_code=500, detail="Fallo la subida a la nube.")
 
 @app.post("/subir_audio_voz/{identificador}")
-async def subir_audio_voz(identificador: str, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+async def subir_audio_voz(identificador: str, request: Request, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     try:
         contenido = await archivo.read()
         file_obj = io.BytesIO(contenido)
@@ -272,9 +412,10 @@ async def subir_audio_voz(identificador: str, archivo: UploadFile = File(...), d
         raise HTTPException(status_code=500, detail="Fallo la subida de audio.")
 
 @app.delete("/eliminar_foto/{foto_id}")
-def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
+def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db)):
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
+    if foto.perfil: validar_pin_o_admin(request, foto.perfil)
     try:
         url_partes = foto.url_foto.split('/')
         cloudinary.uploader.destroy("/".join(url_partes[url_partes.index("memoriales"):]).split('.')[0], resource_type="image")
@@ -285,7 +426,8 @@ def eliminar_foto(foto_id: int, db: Session = Depends(get_db)):
 
 # --- RUTAS DE RECUERDOS Y MOMENTOS ---
 @app.post("/dejar_mensaje/{identificador}")
-def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, db: Session = Depends(get_db)):
+def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "dejar_mensaje", max_calls=10, window=60)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     nuevo_msj = database.MensajeRecuerdo(autor=mensaje.autor, texto=mensaje.texto[:150], perfil_id=perfil.id)
@@ -294,7 +436,8 @@ def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, db: Session = Depen
     return {"mensaje": "Recuerdo guardado"}
 
 @app.post("/likear_mensaje/{mensaje_id}")
-def likear_mensaje(mensaje_id: int, db: Session = Depends(get_db)):
+def likear_mensaje(mensaje_id: int, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "likear", max_calls=30, window=60)
     mensaje = db.query(database.MensajeRecuerdo).filter(database.MensajeRecuerdo.id == mensaje_id).first()
     if not mensaje: raise HTTPException(status_code=404)
     mensaje.likes += 1
@@ -302,40 +445,45 @@ def likear_mensaje(mensaje_id: int, db: Session = Depends(get_db)):
     return {"likes": mensaje.likes}
 
 @app.delete("/eliminar_mensaje/{mensaje_id}")
-def eliminar_mensaje(mensaje_id: int, db: Session = Depends(get_db)):
+def eliminar_mensaje(mensaje_id: int, request: Request, db: Session = Depends(get_db)):
     mensaje = db.query(database.MensajeRecuerdo).filter(database.MensajeRecuerdo.id == mensaje_id).first()
     if not mensaje: raise HTTPException(status_code=404)
+    if mensaje.perfil: validar_pin_o_admin(request, mensaje.perfil)
     db.delete(mensaje)
     db.commit()
     return {"mensaje": "Mensaje eliminado"}
 
 @app.post("/agregar_momento/{identificador}")
-def agregar_momento(identificador: str, momento: MomentoNuevo, db: Session = Depends(get_db)):
+def agregar_momento(identificador: str, momento: MomentoNuevo, request: Request, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
     nuevo_momento = database.MomentoInolvidable(anio=momento.anio, titulo=momento.titulo, descripcion=momento.descripcion, perfil_id=perfil.id)
     db.add(nuevo_momento)
     db.commit()
     return {"mensaje": "Momento agregado"}
 
 @app.put("/editar_momento/{momento_id}")
-def editar_momento(momento_id: int, momento: MomentoNuevo, db: Session = Depends(get_db)):
+def editar_momento(momento_id: int, momento: MomentoNuevo, request: Request, db: Session = Depends(get_db)):
     momento_db = db.query(database.MomentoInolvidable).filter(database.MomentoInolvidable.id == momento_id).first()
     if not momento_db: raise HTTPException(status_code=404)
+    if momento_db.perfil: validar_pin_o_admin(request, momento_db.perfil)
     momento_db.anio = momento.anio; momento_db.titulo = momento.titulo; momento_db.descripcion = momento.descripcion
     db.commit()
     return {"mensaje": "Momento actualizado"}
 
 @app.delete("/eliminar_momento/{momento_id}")
-def eliminar_momento(momento_id: int, db: Session = Depends(get_db)):
+def eliminar_momento(momento_id: int, request: Request, db: Session = Depends(get_db)):
     momento = db.query(database.MomentoInolvidable).filter(database.MomentoInolvidable.id == momento_id).first()
     if not momento: raise HTTPException(status_code=404)
+    if momento.perfil: validar_pin_o_admin(request, momento.perfil)
     db.delete(momento)
     db.commit()
     return {"mensaje": "Momento eliminado"}
 
 @app.post("/api/encender_vela/{identificador}")
-def encender_vela(identificador: str, db: Session = Depends(get_db)):
+def encender_vela(identificador: str, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "vela", max_calls=5, window=60)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404, detail="Perfil no encontrado")
     if perfil.velas is None: perfil.velas = 0
@@ -344,7 +492,8 @@ def encender_vela(identificador: str, db: Session = Depends(get_db)):
     return {"velas": perfil.velas}
 
 @app.post("/api/likear_foto/{foto_id}")
-def likear_foto(foto_id: int, db: Session = Depends(get_db)):
+def likear_foto(foto_id: int, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "likear", max_calls=30, window=60)
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     if foto.likes is None: foto.likes = 0
@@ -354,7 +503,8 @@ def likear_foto(foto_id: int, db: Session = Depends(get_db)):
     return {"likes": foto.likes}
 
 @app.post("/api/comentar_foto/{foto_id}")
-def comentar_foto(foto_id: int, comentario: ComentarioNuevo, db: Session = Depends(get_db)):
+def comentar_foto(foto_id: int, comentario: ComentarioNuevo, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "comentar", max_calls=10, window=60)
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     nuevo_comentario = database.ComentarioFoto(texto=comentario.texto[:120], foto_id=foto.id)
@@ -363,9 +513,9 @@ def comentar_foto(foto_id: int, comentario: ComentarioNuevo, db: Session = Depen
     if foto.perfil: registrar_interaccion(foto.perfil, db)
     return {"mensaje": "Comentario agregado"}
 
-class PinUpdate(BaseModel): nuevo_pin: str
+# --- ADMIN: GESTIÓN DE PERFILES (PROTEGIDO) ---
 @app.put("/api/admin/reset_pin/{identificador}")
-def reset_pin_perfil(identificador: str, datos: PinUpdate, db: Session = Depends(get_db)):
+def reset_pin_perfil(identificador: str, datos: PinUpdate, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     perfil.pin_familia = datos.nuevo_pin
@@ -373,7 +523,7 @@ def reset_pin_perfil(identificador: str, datos: PinUpdate, db: Session = Depends
     return {"mensaje": "PIN actualizado correctamente"}
 
 @app.delete("/api/admin/eliminar_perfil/{identificador}")
-def eliminar_perfil_completo(identificador: str, db: Session = Depends(get_db)):
+def eliminar_perfil_completo(identificador: str, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     try: cloudinary.api.delete_resources_by_prefix(f"memoriales/{identificador}/"); cloudinary.api.delete_folder(f"memoriales/{identificador}")
@@ -388,7 +538,11 @@ def eliminar_perfil_completo(identificador: str, db: Session = Depends(get_db)):
 # 🎬 CONSTRUCCIÓN DE LA VISTA PRINCIPAL 🎬
 @app.get("/perfil/{identificador}", response_class=HTMLResponse)
 def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_db)):
-    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    perfil = db.query(database.PerfilDifunto).options(
+        selectinload(database.PerfilDifunto.fotos_galeria).selectinload(database.FotoGaleria.comentarios),
+        selectinload(database.PerfilDifunto.mensajes),
+        selectinload(database.PerfilDifunto.momentos)
+    ).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: return HTMLResponse(content="<h1>Error 404: Perfil no encontrado</h1>", status_code=404)
 
     hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
@@ -455,15 +609,15 @@ def panel_admin(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @app.get("/api/admin/estadisticas")
-def estadisticas_admin(db: Session = Depends(get_db)):
+def estadisticas_admin(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     perfiles = db.query(database.PerfilDifunto).all()
     return {
         "total_perfiles": len(perfiles), "total_visitas": sum([p.visitas for p in perfiles]), 
-        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva", "pin": p.pin_familia} for p in perfiles]
+        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva"} for p in perfiles]
     }
 
 @app.get("/api/admin/moderacion")
-def datos_moderacion(db: Session = Depends(get_db)):
+def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     fotos = db.query(database.FotoGaleria).all()
     mensajes = db.query(database.MensajeRecuerdo).all()
     return {"fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil], "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]}

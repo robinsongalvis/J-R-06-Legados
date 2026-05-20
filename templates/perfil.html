@@ -668,7 +668,7 @@
     <script>
         AOS.init({ duration: 1000, once: true, offset: 50 });
         const ID_PERFIL = "{{ identificador }}";
-        const CANCION_RAW = "{{ cancion_favorita }}";
+        const CANCION_RAW = {{ cancion_favorita | tojson }};
 
         // =====================================
         // 🎬 LÓGICA DEL SLIDER DE PORTADA
@@ -754,8 +754,39 @@
             if(contenedorCancion && CANCION_RAW) {
                 const match = CANCION_RAW.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if(match && match[1]) {
-                    contenedorCancion.innerHTML = `<iframe class="yt-player" src="https://www.youtube.com/embed/${match[1]}?controls=1" frameborder="0" allowfullscreen></iframe><a href="${CANCION_RAW}" target="_blank" class="btn-yt-rescue"><i class="fab fa-youtube"></i> Escuchar en YouTube</a>`;
-                } else { contenedorCancion.innerHTML = `<span style="font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;">${CANCION_RAW}</span>`; }
+                    contenedorCancion.innerHTML = '';
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'yt-player';
+                    iframe.src = `https://www.youtube.com/embed/${match[1]}?controls=1`;
+                    iframe.frameBorder = '0';
+                    iframe.allowFullscreen = true;
+                    
+                    let safeUrl = '';
+                    try {
+                        const parsed = new URL(CANCION_RAW);
+                        const allowedHosts = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+                        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && allowedHosts.includes(parsed.hostname.toLowerCase())) {
+                            safeUrl = parsed.href;
+                        }
+                    } catch(e) {}
+                    
+                    contenedorCancion.appendChild(iframe);
+                    
+                    if (safeUrl) {
+                        const a = document.createElement('a');
+                        a.className = 'btn-yt-rescue';
+                        a.href = safeUrl;
+                        a.target = '_blank';
+                        a.innerHTML = '<i class="fab fa-youtube"></i> Escuchar en YouTube';
+                        contenedorCancion.appendChild(a);
+                    }
+                } else {
+                    contenedorCancion.innerHTML = '';
+                    const span = document.createElement('span');
+                    span.style.cssText = 'font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;';
+                    span.textContent = CANCION_RAW;
+                    contenedorCancion.appendChild(span);
+                }
             }
         });
 
@@ -959,7 +990,7 @@
         // =====================================
         if (isFamilyAdmin) { document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('admin-only')); let btnLock = document.getElementById('btnAccesoFamiliar'); if (btnLock) btnLock.style.display = 'none'; }
         function compartirHomenaje() { if (navigator.share) { navigator.share({ title: 'Memorial de {{ nombre }}', text: 'Te invito a visitar el espacio de recuerdos en memoria de {{ nombre }}.', url: window.location.href }).catch(console.error); } else { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Te invito a visitar el espacio de recuerdos de {{ nombre }}:\n\n' + window.location.href)}`, '_blank'); } }
-        function verificarPinFamiliar() { let pin = document.getElementById('f_pin').value; let btn = document.getElementById('btnVerificarPin'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; fetch(`/api/verificar_pin/${ID_PERFIL}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pin: pin}) }).then(res => { if(!res.ok) throw new Error("Incorrecto"); return res.json(); }).then(data => { sessionStorage.setItem('family_auth_' + ID_PERFIL, 'true'); window.location.reload(); }).catch(err => { document.getElementById('errorPin').style.display = 'block'; btn.innerHTML = 'Desbloquear Funciones'; }); }
+        function verificarPinFamiliar() { let pin = document.getElementById('f_pin').value; let btn = document.getElementById('btnVerificarPin'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; fetch(`/api/verificar_pin/${ID_PERFIL}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pin: pin}) }).then(res => { if(!res.ok) throw new Error("Incorrecto"); return res.json(); }).then(data => { sessionStorage.setItem('family_auth_' + ID_PERFIL, 'true'); sessionStorage.setItem('family_pin_' + ID_PERFIL, pin); window.location.reload(); }).catch(err => { document.getElementById('errorPin').style.display = 'block'; btn.innerHTML = 'Desbloquear Funciones'; }); }
         
         let pressTimerGrid;
         document.querySelectorAll('.gallery-item').forEach(item => { item.addEventListener('touchstart', (e) => { if(!isFamilyAdmin) return; pressTimerGrid = setTimeout(() => { activarModoEliminar(item.getAttribute('data-id'), item); if (navigator.vibrate) navigator.vibrate(50); }, 600); }); item.addEventListener('touchend', () => clearTimeout(pressTimerGrid)); item.addEventListener('touchmove', () => clearTimeout(pressTimerGrid)); });
@@ -968,21 +999,21 @@
         function cancelarEliminar() { itemAEliminarId = null; tipoEliminacion = null; if(elementoSeleccionado) { elementoSeleccionado.classList.remove('selected-for-delete'); elementoSeleccionado = null; } document.getElementById('deleteTopBar').classList.remove('active'); }
         function prepararEliminarMensaje(id) { itemAEliminarId = id; tipoEliminacion = 'mensaje'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este mensaje?"; abrirModal('confirmModal'); }
         function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); } 
-        function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_momento/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE' }).then(() => window.location.reload()); }
+        function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_momento/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE', headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
         function abrirModal(id) { document.getElementById(id).classList.add('show'); }
         function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
         function prepararMomento(id, anio = "", titulo = "", desc = "") { document.getElementById('t_id').value = id || ""; document.getElementById('t_anio').value = anio; document.getElementById('t_titulo').value = titulo; document.getElementById('t_desc').value = desc; document.getElementById('modalMomentoTitulo').innerText = id ? "Editar Momento" : "Agregar Momento"; abrirModal('momentoModal'); }
-        function guardarMomento() { let id = document.getElementById('t_id').value; let datos = { anio: document.getElementById('t_anio').value, titulo: document.getElementById('t_titulo').value, descripcion: document.getElementById('t_desc').value }; if(!datos.anio || !datos.titulo) { return alert("Por favor, llena el año y el título."); } let url = id ? `/editar_momento/${id}` : `/agregar_momento/${ID_PERFIL}`; fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
+        function guardarMomento() { let id = document.getElementById('t_id').value; let datos = { anio: document.getElementById('t_anio').value, titulo: document.getElementById('t_titulo').value, descripcion: document.getElementById('t_desc').value }; if(!datos.anio || !datos.titulo) { return alert("Por favor, llena el año y el título."); } let url = id ? `/editar_momento/${id}` : `/agregar_momento/${ID_PERFIL}`; fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
         function darLikeMensaje(mensajeId, element) { let icon = element.querySelector('i'); let countSpan = element.querySelector('.like-count'); icon.style.transform = 'scale(1.4)'; element.classList.add('liked'); setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200); fetch(`/likear_mensaje/${mensajeId}`, { method: 'POST' }).then(res => res.json()).then(data => { countSpan.innerText = data.likes; }); }
         function enviarMensaje() { let autor = document.getElementById('m_autor').value.trim(); let texto = document.getElementById('m_texto').value.trim(); if(!autor || !texto) { alert("Por favor, escribe tu nombre y un mensaje."); return; } let btn = document.getElementById('btnEnviarMsj'); btn.innerHTML = 'Publicando...'; btn.style.opacity = '0.7'; fetch(`/dejar_mensaje/${ID_PERFIL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autor: autor, texto: texto }) }).then(() => window.location.reload()); }
         
         let archivosAsubir = []; const dropZone = document.getElementById('dropZone'); const fileInput = document.getElementById('fotoInputMultiple');
         if (isFamilyAdmin) { dropZone.addEventListener('click', () => fileInput.click()); dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }); dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); }); dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); manejarArchivos(e.dataTransfer.files); }); fileInput.addEventListener('change', (e) => { manejarArchivos(e.target.files); }); }
         function manejarArchivos(files) { archivosAsubir = Array.from(files).filter(file => file.type.startsWith('image/')); if (archivosAsubir.length === 0) return; document.getElementById('uploadCountText').innerText = `${archivosAsubir.length} foto(s) seleccionada(s)`; const grid = document.getElementById('previewGrid'); grid.innerHTML = ''; archivosAsubir.forEach(file => { const img = document.createElement('img'); img.src = URL.createObjectURL(file); img.className = 'preview-item'; grid.appendChild(img); }); document.getElementById('uploadProgressContainer').style.display = 'none'; document.getElementById('btnConfirmUpload').style.display = 'block'; abrirModal('modalPreviewUpload'); }
-        function confirmarSubidaBatch() { if (archivosAsubir.length === 0) return; const formData = new FormData(); archivosAsubir.forEach(file => formData.append('archivos', file)); document.getElementById('btnConfirmUpload').style.display = 'none'; document.getElementById('uploadProgressContainer').style.display = 'block'; const xhr = new XMLHttpRequest(); xhr.open('POST', `/subir_fotos/${ID_PERFIL}`, true); xhr.upload.onprogress = function(e) { if (e.lengthComputable) { document.getElementById('uploadProgressBar').style.width = ((e.loaded / e.total) * 100) + '%'; } }; xhr.onload = function() { if (xhr.status === 200) { window.location.reload(); } else { alert('Error al subir imágenes'); cerrarModal('modalPreviewUpload'); } }; xhr.send(formData); }
-        function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; if(input.files[0].size > 15 * 1024 * 1024) { alert("El video es muy pesado. Máximo 15MB."); return; } let formData = new FormData(); formData.append("archivo", input.files[0]); let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
-        function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; if(input.files.length > 4) { alert("Máximo de 4 videos/fotos."); return; } let formData = new FormData(); let totalSize = 0; for(let i=0; i < input.files.length; i++) { totalSize += input.files[i].size; formData.append("archivos", input.files[i]); } if(totalSize > 40 * 1024 * 1024) { alert("Muy pesado en total."); return; } let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData }).then(() => window.location.reload()); }
-        function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
+        function confirmarSubidaBatch() { if (archivosAsubir.length === 0) return; const formData = new FormData(); archivosAsubir.forEach(file => formData.append('archivos', file)); document.getElementById('btnConfirmUpload').style.display = 'none'; document.getElementById('uploadProgressContainer').style.display = 'block'; const xhr = new XMLHttpRequest(); xhr.open('POST', `/subir_fotos/${ID_PERFIL}`, true); xhr.setRequestHeader('X-Family-Pin', sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''); xhr.upload.onprogress = function(e) { if (e.lengthComputable) { document.getElementById('uploadProgressBar').style.width = ((e.loaded / e.total) * 100) + '%'; } }; xhr.onload = function() { if (xhr.status === 200) { window.location.reload(); } else { alert('Error al subir imágenes'); cerrarModal('modalPreviewUpload'); } }; xhr.send(formData); }
+        function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; if(input.files[0].size > 15 * 1024 * 1024) { alert("El video es muy pesado. Máximo 15MB."); return; } let formData = new FormData(); formData.append("archivo", input.files[0]); let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
+        function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; if(input.files.length > 4) { alert("Máximo de 4 videos/fotos."); return; } let formData = new FormData(); let totalSize = 0; for(let i=0; i < input.files.length; i++) { totalSize += input.files[i].size; formData.append("archivos", input.files[i]); } if(totalSize > 40 * 1024 * 1024) { alert("Muy pesado en total."); return; } let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
+        function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
 
         // =====================================
         // 🎙️ SUBIR MP3 DE VOZ REAL
@@ -998,7 +1029,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
             btn.disabled = true;
 
-            fetch(`/subir_audio_voz/${ID_PERFIL}`, { method: 'POST', body: formData })
+            fetch(`/subir_audio_voz/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} })
             .then(res => { if(res.ok) window.location.reload(); else alert("Error subiendo audio"); })
             .catch(err => alert("Fallo la conexión al subir audio."))
             .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> Subir Audio'; });
