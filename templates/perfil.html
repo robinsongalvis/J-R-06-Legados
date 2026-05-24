@@ -295,10 +295,10 @@
         .guestbook-section { padding: 0 20px 40px; width: 100%; }
         .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding: 5px; }
         
-        #timelineWrapper, #recuerdosWrapper { overflow: hidden; position: relative; transition: max-height 0.5s ease-in-out; cursor: pointer; }
-        #timelineWrapper { max-height: 240px; } /* Muestra el primero */
-        #recuerdosWrapper { max-height: 220px; } /* Muestra el primero */
-        #timelineWrapper.expanded, #recuerdosWrapper.expanded { max-height: 450px; cursor: default; overflow-y: auto; }
+        #timelineWrapper, #recuerdosWrapper { overflow: hidden; position: relative; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+        #timelineWrapper { max-height: 240px; }
+        #recuerdosWrapper { max-height: 220px; }
+        #timelineWrapper.expanded, #recuerdosWrapper.expanded { max-height: 5000px; overflow: visible; }
         
         .collapsible-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, rgba(15,23,42,0) 0%, var(--primary-bg) 100%); pointer-events: none; z-index: 5; transition: opacity 0.4s; }
         .collapsible-wrapper.expanded .collapsible-fade, .expanded .collapsible-fade { opacity: 0; }
@@ -346,6 +346,125 @@
         .error-msg { color: #e74c3c; font-size: 14px; margin-top: 15px; display: none; font-weight: bold;}
         .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(212,175,55,0.2); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: 0.3s; z-index: 10; font-size: 16px; display: flex; justify-content: center; align-items: center; }
         .btn-ia-magic:hover { background: var(--accent); color: white; transform: rotate(15deg) scale(1.1); box-shadow: 0 0 15px rgba(212,175,55,0.5); }
+
+        /* ==========================================
+           🎨 TEMAS PREMIUM
+           ========================================== */
+        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#9e7060; --accent:#c97a4a; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
+        body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; }
+
+        body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; }
+
+        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#6b7a5e; --accent:#4a7a3a; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
+        body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; }
+
+        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#7a7a7a; --accent:#b8962e; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
+        body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; }
+
+        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#7a6a9e; --accent:#9b7fca; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
+        body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; }
+
+        /* ==========================================
+           🎨 SELECTOR DE TEMA
+           ========================================== */
+        .tema-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
+        .tema-card { border-radius: 14px; padding: 14px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .tema-card.selected { border-color: var(--accent); transform: scale(1.03); box-shadow: 0 0 20px rgba(212,175,55,0.3); }
+        .tema-card:hover { border-color: var(--accent); }
+        .tema-swatches { display: flex; gap: 4px; }
+        .swatch { width: 18px; height: 18px; border-radius: 50%; }
+        .tema-card h4 { font-size: 13px; font-weight: bold; color: var(--text-main); margin: 0; text-align: center; }
+        .tema-card p { font-size: 11px; color: var(--text-light); margin: 0; text-align: center; line-height: 1.3; }
+        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.3s; }
+        .btn-tema-toggle:hover { background: var(--accent); color: white; }
+
+        /* ==========================================
+           🕯️ MURO DE VELAS
+           ========================================== */
+        .velas-muro-section { padding: 10px 20px 35px; width: 100%; }
+        .velas-muro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        @media (min-width: 400px) { .velas-muro-grid { grid-template-columns: repeat(4, 1fr); } }
+        .vela-card { background: var(--card-bg); border-radius: 14px; padding: 12px 8px; text-align: center; border: 1px solid var(--border-soft); box-shadow: 0 5px 15px var(--border-soft); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .vela-flame { font-size: 28px; animation: flickerVela 2s infinite alternate ease-in-out; line-height: 1; }
+        @keyframes flickerVela { 0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(255,180,0,0.7)); } 50% { transform: scale(1.08) rotate(2deg); filter: drop-shadow(0 0 14px rgba(255,120,0,0.8)); } }
+        .vela-nombre { font-size: 11px; font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
+        .vela-mensaje { font-size: 10px; color: var(--text-light); font-style: italic; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .vela-tiempo { font-size: 9px; color: var(--accent); font-weight: bold; margin-top: 2px; }
+        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto 5px; background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: 25px; padding: 11px 22px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-encender-muro:hover { background: linear-gradient(135deg,rgba(255,140,50,0.3),rgba(255,80,0,0.15)); transform: translateY(-2px); }
+        .velas-empty { text-align: center; padding: 30px 20px; color: var(--text-light); font-style: italic; font-size: 14px; }
+
+        /* ==========================================
+           🗺️ MAPA DEL ÚLTIMO DESCANSO
+           ========================================== */
+        .mapa-section { padding: 10px 20px 35px; width: 100%; }
+        .mapa-container { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px var(--border-soft); border: 1px solid var(--border-soft); }
+        #mapaLeaflet { height: 260px; width: 100%; z-index: 1; }
+        .mapa-info { background: var(--card-bg); padding: 16px; border-top: 1px solid var(--border-soft); }
+        .mapa-direccion { font-size: 14px; font-weight: bold; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: flex-start; gap: 8px; }
+        .mapa-descripcion-txt { font-size: 13px; color: var(--text-light); font-style: italic; line-height: 1.5; margin-bottom: 10px; }
+        .btn-ir-mapa { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border-radius: 20px; padding: 8px 18px; font-size: 13px; font-weight: bold; text-decoration: none; transition: 0.3s; border: none; cursor: pointer; }
+        .btn-ir-mapa:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .mapa-edit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+        /* ==========================================
+           🌳 ÁRBOL FAMILIAR
+           ========================================== */
+        .arbol-section { padding: 10px 20px 35px; width: 100%; }
+        .arbol-container { display: flex; flex-direction: column; gap: 15px; }
+        .arbol-grupo { display: flex; flex-direction: column; gap: 6px; }
+        .arbol-grupo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: 4px; }
+        .arbol-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .familiar-card { background: var(--card-bg); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-soft); box-shadow: 0 4px 12px var(--border-soft); min-width: 130px; flex: 1; max-width: 180px; position: relative; transition: 0.3s; }
+        .familiar-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212,175,55,0.15); }
+        .familiar-foto { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
+        .familiar-info { min-width: 0; }
+        .familiar-nombre { font-size: 13px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .familiar-relacion { font-size: 11px; color: var(--accent); font-weight: bold; text-transform: capitalize; }
+        .familiar-link { font-size: 10px; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+        .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: 12px; opacity: 0; transition: 0.2s; background: none; border: none; padding: 4px; }
+        .familiar-card:hover .familiar-delete { opacity: 0.7; }
+        .familiar-card-deceased { border-color: var(--accent); background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03)); }
+        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: 14px; padding: 12px; min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: bold; transition: 0.3s; flex: 0 0 auto; }
+        .arbol-add-btn:hover { background: rgba(212,175,55,0.15); }
+        .arbol-connector { display: flex; justify-content: center; }
+        .arbol-line { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), transparent); opacity: 0.4; }
+
+        /* ==========================================
+           📄 PRINT / PDF - LIBRO DEL LEGADO
+           ========================================== */
+        .btn-pdf { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: 13px 20px; border-radius: 25px; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-pdf:hover { filter: brightness(1.3); transform: translateY(-2px); }
+
+        @media print {
+            #welcome-screen, #deleteTopBar, #btnAccesoFamiliar, .cover-controls,
+            .btn-candle, .btn-ver-mas, .action-buttons-container, .upload-zone,
+            .gallery-item .item-likes-overlay, .desktop-delete-btn, .slider-dots,
+            .slider-arrows, .add-timeline-btn, .timeline-controls, .msg-delete-btn,
+            .btn-encender-muro, .mapa-edit-row, .arbol-add-btn, .familiar-delete,
+            .lb-actions, .audio-player-container button, script, .admin-only { display: none !important; }
+            html, body { margin: 0; padding: 0; background: white !important; color: #1a1a1a !important; }
+            body { font-size: 11pt; line-height: 1.6; }
+            .container { max-width: 100% !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+            .cover-header { height: 200px; border-radius: 0 !important; page-break-after: avoid; }
+            .cover-media { object-fit: cover; }
+            .profile-wrapper { margin-top: -70px; }
+            .profile-pic { width: 120px; height: 120px; }
+            h1.name { font-size: 26pt; }
+            .bio-text { page-break-inside: avoid; }
+            .timeline-section, .guestbook-section, .arbol-section { page-break-before: auto; }
+            .gallery-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 5px; }
+            .gallery-item { break-inside: avoid; }
+            .velas-muro-grid { grid-template-columns: repeat(5, 1fr) !important; }
+            #qr-print { display: block !important; text-align: center; padding: 30px 20px; page-break-before: always; }
+            #qr-print canvas { margin: 0 auto; display: block; }
+            #qr-print p { font-size: 12pt; margin-top: 10px; color: #333; }
+            .mapa-section { page-break-inside: avoid; }
+            #mapaLeaflet { display: none !important; }
+            .mapa-static-print { display: block !important; }
+        }
+        .mapa-static-print { display: none; }
+        #qr-print { display: none; }
     </style>
 </head>
 <body>
@@ -397,6 +516,7 @@
                 <button class="glass-btn theme-btn" onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar Tema de Color"><i class="fas fa-moon"></i></button>
                 <div style="display: flex; gap: 10px;">
                     <button class="glass-btn admin-only" onclick="abrirModal('editModal')" title="Editar Textos del Perfil"><i class="fas fa-pen"></i></button>
+                    <button class="glass-btn btn-tema-toggle" onclick="abrirModal('temaModal')" title="Cambiar Estilo del Memorial"><i class="fas fa-palette"></i></button>
                     <form id="portadaForm" class="admin-only" style="display:none;"><input type="file" id="portadaInput" accept="image/*,video/mp4,video/quicktime" multiple onchange="cambiarFotoPortada()"></form>
                     <button class="glass-btn admin-only" onclick="document.getElementById('portadaInput').click()" title="Cambiar Slider de Portada"><i class="fas fa-images"></i></button>
                     <form id="fotoForm" class="admin-only" style="display:none;"><input type="file" id="fotoInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPerfil()"></form>
@@ -442,6 +562,18 @@
             </p>
         </div>
 
+        <!-- MURO DE VELAS -->
+        <div class="velas-muro-section" data-aos="fade-up">
+            <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
+                <i class="fas fa-fire" style="color:#f39c12;"></i> Encender una Vela en su Memoria
+            </button>
+            <div id="velasMuroGrid" class="velas-muro-grid"></div>
+            <div id="velasEmpty" class="velas-empty" style="display:none;">
+                <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom:8px;"></i>
+                Sé el primero en encender una vela.
+            </div>
+        </div>
+
         {% if interacciones_hoy > 0 %}
         <div class="memoria-viva-banner" data-aos="fade-up">
             <i class="fas fa-seedling"></i>
@@ -480,6 +612,69 @@
             <div class="bio-text" id="biografiaTexto">{{ biografia }}</div>
         </div>
 
+        <!-- MAPA DEL ÚLTIMO DESCANSO -->
+        {% if mapa_lat and mapa_lng %}
+        <div class="mapa-section" id="mapaSection" data-aos="fade-up">
+            <h2 class="section-title">Lugar de Descanso</h2>
+            <div class="mapa-container">
+                <div id="mapaLeaflet"></div>
+                <div class="mapa-info">
+                    {% if mapa_direccion %}
+                    <div class="mapa-direccion"><i class="fas fa-map-marker-alt" style="color:var(--accent); margin-top:2px;"></i> {{ mapa_direccion }}</div>
+                    {% endif %}
+                    {% if mapa_descripcion %}
+                    <p class="mapa-descripcion-txt">{{ mapa_descripcion }}</p>
+                    {% endif %}
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <a class="btn-ir-mapa" href="https://www.google.com/maps?q={{ mapa_lat }},{{ mapa_lng }}" target="_blank" rel="noopener">
+                            <i class="fas fa-directions"></i> Cómo llegar
+                        </a>
+                        <div class="mapa-static-print">📍 {{ mapa_lat }}, {{ mapa_lng }}</div>
+                        <div class="mapa-edit-row">
+                            <button class="btn-ir-mapa admin-only" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--accent);" onclick="abrirModal('mapaModal')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        {% if tiene_mapa and mapa_privacidad in ['invitados', 'privado'] %}
+        <!-- Mapa con acceso restringido: visible solo para familia con PIN -->
+        <div class="mapa-section" id="mapaSectionInvitados" data-aos="fade-up">
+            <h2 class="section-title">Lugar de Descanso</h2>
+            <div id="mapaInvitadosPlaceholder" style="text-align:center; padding:25px; background:var(--card-bg); border-radius:20px; border:1.5px dashed var(--border-soft);">
+                <i class="fas fa-lock" style="font-size:28px; color:var(--accent); opacity:0.5; display:block; margin-bottom:10px;"></i>
+                <p style="color:var(--text-light); font-size:14px; margin:0;">Ubicación disponible solo para familiares</p>
+            </div>
+            <div id="mapaInvitadosContainer" style="display:none;">
+                <div class="mapa-container">
+                    <div id="mapaLeafletInvitados" style="height:260px; width:100%; z-index:1;"></div>
+                    <div class="mapa-info">
+                        <div id="mapaDireccionInvitados" class="mapa-direccion" style="display:none;"></div>
+                        <p id="mapaDescripcionInvitados" class="mapa-descripcion-txt" style="display:none;"></p>
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <a id="mapaEnlaceInvitados" class="btn-ir-mapa" href="#" target="_blank" rel="noopener">
+                                <i class="fas fa-directions"></i> Cómo llegar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="mapa-section admin-only" id="mapaSectionVacio" data-aos="fade-up">
+            <h2 class="section-title">Lugar de Descanso</h2>
+            <div style="text-align:center; padding:25px; background:var(--card-bg); border-radius:20px; border:1.5px dashed var(--border-soft);">
+                <i class="fas fa-map-marked-alt" style="font-size:36px; color:var(--accent); opacity:0.5; margin-bottom:10px; display:block;"></i>
+                <p style="color:var(--text-light); font-size:14px; margin:0 0 15px;">Agrega la ubicación del lugar de descanso</p>
+                <button class="btn-ir-mapa" onclick="abrirModal('mapaModal')"><i class="fas fa-plus"></i> Configurar Mapa</button>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
         <div class="timeline-section" id="timelineSection">
             <div class="title-with-btn" data-aos="fade-up">
                 <h2 class="section-title" style="margin:0;">Momentos Inolvidables</h2>
@@ -511,6 +706,17 @@
             {% endif %}
         </div>
 
+        <!-- ÁRBOL FAMILIAR -->
+        <div class="arbol-section" id="arbolSection" data-aos="fade-up">
+            <div class="title-with-btn">
+                <h2 class="section-title" style="margin:0;">Árbol Familiar</h2>
+                <button class="add-timeline-btn admin-only" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="arbol-container" id="arbolContainer">
+                <!-- Renderizado por JS -->
+            </div>
+        </div>
+
         <div class="guestbook-section" data-aos="fade-up">
             <h2 class="section-title">Recuerdos</h2>
             <div class="collapsible-wrapper" id="recuerdosWrapper">
@@ -540,6 +746,7 @@
             <div class="action-buttons-container" style="margin-top: 15px;">
                 <button class="btn-elegant" onclick="abrirModal('mensajeModal')"><i class="fas fa-pen-fancy"></i> Escribir un Mensaje</button>
                 <button class="btn-elegant btn-share" onclick="compartirHomenaje()"><i class="fas fa-share-alt"></i> Compartir Homenaje</button>
+                <button class="btn-pdf" onclick="imprimirLibroLegado()"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>
             </div>
         </div>
 
@@ -589,6 +796,13 @@
             </div>
         </div>
 
+        <!-- QR visible solo en impresión -->
+        <div id="qr-print">
+            <canvas id="qrCanvas"></canvas>
+            <p>Escanea para visitar el memorial digital de <strong>{{ nombre }}</strong></p>
+            <small style="color:#666;">{{ request.base_url }}perfil/{{ identificador }}</small>
+        </div>
+
         <div style="text-align: center; padding: 40px 20px 20px; margin-top: 20px; border-top: 1px solid var(--border-soft);" data-aos="fade-up">
             <p style="font-size: 12px; color: var(--text-light); margin: 0; letter-spacing: 0.5px;">Desarrollado con ❤️ por <strong>J&R 06 Legados</strong> © 2026.<br>Todos los derechos reservados.</p>
         </div>
@@ -614,6 +828,125 @@
         </div>
     </div>
     
+    <!-- MODAL: SELECTOR DE TEMA -->
+    <div id="temaModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('temaModal')">&times;</span>
+            <h2 style="font-family:'Playfair Display',serif;">Estilo del Memorial</h2>
+            <p style="color:var(--text-light); font-size:13px;">Elige la paleta visual que mejor honre su memoria.</p>
+            <div class="tema-grid">
+                <div class="tema-card" id="tc-noche" onclick="previewTema('noche')" style="background:linear-gradient(135deg,#080d1a,#0f1628);">
+                    <div class="tema-swatches"><span class="swatch" style="background:#080d1a;"></span><span class="swatch" style="background:#8fafd8;"></span><span class="swatch" style="background:#e0e8f5;"></span></div>
+                    <h4 style="color:#e0e8f5;">Noche Estrellada</h4>
+                    <p style="color:#7890b5;">Oscuro, eterno y sereno</p>
+                </div>
+                <div class="tema-card" id="tc-atardecer" onclick="previewTema('atardecer')" style="background:linear-gradient(135deg,#fdf6f0,#fdeee6);">
+                    <div class="tema-swatches"><span class="swatch" style="background:#fdf6f0;"></span><span class="swatch" style="background:#c97a4a;"></span><span class="swatch" style="background:#5c3d2e;"></span></div>
+                    <h4 style="color:#5c3d2e;">Atardecer Sereno</h4>
+                    <p style="color:#9e7060;">Cálido, nostálgico y gentil</p>
+                </div>
+                <div class="tema-card" id="tc-bosque" onclick="previewTema('bosque')" style="background:linear-gradient(135deg,#f2ede6,#e8e2d8);">
+                    <div class="tema-swatches"><span class="swatch" style="background:#f2ede6;"></span><span class="swatch" style="background:#4a7a3a;"></span><span class="swatch" style="background:#2d3a2a;"></span></div>
+                    <h4 style="color:#2d3a2a;">Bosque en Calma</h4>
+                    <p style="color:#6b7a5e;">Natural, espiritual y vivo</p>
+                </div>
+                <div class="tema-card" id="tc-marmol" onclick="previewTema('marmol')" style="background:linear-gradient(135deg,#f8f7f5,#f2f0ec);">
+                    <div class="tema-swatches"><span class="swatch" style="background:#f8f7f5;"></span><span class="swatch" style="background:#b8962e;"></span><span class="swatch" style="background:#1a1a1a;"></span></div>
+                    <h4 style="color:#1a1a1a;">Mármol y Oro</h4>
+                    <p style="color:#7a7a7a;">Elegante, clásico y atemporal</p>
+                </div>
+                <div class="tema-card" id="tc-jardin" onclick="previewTema('jardin')" style="background:linear-gradient(135deg,#f6f2ff,#ede8ff);">
+                    <div class="tema-swatches"><span class="swatch" style="background:#f6f2ff;"></span><span class="swatch" style="background:#9b7fca;"></span><span class="swatch" style="background:#2d2545;"></span></div>
+                    <h4 style="color:#2d2545;">Jardín de Luz</h4>
+                    <p style="color:#7a6a9e;">Esperanza, amor y celebración</p>
+                </div>
+            </div>
+            <button class="btn-save" style="margin-top:20px;" onclick="guardarTema()">Guardar Estilo</button>
+        </div>
+    </div>
+
+    <!-- MODAL: ENCENDER VELA -->
+    <div id="candleModal" class="system-modal">
+        <div class="modal-body" style="text-align:center;">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('candleModal')">&times;</span>
+            <div style="font-size:50px; margin-bottom:10px;">🕯️</div>
+            <h2 style="font-family:'Playfair Display',serif; color:var(--text-main);">Encender una Vela</h2>
+            <p style="color:var(--text-light); font-size:14px; margin-bottom:20px;">Tu vela iluminará este memorial por el tiempo que elijas.</p>
+            <div class="form-group" style="text-align:left;">
+                <label>Tu nombre</label>
+                <input type="text" id="vela_nombre" class="input-pro" placeholder="Ej: María Rodríguez" maxlength="50" style="font-size:16px;">
+            </div>
+            <div class="form-group" style="text-align:left;">
+                <label>Mensaje (opcional)</label>
+                <textarea id="vela_mensaje" rows="3" class="input-pro" maxlength="150" placeholder="Un pensamiento, una oración, un recuerdo..." style="font-size:16px;"></textarea>
+            </div>
+            <div class="form-group" style="text-align:left;">
+                <label>Duración de la vela</label>
+                <select id="vela_duracion" class="input-pro" style="font-size:16px;">
+                    <option value="24">24 horas</option>
+                    <option value="48">48 horas</option>
+                    <option value="72">72 horas (3 días)</option>
+                </select>
+            </div>
+            <button class="btn-save" id="btnEncenderVelaMuro" onclick="encenderVelaMuro()"><i class="fas fa-fire"></i> Encender Vela</button>
+        </div>
+    </div>
+
+    <!-- MODAL: MAPA -->
+    <div id="mapaModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mapaModal')">&times;</span>
+            <h2 style="font-family:'Playfair Display',serif;">Mapa del Último Descanso</h2>
+            <p style="color:var(--text-light); font-size:13px; margin-bottom:15px;">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
+            <div id="mapaEditorLeaflet" style="height:220px; border-radius:12px; overflow:hidden; margin-bottom:15px; border:1px solid var(--border-soft);"></div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div class="form-group" style="flex:1; margin:0;"><label>Latitud</label><input type="text" id="m_lat" class="input-pro" placeholder="-7.0700" style="font-size:16px;"></div>
+                <div class="form-group" style="flex:1; margin:0;"><label>Longitud</label><input type="text" id="m_lng" class="input-pro" placeholder="-73.1086" style="font-size:16px;"></div>
+            </div>
+            <div class="form-group"><label>Dirección</label><input type="text" id="m_dir" class="input-pro" placeholder="Cementerio Municipal de..." style="font-size:16px;"></div>
+            <div class="form-group"><label>Descripción del lugar</label><textarea id="m_desc" rows="2" class="input-pro" placeholder="Un texto breve sobre este lugar sagrado..." style="font-size:16px;"></textarea></div>
+            <div class="form-group">
+                <label>Privacidad</label>
+                <select id="m_priv" class="input-pro" style="font-size:16px;">
+                    <option value="publico">Público (todos pueden ver)</option>
+                    <option value="invitados">Solo con PIN familiar</option>
+                    <option value="privado">Privado (solo admin)</option>
+                </select>
+            </div>
+            <button class="btn-save" onclick="guardarMapa()">Guardar Ubicación</button>
+        </div>
+    </div>
+
+    <!-- MODAL: FAMILIAR -->
+    <div id="familiarModal" class="system-modal">
+        <div class="modal-body">
+            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('familiarModal')">&times;</span>
+            <h2 id="familiarModalTitulo" style="font-family:'Playfair Display',serif;">Agregar Familiar</h2>
+            <input type="hidden" id="f_fam_id">
+            <div class="form-group"><label>Nombre completo</label><input type="text" id="f_nombre" class="input-pro" style="font-size:16px;"></div>
+            <div class="form-group">
+                <label>Relación con el fallecido</label>
+                <select id="f_relacion" class="input-pro" style="font-size:16px;">
+                    <option value="Padre">Padre</option>
+                    <option value="Madre">Madre</option>
+                    <option value="Abuelo">Abuelo</option>
+                    <option value="Abuela">Abuela</option>
+                    <option value="Hermano">Hermano</option>
+                    <option value="Hermana">Hermana</option>
+                    <option value="Esposo/a">Esposo/a</option>
+                    <option value="Hijo">Hijo</option>
+                    <option value="Hija">Hija</option>
+                    <option value="Nieto">Nieto</option>
+                    <option value="Nieta">Nieta</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div class="form-group"><label>URL de foto (opcional)</label><input type="url" id="f_foto" class="input-pro" placeholder="https://..." style="font-size:16px;"></div>
+            <div class="form-group"><label>ID memorial propio (opcional)</label><input type="text" id="f_memorial" class="input-pro" placeholder="identificador en la plataforma" style="font-size:16px;"></div>
+            <button class="btn-save" onclick="guardarFamiliar()">Guardar</button>
+        </div>
+    </div>
+
     <div id="lightbox">
         <div class="lb-header-bar">
             <span class="lb-close" onclick="cerrarLightbox()">&times;</span>
@@ -669,6 +1002,16 @@
         AOS.init({ duration: 1000, once: true, offset: 50 });
         const ID_PERFIL = "{{ identificador }}";
         const CANCION_RAW = {{ cancion_favorita | tojson }};
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         // =====================================
         // 🎬 LÓGICA DEL SLIDER DE PORTADA
@@ -1122,7 +1465,6 @@
                     wrap.classList.remove('expanded');
                     if(btnMas) btnMas.style.display = 'block';
                     if(btnMenos) btnMenos.style.display = 'none';
-                    wrap.scrollTop = 0; 
                 } else {
                     wrap.classList.add('expanded');
                     if(btnMas) btnMas.style.display = 'none';
@@ -1141,7 +1483,6 @@
                     wrap.classList.remove('expanded');
                     if(btnMas) btnMas.style.display = 'block';
                     if(btnMenos) btnMenos.style.display = 'none';
-                    wrap.scrollTop = 0; 
                 } else {
                     wrap.classList.add('expanded');
                     if(btnMas) btnMas.style.display = 'none';
@@ -1149,6 +1490,400 @@
                 }
             }
         }
+
+        // =====================================
+        // 🎨 SISTEMA DE TEMAS
+        // =====================================
+        const TEMAS_VALIDOS = ['noche','atardecer','bosque','marmol','jardin'];
+        let temaActual = {{ tema_visual | tojson }};
+
+        function aplicarTema(tema, guardar) {
+            TEMAS_VALIDOS.forEach(t => document.body.classList.remove('tema-' + t));
+            if (tema && TEMAS_VALIDOS.includes(tema)) {
+                document.body.classList.add('tema-' + tema);
+            }
+            document.querySelectorAll('.tema-card').forEach(c => c.classList.remove('selected'));
+            const tc = document.getElementById('tc-' + tema);
+            if (tc) tc.classList.add('selected');
+            if (guardar) {
+                temaActual = tema;
+                localStorage.setItem('tema_' + ID_PERFIL, tema);
+            }
+        }
+
+        function previewTema(tema) { aplicarTema(tema, false); }
+
+        function guardarTema() {
+            const seleccionado = document.querySelector('.tema-card.selected');
+            if (!seleccionado) return;
+            const tema = seleccionado.id.replace('tc-', '');
+            const pin = sessionStorage.getItem('family_pin_' + ID_PERFIL) || '';
+            fetch(`/api/tema/${ID_PERFIL}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Family-Pin': pin },
+                body: JSON.stringify({ tema })
+            }).then(r => {
+                if (r.ok) { aplicarTema(tema, true); cerrarModal('temaModal'); }
+                else alert('No se pudo guardar. Verifica tu acceso.');
+            });
+        }
+
+        // Aplicar tema al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            aplicarTema(temaActual, false);
+        });
+
+        // =====================================
+        // 🕯️ MURO DE VELAS
+        // =====================================
+        function cargarVelasMuro() {
+            fetch(`/api/velas_muro/${ID_PERFIL}`)
+                .then(r => r.json())
+                .then(data => {
+                    const grid = document.getElementById('velasMuroGrid');
+                    const empty = document.getElementById('velasEmpty');
+                    if (!grid) return;
+                    if (!data.velas || data.velas.length === 0) {
+                        grid.innerHTML = '';
+                        if (empty) empty.style.display = 'block';
+                        return;
+                    }
+                    if (empty) empty.style.display = 'none';
+                    grid.innerHTML = data.velas.map(v => {
+                        const horas = parseInt(v.horas_restantes) || 0;
+                        const tiempo = horas >= 48 ? `${Math.floor(horas/24)}d restantes` : `${horas}h restantes`;
+                        const nombreSafe = escapeHTML(v.nombre || 'Anónimo');
+                        const msg = v.mensaje ? `<div class="vela-mensaje">"${escapeHTML(v.mensaje)}"</div>` : '';
+                        return `<div class="vela-card">
+                            <span class="vela-flame">🕯️</span>
+                            <div class="vela-nombre">${nombreSafe}</div>
+                            ${msg}
+                            <div class="vela-tiempo">${tiempo}</div>
+                        </div>`;
+                    }).join('');
+                }).catch(() => {});
+        }
+
+        function encenderVelaMuro() {
+            const nombre = document.getElementById('vela_nombre').value.trim() || 'Visitante Anónimo';
+            const mensaje = document.getElementById('vela_mensaje').value.trim();
+            const duracion = parseInt(document.getElementById('vela_duracion').value);
+            const btn = document.getElementById('btnEncenderVelaMuro');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Encendiendo...';
+            btn.disabled = true;
+            fetch(`/api/velas_muro/${ID_PERFIL}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, mensaje, duracion_horas: duracion })
+            }).then(r => {
+                if (r.ok) {
+                    cerrarModal('candleModal');
+                    cargarVelasMuro();
+                    if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                } else {
+                    alert('No se pudo encender la vela. Intenta más tarde.');
+                }
+            }).finally(() => {
+                btn.innerHTML = '<i class="fas fa-fire"></i> Encender Vela';
+                btn.disabled = false;
+            });
+        }
+
+        // =====================================
+        // 🗺️ MAPA (LEAFLET.JS)
+        // =====================================
+        let mapaLeaflet = null;
+        let mapaEditorLeaflet = null;
+        let mapaMarker = null;
+        let mapaEditorMarker = null;
+        const MAPA_LAT = {{ mapa_lat | tojson }};
+        const MAPA_LNG = {{ mapa_lng | tojson }};
+        const MAPA_PRIVACIDAD = {{ mapa_privacidad | tojson }};
+        const TIENE_MAPA = {{ tiene_mapa | tojson }};
+
+        function initMapaVisor() {
+            if (!MAPA_LAT || !MAPA_LNG) return;
+            if (mapaLeaflet) return;
+            const lat = parseFloat(MAPA_LAT), lng = parseFloat(MAPA_LNG);
+            if (isNaN(lat) || isNaN(lng)) return;
+            mapaLeaflet = L.map('mapaLeaflet', { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap', maxZoom: 19
+            }).addTo(mapaLeaflet);
+            const icon = L.divIcon({ html: '<div style="font-size:28px;line-height:1;">🌹</div>', className: '', iconAnchor: [14, 28] });
+            mapaMarker = L.marker([lat, lng], { icon }).addTo(mapaLeaflet);
+            {% if mapa_direccion %}mapaMarker.bindPopup('<b>{{ mapa_direccion }}</b>').openPopup();{% endif %}
+        }
+
+        function initMapaEditor() {
+            if (mapaEditorLeaflet) {
+                mapaEditorLeaflet.invalidateSize();
+                return;
+            }
+            const lat = MAPA_LAT ? parseFloat(MAPA_LAT) : 4.6097;
+            const lng = MAPA_LNG ? parseFloat(MAPA_LNG) : -74.0817;
+            mapaEditorLeaflet = L.map('mapaEditorLeaflet', { scrollWheelZoom: false }).setView([lat, lng], MAPA_LAT ? 15 : 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap', maxZoom: 19
+            }).addTo(mapaEditorLeaflet);
+            if (MAPA_LAT && MAPA_LNG) {
+                mapaEditorMarker = L.marker([lat, lng]).addTo(mapaEditorLeaflet);
+                document.getElementById('m_lat').value = MAPA_LAT;
+                document.getElementById('m_lng').value = MAPA_LNG;
+                document.getElementById('m_dir').value = {{ mapa_direccion | tojson }};
+                document.getElementById('m_desc').value = {{ mapa_descripcion | tojson }};
+                document.getElementById('m_priv').value = {{ mapa_privacidad | tojson }};
+            }
+            mapaEditorLeaflet.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                document.getElementById('m_lat').value = lat.toFixed(6);
+                document.getElementById('m_lng').value = lng.toFixed(6);
+                if (mapaEditorMarker) mapaEditorLeaflet.removeLayer(mapaEditorMarker);
+                mapaEditorMarker = L.marker([lat, lng]).addTo(mapaEditorLeaflet);
+            });
+        }
+
+        const _abrirModalOrig = abrirModal;
+        function abrirModal(id) {
+            _abrirModalOrig(id);
+            if (id === 'mapaModal') setTimeout(initMapaEditor, 150);
+        }
+
+        function guardarMapa() {
+            const lat = document.getElementById('m_lat').value.trim();
+            const lng = document.getElementById('m_lng').value.trim();
+            if (!lat || !lng) { alert('Por favor marca un punto en el mapa o ingresa las coordenadas.'); return; }
+            const pin = sessionStorage.getItem('family_pin_' + ID_PERFIL) || '';
+            const btn = document.querySelector('#mapaModal .btn-save');
+            btn.innerHTML = 'Guardando...'; btn.disabled = true;
+            fetch(`/api/mapa/${ID_PERFIL}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Family-Pin': pin },
+                body: JSON.stringify({
+                    lat, lng,
+                    direccion: document.getElementById('m_dir').value,
+                    descripcion: document.getElementById('m_desc').value,
+                    privacidad: document.getElementById('m_priv').value
+                })
+            }).then(r => {
+                if (r.ok) window.location.reload();
+                else alert('Error al guardar. Verifica tu acceso.');
+            }).finally(() => { btn.innerHTML = 'Guardar Ubicación'; btn.disabled = false; });
+        }
+
+        // =====================================
+        // 🌳 ÁRBOL FAMILIAR
+        // =====================================
+        const ORDEN_RELACIONES = {
+            'Abuelo':0,'Abuela':0,'Padre':1,'Madre':1,
+            'Hermano':2,'Hermana':2,'Esposo/a':2,
+            'Hijo':3,'Hija':3,'Nieto':4,'Nieta':4,'Otro':5
+        };
+        const GRUPOS_LABELS = {0:'Abuelos',1:'Padres',2:'Hermanos y Pareja',3:'Hijos',4:'Nietos',5:'Otros familiares'};
+        let familiaresData = {{ familiares | tojson }};
+
+        function renderArbol() {
+            const container = document.getElementById('arbolContainer');
+            if (!container) return;
+            if (familiaresData.length === 0) {
+                container.innerHTML = `<div style="text-align:center;padding:30px 20px;background:var(--card-bg);border-radius:20px;border:1.5px dashed var(--border-soft);">
+                    <i class="fas fa-tree" style="font-size:36px;color:var(--accent);opacity:0.4;display:block;margin-bottom:10px;"></i>
+                    <p style="color:var(--text-light);font-size:14px;margin:0;">El árbol familiar aún no tiene integrantes.</p>
+                </div>`;
+                return;
+            }
+            const grupos = {};
+            familiaresData.forEach(f => {
+                const g = ORDEN_RELACIONES[f.relacion] ?? 5;
+                if (!grupos[g]) grupos[g] = [];
+                grupos[g].push(f);
+            });
+            const fotoFallecidoSafe = escapeHTML({{ foto_perfil | tojson }} || '');
+            const nombreFallecidoSafe = escapeHTML({{ nombre | tojson }} || '');
+            let html = '';
+            const gruposOrdenados = Object.keys(grupos).map(Number).sort((a,b) => a-b);
+            const tieneArriba = gruposOrdenados.some(g => g < 2);
+            if (tieneArriba) {
+                gruposOrdenados.filter(g => g < 2).forEach(g => {
+                    html += `<div class="arbol-grupo">
+                        <div class="arbol-grupo-label">${GRUPOS_LABELS[g]}</div>
+                        <div class="arbol-row">${grupos[g].map(f => tarjetaFamiliar(f)).join('')}</div>
+                    </div>`;
+                });
+                html += `<div class="arbol-connector"><div class="arbol-line"></div></div>`;
+            }
+            html += `<div class="arbol-grupo">
+                <div class="arbol-grupo-label">Fallecido</div>
+                <div class="arbol-row">
+                    <div class="familiar-card familiar-card-deceased">
+                        <img class="familiar-foto" src="${fotoFallecidoSafe}" alt="${nombreFallecidoSafe}" onerror="this.src='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'">
+                        <div class="familiar-info"><div class="familiar-nombre">${nombreFallecidoSafe}</div><div class="familiar-relacion" style="color:var(--accent);">Q.E.P.D.</div></div>
+                    </div>
+                    ${gruposOrdenados.some(g => g === 2) ? grupos[2].map(f => tarjetaFamiliar(f)).join('') : ''}
+                </div>
+            </div>`;
+            gruposOrdenados.filter(g => g > 2).forEach(g => {
+                if (g === 2) return;
+                html += `<div class="arbol-connector"><div class="arbol-line"></div></div>
+                    <div class="arbol-grupo">
+                        <div class="arbol-grupo-label">${GRUPOS_LABELS[g]}</div>
+                        <div class="arbol-row">${grupos[g].map(f => tarjetaFamiliar(f)).join('')}</div>
+                    </div>`;
+            });
+            if (isFamilyAdmin) {
+                html += `<div class="arbol-row" style="margin-top:10px;"><button class="arbol-add-btn" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i> Agregar familiar</button></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function tarjetaFamiliar(f) {
+            const fotoSafe = escapeHTML(f.foto_url || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png');
+            const nombreSafe = escapeHTML(f.nombre || '');
+            const relacionSafe = escapeHTML(f.relacion || '');
+            // Validar memorial_id: solo alfanumérico + guiones (sin javascript: ni rutas externas)
+            const memId = /^[a-zA-Z0-9_-]{1,100}$/.test(f.memorial_id || '') ? f.memorial_id : '';
+            const enlace = memId ? `<a class="familiar-link" href="/perfil/${memId}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Ver memorial</a>` : '';
+            const famId = parseInt(f.id) || 0;
+            const delBtn = isFamilyAdmin ? `<button class="familiar-delete admin-only" onclick="event.stopPropagation();eliminarFamiliar(${famId})"><i class="fas fa-times"></i></button>` : '';
+            return `<div class="familiar-card">
+                <img class="familiar-foto" src="${fotoSafe}" alt="${nombreSafe}" onerror="this.src='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'">
+                <div class="familiar-info">
+                    <div class="familiar-nombre">${nombreSafe}</div>
+                    <div class="familiar-relacion">${relacionSafe}</div>
+                    ${enlace}
+                </div>
+                ${delBtn}
+            </div>`;
+        }
+
+        function abrirModalFamiliar() {
+            document.getElementById('f_fam_id').value = '';
+            document.getElementById('f_nombre').value = '';
+            document.getElementById('f_foto').value = '';
+            document.getElementById('f_memorial').value = '';
+            document.getElementById('familiarModalTitulo').innerText = 'Agregar Familiar';
+            abrirModal('familiarModal');
+        }
+
+        function guardarFamiliar() {
+            const nombre = document.getElementById('f_nombre').value.trim();
+            if (!nombre) { alert('El nombre es obligatorio.'); return; }
+            const pin = sessionStorage.getItem('family_pin_' + ID_PERFIL) || '';
+            const btn = document.querySelector('#familiarModal .btn-save');
+            btn.innerHTML = 'Guardando...'; btn.disabled = true;
+            const datos = {
+                nombre,
+                relacion: document.getElementById('f_relacion').value,
+                foto_url: document.getElementById('f_foto').value.trim(),
+                memorial_id: document.getElementById('f_memorial').value.trim(),
+                orden: ORDEN_RELACIONES[document.getElementById('f_relacion').value] ?? 5
+            };
+            fetch(`/api/familiar/${ID_PERFIL}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Family-Pin': pin },
+                body: JSON.stringify(datos)
+            }).then(r => {
+                if (!r.ok) {
+                    const msg = r.status === 403
+                        ? 'Sin permiso. Verifica el PIN familiar.'
+                        : `Error del servidor (${r.status}). No se guardó el familiar.`;
+                    throw new Error(msg);
+                }
+                return r.json();
+            }).then(data => {
+                familiaresData.push({ ...datos, id: data.id });
+                cerrarModal('familiarModal');
+                renderArbol();
+            }).catch(err => alert(err.message || 'Error al guardar el familiar.'))
+            .finally(() => { btn.innerHTML = 'Guardar'; btn.disabled = false; });
+        }
+
+        function eliminarFamiliar(id) {
+            if (!confirm('¿Eliminar este familiar del árbol?')) return;
+            const pin = sessionStorage.getItem('family_pin_' + ID_PERFIL) || '';
+            fetch(`/api/familiar/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Family-Pin': pin }
+            }).then(r => {
+                if (r.ok) {
+                    familiaresData = familiaresData.filter(f => f.id !== id);
+                    renderArbol();
+                }
+            });
+        }
+
+        // =====================================
+        // 📄 LIBRO DEL LEGADO (PDF/PRINT)
+        // =====================================
+        function imprimirLibroLegado() {
+            if (typeof QRCode !== 'undefined') {
+                const canvas = document.getElementById('qrCanvas');
+                if (canvas && !canvas.getAttribute('data-qr-done')) {
+                    QRCode.toCanvas(canvas, window.location.href, { width: 150, margin: 2 }, () => {
+                        canvas.setAttribute('data-qr-done', '1');
+                        window.print();
+                    });
+                    return;
+                }
+            }
+            window.print();
+        }
+
+        // =====================================
+        // INICIALIZACIÓN AL CARGAR
+        // =====================================
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarVelasMuro();
+            renderArbol();
+            if (MAPA_LAT && MAPA_LNG) {
+                setTimeout(initMapaVisor, 500);
+            }
+            // Mapa con privacidad restringida: cargar coordenadas vía API después de PIN
+            if (isFamilyAdmin && TIENE_MAPA && !MAPA_LAT && (MAPA_PRIVACIDAD === 'invitados' || MAPA_PRIVACIDAD === 'privado')) {
+                const pin = sessionStorage.getItem('family_pin_' + ID_PERFIL) || '';
+                fetch(`/api/mapa_coords/${ID_PERFIL}`, { headers: { 'X-Family-Pin': pin } })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (!data || !data.lat || !data.lng) return;
+                        const lat = parseFloat(data.lat), lng = parseFloat(data.lng);
+                        if (isNaN(lat) || isNaN(lng)) return;
+                        document.getElementById('mapaInvitadosPlaceholder').style.display = 'none';
+                        const cont = document.getElementById('mapaInvitadosContainer');
+                        cont.style.display = 'block';
+                        if (data.direccion) {
+                            const el = document.getElementById('mapaDireccionInvitados');
+                            el.style.display = '';
+                            const icon = document.createElement('i');
+                            icon.className = 'fas fa-map-marker-alt';
+                            icon.style.cssText = 'color:var(--accent); margin-right:6px;';
+                            el.innerHTML = '';
+                            el.appendChild(icon);
+                            el.appendChild(document.createTextNode(' ' + data.direccion));
+                        }
+                        if (data.descripcion) {
+                            const el = document.getElementById('mapaDescripcionInvitados');
+                            el.style.display = '';
+                            el.textContent = data.descripcion;
+                        }
+                        const enlace = document.getElementById('mapaEnlaceInvitados');
+                        enlace.href = `https://www.google.com/maps?q=${encodeURIComponent(data.lat + ',' + data.lng)}`;
+                        setTimeout(() => {
+                            const mapa = L.map('mapaLeafletInvitados').setView([lat, lng], 16);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '© OpenStreetMap'
+                            }).addTo(mapa);
+                            L.marker([lat, lng]).addTo(mapa);
+                        }, 150);
+                    })
+                    .catch(() => {});
+            }
+        });
     </script>
+
+    <!-- Leaflet.js (mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- QRCode.js (para PDF) -->
+    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 </body>
 </html>

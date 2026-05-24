@@ -197,6 +197,28 @@ class AdminLogin(BaseModel):
 class PinUpdate(BaseModel):
     nuevo_pin: str
 
+class TemaUpdate(BaseModel):
+    tema: str
+
+class VelaRequest(BaseModel):
+    nombre: str = "Visitante Anónimo"
+    mensaje: str = ""
+    duracion_horas: int = 24
+
+class MapaUpdate(BaseModel):
+    lat: str
+    lng: str
+    direccion: str = ""
+    descripcion: str = ""
+    privacidad: str = "publico"
+
+class FamiliarRequest(BaseModel):
+    nombre: str
+    relacion: str
+    foto_url: str = ""
+    memorial_id: str = ""
+    orden: int = 0
+
 def get_db():
     db = database.SessionLocal()
     try: yield db
@@ -535,13 +557,48 @@ def eliminar_perfil_completo(identificador: str, request: Request, db: Session =
     db.commit()
     return {"mensaje": "Perfil eliminado."}
 
+def _mapa_context(perfil, request: Request) -> dict:
+    """Devuelve las claves de mapa para el template respetando mapa_privacidad."""
+    lat = getattr(perfil, 'mapa_lat', '') or ''
+    lng = getattr(perfil, 'mapa_lng', '') or ''
+    privacidad = getattr(perfil, 'mapa_privacidad', 'publico') or 'publico'
+    tiene_mapa = bool(lat and lng)
+    puede_ver = privacidad == 'publico' or _es_admin(request)
+    return {
+        "mapa_lat": lat if puede_ver else '',
+        "mapa_lng": lng if puede_ver else '',
+        "mapa_direccion": (getattr(perfil, 'mapa_direccion', '') or '') if puede_ver else '',
+        "mapa_descripcion": (getattr(perfil, 'mapa_descripcion', '') or '') if puede_ver else '',
+        "mapa_privacidad": privacidad,
+        "tiene_mapa": tiene_mapa,
+    }
+
+# 🗺️ API: COORDENADAS AUTORIZADAS (para familia con PIN)
+@app.get("/api/mapa_coords/{identificador}")
+def obtener_mapa_coords(identificador: str, request: Request, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    privacidad = getattr(perfil, 'mapa_privacidad', 'publico') or 'publico'
+    if privacidad in ('privado', 'invitados'):
+        if not _es_admin(request):
+            pin = request.headers.get("x-family-pin", "")
+            if not pin or pin != perfil.pin_familia:
+                raise HTTPException(status_code=403, detail="PIN familiar requerido")
+    return {
+        "lat": getattr(perfil, 'mapa_lat', '') or '',
+        "lng": getattr(perfil, 'mapa_lng', '') or '',
+        "direccion": getattr(perfil, 'mapa_direccion', '') or '',
+        "descripcion": getattr(perfil, 'mapa_descripcion', '') or '',
+    }
+
 # 🎬 CONSTRUCCIÓN DE LA VISTA PRINCIPAL 🎬
 @app.get("/perfil/{identificador}", response_class=HTMLResponse)
 def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_db)):
     perfil = db.query(database.PerfilDifunto).options(
         selectinload(database.PerfilDifunto.fotos_galeria).selectinload(database.FotoGaleria.comentarios),
         selectinload(database.PerfilDifunto.mensajes),
-        selectinload(database.PerfilDifunto.momentos)
+        selectinload(database.PerfilDifunto.momentos),
+        selectinload(database.PerfilDifunto.familiares_arbol)
     ).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: return HTMLResponse(content="<h1>Error 404: Perfil no encontrado</h1>", status_code=404)
 
@@ -591,7 +648,14 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         "total_corazones_galeria": total_corazones_galeria,
         "foto_aleatoria": foto_aleatoria,
         "foto_mas_recordada": foto_mas_recordada,
-        "audio_voz": getattr(perfil, 'audio_voz', '') # ✅ AUDIO REAL
+        "audio_voz": getattr(perfil, 'audio_voz', ''),
+        "tema_visual": getattr(perfil, 'tema_visual', 'noche') or 'noche',
+        **_mapa_context(perfil, request),
+        "familiares": [
+            {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
+             "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or ''}
+            for f in sorted(getattr(perfil, 'familiares_arbol', []), key=lambda x: x.orden)
+        ],
     }
 
     pagina_html = templates.TemplateResponse("perfil.html", {"request": request, **datos_diccionario})
@@ -621,3 +685,116 @@ def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: boo
     fotos = db.query(database.FotoGaleria).all()
     mensajes = db.query(database.MensajeRecuerdo).all()
     return {"fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil], "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]}
+
+# ==========================================
+# 🎨 PREMIUM: TEMA VISUAL
+# ==========================================
+@app.put("/api/tema/{identificador}")
+def actualizar_tema(identificador: str, datos: TemaUpdate, request: Request, db: Session = Depends(get_db)):
+    temas_validos = {"noche", "atardecer", "bosque", "marmol", "jardin"}
+    if datos.tema not in temas_validos:
+        raise HTTPException(status_code=400, detail="Tema no válido")
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
+    perfil.tema_visual = datos.tema
+    db.commit()
+    return {"mensaje": "Tema actualizado", "tema": datos.tema}
+
+# ==========================================
+# 🕯️ PREMIUM: MURO DE VELAS
+# ==========================================
+@app.get("/api/velas_muro/{identificador}")
+def listar_velas_muro(identificador: str, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    ahora = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    velas_activas = []
+    for v in reversed(perfil.velas_list):
+        horas_transcurridas = (ahora - v.fecha_encendida).total_seconds() / 3600
+        if horas_transcurridas < v.duracion_horas:
+            horas_restantes = max(0, v.duracion_horas - int(horas_transcurridas))
+            velas_activas.append({
+                "id": v.id, "nombre": v.nombre, "mensaje": v.mensaje,
+                "horas_restantes": horas_restantes,
+                "duracion_horas": v.duracion_horas,
+                "fecha": v.fecha_encendida.strftime("%d/%m/%Y")
+            })
+        if len(velas_activas) >= 24:
+            break
+    return {"velas": velas_activas, "total": len(velas_activas)}
+
+@app.post("/api/velas_muro/{identificador}")
+def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request, db: Session = Depends(get_db)):
+    rate_limit_check(request, "vela_muro", max_calls=3, window=300)
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    duracion = min(72, max(1, datos.duracion_horas))
+    nueva_vela = database.VelaEncendida(
+        nombre=datos.nombre[:50] if datos.nombre else "Visitante Anónimo",
+        mensaje=datos.mensaje[:150] if datos.mensaje else "",
+        duracion_horas=duracion,
+        perfil_id=perfil.id
+    )
+    db.add(nueva_vela)
+    perfil.velas = (perfil.velas or 0) + 1
+    registrar_interaccion(perfil, db)
+    return {"mensaje": "Vela encendida", "velas_total": perfil.velas}
+
+# ==========================================
+# 🗺️ PREMIUM: MAPA DEL ÚLTIMO DESCANSO
+# ==========================================
+@app.put("/api/mapa/{identificador}")
+def actualizar_mapa(identificador: str, datos: MapaUpdate, request: Request, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
+    try:
+        float(datos.lat); float(datos.lng)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Coordenadas inválidas")
+    perfil.mapa_lat = datos.lat
+    perfil.mapa_lng = datos.lng
+    perfil.mapa_direccion = datos.direccion[:300] if datos.direccion else ""
+    perfil.mapa_descripcion = datos.descripcion[:500] if datos.descripcion else ""
+    perfil.mapa_privacidad = datos.privacidad if datos.privacidad in ("publico", "invitados", "privado") else "publico"
+    db.commit()
+    return {"mensaje": "Mapa actualizado"}
+
+# ==========================================
+# 🌳 PREMIUM: ÁRBOL FAMILIAR
+# ==========================================
+@app.get("/api/familiares/{identificador}")
+def listar_familiares(identificador: str, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    return {"familiares": [
+        {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
+         "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '', "orden": f.orden}
+        for f in sorted(perfil.familiares_arbol, key=lambda x: x.orden)
+    ]}
+
+@app.post("/api/familiar/{identificador}")
+def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Request, db: Session = Depends(get_db)):
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
+    nuevo = database.FamiliarArbol(
+        nombre=datos.nombre[:80], relacion=datos.relacion,
+        foto_url=datos.foto_url[:500] if datos.foto_url else "",
+        memorial_id=datos.memorial_id[:100] if datos.memorial_id else "",
+        orden=datos.orden, perfil_id=perfil.id
+    )
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return {"id": nuevo.id, "mensaje": "Familiar agregado"}
+
+@app.delete("/api/familiar/{familiar_id}")
+def eliminar_familiar(familiar_id: int, request: Request, db: Session = Depends(get_db)):
+    familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()
+    if not familiar: raise HTTPException(status_code=404)
+    if familiar.perfil: validar_pin_o_admin(request, familiar.perfil)
+    db.delete(familiar)
+    db.commit()
+    return {"mensaje": "Familiar eliminado"}

@@ -74,10 +74,22 @@ class PerfilDifunto(Base):
     interacciones_hoy = Column(Integer, default=0)
     dia_interacciones = Column(String, default="")
 
+    # 🎨 PREMIUM: TEMA VISUAL
+    tema_visual = Column(String, default="noche")
+
+    # 🗺️ PREMIUM: MAPA DEL ÚLTIMO DESCANSO
+    mapa_lat = Column(String, default="")
+    mapa_lng = Column(String, default="")
+    mapa_direccion = Column(String, default="")
+    mapa_descripcion = Column(String, default="")
+    mapa_privacidad = Column(String, default="publico")
+
     # Relaciones con otras tablas
     fotos_galeria = relationship("FotoGaleria", back_populates="perfil")
     mensajes = relationship("MensajeRecuerdo", back_populates="perfil")
     momentos = relationship("MomentoInolvidable", back_populates="perfil")
+    velas_list = relationship("VelaEncendida", back_populates="perfil", cascade="all, delete-orphan")
+    familiares_arbol = relationship("FamiliarArbol", back_populates="perfil", cascade="all, delete-orphan")
 
 class FotoGaleria(Base):
     __tablename__ = "fotos_galeria"
@@ -118,6 +130,27 @@ class MomentoInolvidable(Base):
     perfil_id = Column(Integer, ForeignKey("perfiles.id"))
     perfil = relationship("PerfilDifunto", back_populates="momentos")
 
+class VelaEncendida(Base):
+    __tablename__ = "velas_encendidas"
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, default="Visitante Anónimo")
+    mensaje = Column(String(150), default="")
+    duracion_horas = Column(Integer, default=24)
+    fecha_encendida = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None))
+    perfil_id = Column(Integer, ForeignKey("perfiles.id"))
+    perfil = relationship("PerfilDifunto", back_populates="velas_list")
+
+class FamiliarArbol(Base):
+    __tablename__ = "familiares_arbol"
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String)
+    relacion = Column(String)
+    foto_url = Column(String, default="")
+    memorial_id = Column(String, default="")
+    orden = Column(Integer, default=0)
+    perfil_id = Column(Integer, ForeignKey("perfiles.id"))
+    perfil = relationship("PerfilDifunto", back_populates="familiares_arbol")
+
 # Esto crea las tablas automáticamente en Neon.tech si no existen
 Base.metadata.create_all(bind=engine)
 
@@ -151,5 +184,41 @@ except Exception:
 try:
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN audio_voz VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN tema_visual VARCHAR DEFAULT 'noche'"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_lat VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_lng VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_direccion VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_descripcion VARCHAR DEFAULT ''"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_privacidad VARCHAR DEFAULT 'publico'"))
 except Exception:
     pass
