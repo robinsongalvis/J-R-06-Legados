@@ -1643,9 +1643,10 @@
             });
         }
 
-        const _abrirModalOrig = abrirModal;
         function abrirModal(id) {
-            _abrirModalOrig(id);
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('show');
             if (id === 'mapaModal') setTimeout(initMapaEditor, 150);
         }
 
