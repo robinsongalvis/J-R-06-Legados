@@ -1235,19 +1235,20 @@
         let itemAEliminarId = null; let tipoEliminacion = null; let elementoSeleccionado = null;
         
         let scrollPosition = 0;
+        let scrollLocked = false;
 
         function lockBodyScroll() {
-            scrollPosition = window.scrollY;
-            document.body.style.position = 'fixed';
-            document.body.style.top = `-${scrollPosition}px`;
-            document.body.style.width = '100%';
+            if (scrollLocked) return;  // Evita acumulación de llamadas
+            scrollLocked = true;
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
         }
 
         function unlockBodyScroll() {
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            window.scrollTo(0, scrollPosition);
+            if (!scrollLocked) return;  // No desbloquea si no está bloqueado
+            scrollLocked = false;
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
         }
 
         function resetZoom() {
