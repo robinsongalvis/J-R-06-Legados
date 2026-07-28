@@ -153,6 +153,24 @@ os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+
+def miniatura(url: str, ancho: int = 400) -> str:
+    """Devuelve una versión ligera de la imagen para las cuadrículas.
+
+    En Cloudinary inserta transformaciones (formato y calidad automáticos + recorte),
+    lo que baja una foto de ~2MB a ~30KB. Con 50 fotos eso es la diferencia entre
+    un scroll fluido y uno que se traba en el celular. URLs de otros orígenes se
+    devuelven intactas.
+    """
+    if not url or "/upload/" not in url or "res.cloudinary.com" not in url:
+        return url
+    return url.replace("/upload/", f"/upload/f_auto,q_auto,w_{ancho},c_fill,g_auto/", 1)
+
+
+templates.env.filters["miniatura"] = miniatura
+
+
 @app.get("/", response_class=HTMLResponse)
 async def inicio(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})

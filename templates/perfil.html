@@ -58,6 +58,26 @@
             scroll-behavior: smooth;
             -webkit-text-size-adjust: 100%;
         }
+
+        /* ==========================================
+           SCROLL FLUIDO EN CELULAR
+           El desenfoque (backdrop-filter) se recalcula en cada cuadro y es
+           lo que más traba el scroll en gama media. En pantallas táctiles
+           pequeñas lo cambiamos por fondos sólidos: se ve igual de bien y
+           el scroll deja de saltar.
+           ========================================== */
+        @media (hover: none) and (max-width: 820px) {
+            .glass-btn, .slider-arrow, .hl-likes-badge, .tl-ctrl-btn,
+            .desktop-delete-btn, .delete-top-bar, .system-modal, .item-likes-overlay {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            .glass-btn, .slider-arrow, .tl-ctrl-btn { background: rgba(20, 20, 24, 0.55); }
+            .system-modal { background: rgba(0, 0, 0, 0.72); }
+        }
+
+        /* Nota: no usamos content-visibility en las secciones grandes. Ahorra pintado,
+           pero al estimar mal su alto el scroll da saltos — justo lo que queremos evitar. */
         
         body { 
             font-family: 'Lato', sans-serif; 
@@ -210,10 +230,47 @@
         .gallery-empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
         .gallery-empty i { font-size: 34px; color: var(--accent); opacity: 0.4; display: block; margin-bottom: 10px; }
         .gallery-empty p { font-size: 14px; font-style: italic; margin: 0; }
-        .gallery-item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; position: relative; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; pointer-events: none; }
+        .gallery-item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; position: relative; background: rgba(128,128,128,0.12); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease, opacity 0.5s ease; pointer-events: none; opacity: 0; }
+        .gallery-item img.cargada { opacity: 1; }
         .gallery-item:hover { z-index: 10; border-radius: 8px;}
         .gallery-item:hover img { transform: scale(1.1); filter: brightness(1.1);}
+        /* Fotos ocultas hasta que el scroll las pide (carga progresiva tipo Instagram) */
+        .gallery-item.pendiente { display: none; }
+        #galeriaSentinel { height: 1px; }
+        .galeria-cargando { text-align: center; padding: 18px; color: var(--text-light); font-size: 13px; }
+        .galeria-cargando i { color: var(--accent); margin-right: 6px; }
+        /* Corazón al dar doble toque */
+        .doble-tap-corazon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); color: #fff; font-size: 46px; text-shadow: 0 3px 14px rgba(0,0,0,0.45); pointer-events: none; z-index: 12; }
+        .doble-tap-corazon.animar { animation: latidoCorazon 0.9s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes latidoCorazon {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+            35% { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+            60% { transform: translate(-50%,-50%) scale(0.95); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1.3); opacity: 0; }
+        }
+
+        /* ==========================================
+           NOTA DE VOZ — reproductor propio
+           ========================================== */
+        .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(212,175,55,0.28); border-radius: 22px; padding: 20px; margin-bottom: 26px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.10); }
+        .voz-card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0) 70%); pointer-events: none; }
+        .voz-header { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; position: relative; z-index: 1; }
+        .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(212,175,55,0.14); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+        .voz-titulo { font-weight: 700; font-size: 15px; line-height: 1.25; }
+        .voz-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+        .voz-player { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
+        .voz-play { width: 54px; height: 54px; min-width: 54px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #e3c15a, #b8952c); color: #1a1408; font-size: 19px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(212,175,55,0.35); transition: transform 0.2s ease; padding-left: 3px; }
+        .voz-play:active { transform: scale(0.93); }
+        .voz-play.sonando { padding-left: 0; }
+        .voz-onda { flex: 1; display: flex; align-items: center; gap: 2px; height: 46px; cursor: pointer; touch-action: manipulation; }
+        .voz-barra { flex: 1; min-width: 2px; border-radius: 2px; background: currentColor; opacity: 0.2; transform-origin: center; transition: opacity 0.25s ease, background 0.25s ease; }
+        .voz-barra.reproducida { opacity: 1; background: var(--accent); }
+        .voz-card.sonando .voz-barra.reproducida:nth-child(3n) { animation: ondaLatido 0.85s ease-in-out infinite alternate; }
+        .voz-card.sonando .voz-barra.reproducida:nth-child(3n+1) { animation: ondaLatido 1.05s ease-in-out infinite alternate; }
+        @keyframes ondaLatido { from { transform: scaleY(0.82); } to { transform: scaleY(1.12); } }
+        .voz-tiempo { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); margin-top: 10px; font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
+        @media (prefers-reduced-motion: reduce) { .voz-card.sonando .voz-barra { animation: none !important; } }
         
         .item-likes-overlay { 
             position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.5); 
@@ -639,12 +696,26 @@
             <h2 class="section-title">Su Historia</h2>
             
             {% if audio_voz %}
-            <div class="audio-player-container" style="margin-bottom: 25px;">
-                <p style="text-align:center; font-size:14px; color:var(--text-light); margin-bottom:10px; font-weight:600;"><i class="fas fa-microphone-alt" style="color:var(--accent);"></i> Escucha su voz</p>
-                <audio controls style="width: 100%; border-radius: 30px; outline: none; height: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-                    <source src="{{ audio_voz }}" type="audio/mpeg">
-                    Tu navegador no soporta el elemento de audio.
-                </audio>
+            <div class="voz-card" id="vozCard">
+                <div class="voz-header">
+                    <div class="voz-icono"><i class="fas fa-microphone-alt"></i></div>
+                    <div>
+                        <div class="voz-titulo">Su voz</div>
+                        <div class="voz-sub">Un recuerdo para escuchar</div>
+                    </div>
+                </div>
+                <div class="voz-player">
+                    <button type="button" class="voz-play" id="vozPlayBtn" aria-label="Reproducir la nota de voz">
+                        <i class="fas fa-play" id="vozPlayIcono"></i>
+                    </button>
+                    <div class="voz-onda" id="vozOnda" role="slider" tabindex="0"
+                         aria-label="Avanzar o retroceder en la grabación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                </div>
+                <div class="voz-tiempo">
+                    <span id="vozActual">0:00</span>
+                    <span id="vozTotal">--:--</span>
+                </div>
+                <audio id="audioVoz" preload="metadata" src="{{ audio_voz }}"></audio>
             </div>
             {% endif %}
             
@@ -830,8 +901,13 @@
             {% if fotos %}
             <div class="gallery-grid" id="mainGalleryGrid">
                 {% for foto in fotos %}
-                <div class="gallery-item" data-id="{{ foto.id }}" data-aos="zoom-in" onclick="interactuarFotoGrid('{{ foto.id }}', this)">
-                    <img src="{{ foto.url }}" alt="Recuerdo de {{ nombre }}">
+                <div class="gallery-item {% if loop.index > 12 %}pendiente{% endif %}" data-id="{{ foto.id }}" onclick="interactuarFotoGrid('{{ foto.id }}', this)">
+                    {# Las fotos del primer pantallazo se piden ya; el resto guarda la URL en
+                       data-src y solo se descarga cuando el scroll la revela. #}
+                    <img {% if loop.index > 12 %}data-src="{{ foto.url | miniatura(400) }}"{% else %}src="{{ foto.url | miniatura(400) }}"{% endif %}
+                         alt="Recuerdo de {{ nombre }}"
+                         loading="lazy" decoding="async" width="400" height="400"
+                         onload="this.classList.add('cargada')">
 
                     <div class="item-likes-overlay {% if foto.likes > 0 %}has-likes{% endif %}" id="grid-like-badge-{{ foto.id }}">
                         <i class="fas fa-heart"></i> <span>{{ foto.likes }}</span>
@@ -841,6 +917,10 @@
                 </div>
                 {% endfor %}
             </div>
+            {% if fotos|length > 12 %}
+            <div id="galeriaSentinel"></div>
+            <p class="galeria-cargando" id="galeriaCargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando más recuerdos…</p>
+            {% endif %}
             {% else %}
             <div class="gallery-empty">
                 <i class="fas fa-images"></i>
@@ -1360,7 +1440,8 @@
             } else {
                 if (((new Date().getTime()) - lbTouchTime) < 300) {
                     e.preventDefault();
-                    likearFotoActual(); 
+                    likearFotoActual();
+                    mostrarCorazonLike();
                     lbTouchTime = 0;
                 }
             }
@@ -1465,6 +1546,157 @@
         function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; if(input.files[0].size > 15 * 1024 * 1024) { alert("El video es muy pesado. Máximo 15MB."); return; } let formData = new FormData(); formData.append("archivo", input.files[0]); let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
         function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; if(input.files.length > 4) { alert("Máximo de 4 videos/fotos."); return; } let formData = new FormData(); let totalSize = 0; for(let i=0; i < input.files.length; i++) { totalSize += input.files[i].size; formData.append("archivos", input.files[i]); } if(totalSize > 40 * 1024 * 1024) { alert("Muy pesado en total."); return; } let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
         function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
+
+        // =====================================
+        // 🖼️ GALERÍA: CARGA PROGRESIVA + DOBLE TOQUE
+        // =====================================
+        (function galeriaInstagram() {
+            const grid = document.getElementById('mainGalleryGrid');
+            if (!grid) return;
+
+            // --- Carga progresiva: revela 12 fotos más cada vez que el scroll llega al final
+            const sentinel = document.getElementById('galeriaSentinel');
+            const aviso = document.getElementById('galeriaCargando');
+            const LOTE = 12;
+
+            function mostrarItem(item) {
+                item.classList.remove('pendiente');
+                const img = item.querySelector('img[data-src]');
+                if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+            }
+
+            function revelarLote() {
+                const pendientes = grid.querySelectorAll('.gallery-item.pendiente');
+                for (let i = 0; i < Math.min(LOTE, pendientes.length); i++) mostrarItem(pendientes[i]);
+
+                if (grid.querySelector('.gallery-item.pendiente')) {
+                    // El observador solo avisa cuando el centinela CRUZA el borde. Si sigue
+                    // a la vista tras revelar, hay que re-observarlo para que vuelva a avisar.
+                    if (observador) {
+                        observador.unobserve(sentinel);
+                        requestAnimationFrame(() => observador.observe(sentinel));
+                    }
+                } else {
+                    if (aviso) aviso.style.display = 'none';
+                    if (observador) observador.unobserve(sentinel);
+                }
+            }
+
+            let observador = null;
+            if (sentinel && 'IntersectionObserver' in window) {
+                observador = new IntersectionObserver((entradas) => {
+                    if (entradas[0].isIntersecting) revelarLote();
+                }, { rootMargin: '400px' });
+                observador.observe(sentinel);
+            } else {
+                // Sin soporte: mostrarlas todas de una vez antes que esconder recuerdos
+                grid.querySelectorAll('.gallery-item.pendiente').forEach(mostrarItem);
+                if (aviso) aviso.style.display = 'none';
+            }
+
+        })();
+
+        // Corazón que late al dar like con doble toque dentro de la foto abierta
+        function mostrarCorazonLike() {
+            const zona = document.getElementById('lb-content-area');
+            if (!zona) return;
+            const corazon = document.createElement('i');
+            corazon.className = 'fas fa-heart doble-tap-corazon';
+            zona.appendChild(corazon);
+            requestAnimationFrame(() => corazon.classList.add('animar'));
+            setTimeout(() => corazon.remove(), 950);
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // =====================================
+        // 🎙️ REPRODUCTOR DE LA NOTA DE VOZ
+        // =====================================
+        (function reproductorVoz() {
+            const audio = document.getElementById('audioVoz');
+            if (!audio) return;
+
+            const card = document.getElementById('vozCard');
+            const btn = document.getElementById('vozPlayBtn');
+            const icono = document.getElementById('vozPlayIcono');
+            const onda = document.getElementById('vozOnda');
+            const elActual = document.getElementById('vozActual');
+            const elTotal = document.getElementById('vozTotal');
+            const TOTAL_BARRAS = 44;
+
+            // Onda decorativa: alturas variadas pero estables entre recargas
+            const barras = [];
+            for (let i = 0; i < TOTAL_BARRAS; i++) {
+                const b = document.createElement('div');
+                b.className = 'voz-barra';
+                const altura = 26 + Math.abs(Math.sin(i * 1.7)) * 52 + (i % 4) * 5;
+                b.style.height = Math.min(altura, 100) + '%';
+                onda.appendChild(b);
+                barras.push(b);
+            }
+
+            const formatear = (seg) => {
+                if (!isFinite(seg) || seg < 0) return '0:00';
+                const m = Math.floor(seg / 60);
+                const s = Math.floor(seg % 60);
+                return m + ':' + String(s).padStart(2, '0');
+            };
+
+            function pintarProgreso() {
+                const progreso = audio.duration ? audio.currentTime / audio.duration : 0;
+                const activas = Math.round(progreso * TOTAL_BARRAS);
+                barras.forEach((b, i) => b.classList.toggle('reproducida', i < activas));
+                elActual.textContent = formatear(audio.currentTime);
+                onda.setAttribute('aria-valuenow', Math.round(progreso * 100));
+            }
+
+            audio.addEventListener('loadedmetadata', () => { elTotal.textContent = formatear(audio.duration); });
+            audio.addEventListener('timeupdate', pintarProgreso);
+
+            audio.addEventListener('play', () => {
+                card.classList.add('sonando');
+                btn.classList.add('sonando');
+                icono.className = 'fas fa-pause';
+                btn.setAttribute('aria-label', 'Pausar la nota de voz');
+            });
+
+            function alPausar() {
+                card.classList.remove('sonando');
+                btn.classList.remove('sonando');
+                icono.className = 'fas fa-play';
+                btn.setAttribute('aria-label', 'Reproducir la nota de voz');
+            }
+            audio.addEventListener('pause', alPausar);
+            audio.addEventListener('ended', () => { alPausar(); audio.currentTime = 0; pintarProgreso(); });
+
+            btn.addEventListener('click', () => {
+                if (audio.paused) {
+                    // Si suena la canción del memorial, no las encimamos
+                    const yt = document.querySelector('#contenedor-cancion iframe');
+                    if (yt) yt.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    audio.play().catch(() => mostrarAvisoVoz());
+                } else {
+                    audio.pause();
+                }
+            });
+
+            function saltarA(clientX) {
+                if (!audio.duration) return;
+                const caja = onda.getBoundingClientRect();
+                const proporcion = Math.min(Math.max((clientX - caja.left) / caja.width, 0), 1);
+                audio.currentTime = proporcion * audio.duration;
+                pintarProgreso();
+            }
+            onda.addEventListener('click', (e) => saltarA(e.clientX));
+            onda.addEventListener('keydown', (e) => {
+                if (!audio.duration) return;
+                if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.currentTime + 5, audio.duration); pintarProgreso(); }
+                if (e.key === 'ArrowLeft') { audio.currentTime = Math.max(audio.currentTime - 5, 0); pintarProgreso(); }
+            });
+
+            function mostrarAvisoVoz() {
+                elTotal.textContent = 'No se pudo reproducir';
+            }
+        })();
 
         // =====================================
         // 🎙️ SUBIR MP3 DE VOZ REAL
