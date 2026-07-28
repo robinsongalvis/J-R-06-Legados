@@ -17,27 +17,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    
+    <noscript><style>[data-aos]{opacity:1 !important; transform:none !important;}</style></noscript>
+
     <style>
         /* ==========================================
            VARIABLES DE COLOR 
            ========================================== */
-        :root { 
-            --primary-bg: #fdfdfd; 
-            --text-main: #2c3e50; 
-            --text-light: #7f8c8d; 
-            --accent: #d4af37; 
-            --card-bg: #ffffff; 
-            --border-soft: rgba(0,0,0,0.05); 
+        :root {
+            --primary-bg: #fdfdfd;
+            --text-main: #2c3e50;
+            --text-light: #6b7a80;
+            --accent: #d4af37;
+            --accent-text: #8a6d10; /* dorado oscuro legible sobre fondos claros (AA) */
+            --card-bg: #ffffff;
+            --border-soft: rgba(0,0,0,0.05);
             --input-bg: #f8fafc;
         }
 
         body.dark-mode {
-            --primary-bg: #0a0f18; 
-            --text-main: #f1f5f9; 
-            --text-light: #94a3b8; 
-            --card-bg: #1e293b; 
-            --border-soft: rgba(255,255,255,0.05); 
+            --primary-bg: #0a0f18;
+            --text-main: #f1f5f9;
+            --text-light: #94a3b8;
+            --accent: #d4af37;
+            --accent-text: #e3c15a; /* dorado claro legible sobre fondos oscuros */
+            --card-bg: #1e293b;
+            --border-soft: rgba(255,255,255,0.05);
             --input-bg: #0f172a;
         }
 
@@ -106,7 +110,10 @@
         .welcome-content p { font-size: 14px; font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin: 0; }
         .welcome-content h1 { font-family: 'Playfair Display', serif; font-size: 40px; margin: 10px 0; color: #ffffff; font-weight: 400; letter-spacing: 1px; text-shadow: 0 5px 20px rgba(0,0,0,0.6); line-height: 1.2; }
         .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: 50px; font-size: 15px; color: #94a3b8; font-style: italic; font-weight: 300; }
-        
+        #btnSaltarIntro { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); opacity: 0; animation: fadeIn 1s ease-in-out 2.2s forwards; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 24px; border-radius: 30px; font-family: 'Lato', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.3s, transform 0.3s; z-index: 2; }
+        #btnSaltarIntro:hover { background: rgba(255,255,255,0.25); transform: translateX(-50%) translateY(-2px); }
+        #welcome-screen.oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.6s ease, visibility 0.6s ease; }
+
         @keyframes cinematicZoom { from { transform: scale(1); } to { transform: scale(1.15); } }
         @keyframes fadeOutWelcome { to { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.05); } } 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } 
@@ -128,7 +135,7 @@
         .glass-btn:hover { background: rgba(0, 0, 0, 0.7); transform: scale(1.1); }
         .theme-btn { background: rgba(255, 255, 255, 0.15); color: #f1c40f; border: 1px solid rgba(255, 255, 255, 0.3); }
 
-        .slider-dots { position: absolute; bottom: 85px; left: 0; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 5; }
+        .slider-dots { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 0; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 6; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: 0.3s; }
         .dot.active { background: white; transform: scale(1.5); }
         .slider-arrows { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; transform: translateY(-50%); z-index: 5; padding: 0 15px; pointer-events: none;}
@@ -145,7 +152,7 @@
         .main-info { text-align: center; padding: 0 20px; width: 100%; padding-top: 15px; }
         .name { font-family: 'Playfair Display', serif; font-size: 32px; margin: 10px 0 5px; font-weight: 600; color: var(--text-main); word-wrap: break-word;}
         .dates { font-size: 15px; color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; font-weight: bold;}
-        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent); margin-top: 10px; font-size: 18px; word-wrap: break-word;}
+        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: 10px; font-size: 18px; word-wrap: break-word;}
 
         .candle-container { margin: 25px auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: 12px 25px; border-radius: 30px; font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px var(--border-soft); transition: all 0.3s ease; }
@@ -155,6 +162,16 @@
         .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
         .candle-count-text { margin-top: 8px; font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
         @keyframes flicker { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
+
+        /* Pantallas pequeñas: hero más compacto para acercar el contenido */
+        @media (max-width: 420px) {
+            .cover-header { height: 240px; }
+            .name { font-size: 27px; }
+            .dates { font-size: 14px; letter-spacing: 2px; }
+            .memory-of { font-size: 16px; margin-top: 8px; }
+            .candle-container { margin: 18px auto 8px; }
+            .main-info { padding-top: 12px; }
+        }
 
         /* ==========================================
            MÉTRICAS: MEMORIA VIVA Y DESTACADOS
@@ -188,6 +205,9 @@
 
         .gallery-container { padding: 0 2px; width: 100%;}
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+        .gallery-empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+        .gallery-empty i { font-size: 34px; color: var(--accent); opacity: 0.4; display: block; margin-bottom: 10px; }
+        .gallery-empty p { font-size: 14px; font-style: italic; margin: 0; }
         .gallery-item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; position: relative; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; pointer-events: none; }
         .gallery-item:hover { z-index: 10; border-radius: 8px;}
@@ -269,6 +289,12 @@
         .info-card i { font-size: 26px; color: var(--accent); margin-bottom: 12px;}
         .info-card strong { font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: 8px;}
         .info-card span { font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;}
+        /* La canción ocupa ancho completo para que el reproductor no se recorte */
+        #card-cancion { grid-column: 1 / -1; }
+        #contenedor-cancion { width: 100%; }
+        .yt-player { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; display: block; box-shadow: 0 6px 18px var(--border-soft); }
+        .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: 20px; padding: 7px 16px; font-size: 12.5px; font-weight: bold; text-decoration: none; transition: 0.3s; }
+        .btn-yt-rescue:hover { background: rgba(255,0,0,0.15); transform: translateY(-1px); }
         
         .bio-section { padding: 10px 20px 40px; width: 100%; }
         .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: 26px; margin-bottom: 25px; color: var(--text-main); position: relative;}
@@ -284,7 +310,7 @@
         .timeline-item:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(212,175,55,0.2); }
         .timeline-icon { position: absolute; left: -43px; top: 15px; width: 32px; height: 32px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: 14px; transition: 0.3s; z-index: 2;}
         .timeline-item:hover .timeline-icon { background: var(--accent); color: white; transform: scale(1.1); box-shadow: 0 0 20px var(--accent); }
-        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 14px; margin-bottom: 10px; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
+        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 14px; margin-bottom: 10px; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
         .timeline-event { font-size: 15px; color: var(--text-light); margin-top: 5px; line-height: 1.5; word-wrap: break-word;}
         .timeline-event strong { color: var(--text-main); display: block; font-size: 16px; margin-bottom: 2px;}
         .timeline-controls { position: absolute; right: 10px; top: 15px; display: flex; gap: 8px; opacity: 0; transition: 0.3s; z-index: 10;}
@@ -335,7 +361,7 @@
         .system-modal.show .modal-body { transform: scale(1); }
         .form-group { margin-bottom: 15px; width: 100%; } 
         .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--text-light);} 
-        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato';} 
+        .form-group input, .form-group textarea, .input-pro { width: 100%; padding: 12px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato'; font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */ }
         .btn-save { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 10px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold;}
         .confirm-actions { display: flex; gap: 10px; margin-top: 20px;}
         .confirm-actions button { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
@@ -389,8 +415,11 @@
         @keyframes flickerVela { 0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(255,180,0,0.7)); } 50% { transform: scale(1.08) rotate(2deg); filter: drop-shadow(0 0 14px rgba(255,120,0,0.8)); } }
         .vela-nombre { font-size: 11px; font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
         .vela-mensaje { font-size: 10px; color: var(--text-light); font-style: italic; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .vela-tiempo { font-size: 9px; color: var(--accent); font-weight: bold; margin-top: 2px; }
-        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto 5px; background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: 25px; padding: 11px 22px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .vela-tiempo { font-size: 10px; color: var(--accent-text); font-weight: bold; margin-top: 2px; }
+        .velas-muro-header { text-align: center; margin-bottom: 14px; }
+        .velas-muro-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text-main); margin: 0; }
+        .velas-muro-sub { font-size: 12.5px; color: var(--text-light); margin: 4px 0 0; font-style: italic; }
+        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 16px auto 5px; background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: 25px; padding: 11px 22px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-encender-muro:hover { background: linear-gradient(135deg,rgba(255,140,50,0.3),rgba(255,80,0,0.15)); transform: translateY(-2px); }
         .velas-empty { text-align: center; padding: 30px 20px; color: var(--text-light); font-style: italic; font-size: 14px; }
 
@@ -414,13 +443,13 @@
         .arbol-container { display: flex; flex-direction: column; gap: 15px; }
         .arbol-grupo { display: flex; flex-direction: column; gap: 6px; }
         .arbol-grupo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: 4px; }
-        .arbol-row { display: flex; flex-wrap: wrap; gap: 10px; }
-        .familiar-card { background: var(--card-bg); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-soft); box-shadow: 0 4px 12px var(--border-soft); min-width: 130px; flex: 1; max-width: 180px; position: relative; transition: 0.3s; }
+        .arbol-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
+        .familiar-card { background: var(--card-bg); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: 0 4px 12px var(--border-soft); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: 0.3s; }
         .familiar-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212,175,55,0.15); }
-        .familiar-foto { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
+        .familiar-foto { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
         .familiar-info { min-width: 0; }
-        .familiar-nombre { font-size: 13px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .familiar-relacion { font-size: 11px; color: var(--accent); font-weight: bold; text-transform: capitalize; }
+        .familiar-nombre { font-size: 13px; font-weight: bold; color: var(--text-main); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .familiar-relacion { font-size: 11px; color: var(--accent-text); font-weight: bold; text-transform: capitalize; }
         .familiar-link { font-size: 10px; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
         .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: 12px; opacity: 0; transition: 0.2s; background: none; border: none; padding: 4px; }
         .familiar-card:hover .familiar-delete { opacity: 0.7; }
@@ -429,6 +458,14 @@
         .arbol-add-btn:hover { background: rgba(212,175,55,0.15); }
         .arbol-connector { display: flex; justify-content: center; }
         .arbol-line { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), transparent); opacity: 0.4; }
+
+        /* Botón flotante de acceso familiar */
+        #btnAccesoFamiliar { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); right: 24px; background: #2c3e50; color: white; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.35); display: flex; justify-content: center; align-items: center; z-index: 50; font-size: 20px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.3s ease; }
+        #btnAccesoFamiliar:hover { transform: scale(1.08); }
+        /* En desktop lo anclamos a la esquina del "marco de teléfono" (contenedor de 600px) */
+        @media (min-width: 768px) {
+            #btnAccesoFamiliar { position: fixed; left: 50%; right: auto; bottom: 40px; margin-left: 218px; }
+        }
 
         /* ==========================================
            📄 PRINT / PDF - LIBRO DEL LEGADO
@@ -469,13 +506,15 @@
 </head>
 <body>
 
-    <div id="welcome-screen">
-        {% if portadas[0].es_video %}
-            <video class="welcome-bg" src="{{ portadas[0].url }}" autoplay loop muted playsinline></video>
-        {% else %}
-            <div class="welcome-bg" style="background-image: url('{{ portadas[0].url }}');"></div>
+    <div id="welcome-screen" onclick="saltarIntro()" title="Toca para entrar">
+        {% if portadas %}
+            {% if portadas[0].es_video %}
+                <video class="welcome-bg" src="{{ portadas[0].url }}" autoplay loop muted playsinline></video>
+            {% else %}
+                <div class="welcome-bg" style="background-image: url('{{ portadas[0].url }}');"></div>
+            {% endif %}
         {% endif %}
-        
+
         <div class="welcome-overlay"></div>
         <div class="light-particle p1"></div>
         <div class="light-particle p2"></div>
@@ -488,11 +527,12 @@
             </div>
             <p class="welcome-delay">"Gracias por visitar este espacio de recuerdos"</p>
         </div>
+        <button id="btnSaltarIntro" onclick="event.stopPropagation(); saltarIntro();" aria-label="Saltar introducción">Entrar <i class="fas fa-arrow-right"></i></button>
     </div>
 
     <div id="deleteTopBar" class="delete-top-bar"><span class="cancel-btn" onclick="cancelarEliminar()">Cancelar</span><span class="delete-title">1 seleccionada</span><span class="trash-btn" onclick="abrirConfirmacionGlobal()"><i class="fas fa-trash"></i></span></div>
     <div id="confirmModal" class="system-modal"><div class="modal-body" style="text-align: center;"><h2 style="color: #e74c3c;">Eliminar</h2><p id="confirmText" style="color: var(--text-light); font-size: 15px; margin-bottom: 25px;">¿Estás seguro de que deseas eliminar esto?</p><div class="confirm-actions"><button class="btn-cancel-modal" onclick="cerrarModal('confirmModal')">Cancelar</button><button class="btn-delete-confirm" id="btnDeleteGlobal" onclick="ejecutarEliminacionGlobal()">Eliminar</button></div></div></div>
-    <button id="btnAccesoFamiliar" onclick="abrirModal('modalLoginFamiliar')" style="position:fixed; bottom:24px; right:24px; background:#2c3e50; color:white; width:56px; height:56px; border-radius:50%; box-shadow:0 10px 25px rgba(0,0,0,0.35); display:flex; justify-content:center; align-items:center; z-index:50; font-size:20px; border:2px solid rgba(255,255,255,0.2); cursor:pointer; transition:transform 0.3s ease;"><i class="fas fa-lock"></i></button>
+    <button id="btnAccesoFamiliar" onclick="abrirModal('modalLoginFamiliar')" aria-label="Acceso familiar" title="Acceso familiar"><i class="fas fa-lock"></i></button>
     <div id="modalLoginFamiliar" class="system-modal"><div class="modal-body" style="text-align: center; padding: 40px 25px; position: relative;"><span style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 28px; color: var(--text-light);" onclick="cerrarModal('modalLoginFamiliar')">&times;</span><div class="pin-icon-wrapper"><i class="fas fa-unlock-alt"></i></div><h2 style="font-family: 'Playfair Display', serif; color: var(--text-main); font-size: 26px;">Acceso Familiar</h2><p style="color: var(--text-light); font-size: 14px;">Ingresa el PIN de seguridad de 4 dígitos.</p><input type="password" id="f_pin" class="pin-input" placeholder="••••" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button onclick="verificarPinFamiliar()" id="btnVerificarPin" class="btn-elegant" style="width: 100%;">Desbloquear Funciones</button><p id="errorPin" class="error-msg"><i class="fas fa-exclamation-circle"></i> PIN incorrecto.</p></div></div>
     
     <div class="container">
@@ -504,7 +544,7 @@
                     {% if portada.es_video %}
                         <video src="{{ portada.url }}" class="cover-media" loop muted playsinline {% if loop.index0 == 0 %}autoplay{% endif %}></video>
                     {% else %}
-                        <img src="{{ portada.url }}" class="cover-media">
+                        <img src="{{ portada.url }}" class="cover-media" alt="Portada de {{ nombre }}">
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -516,7 +556,7 @@
                 <button class="glass-btn theme-btn" onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar Tema de Color"><i class="fas fa-moon"></i></button>
                 <div style="display: flex; gap: 10px;">
                     <button class="glass-btn admin-only" onclick="abrirModal('editModal')" title="Editar Textos del Perfil"><i class="fas fa-pen"></i></button>
-                    <button class="glass-btn btn-tema-toggle" onclick="abrirModal('temaModal')" title="Cambiar Estilo del Memorial"><i class="fas fa-palette"></i></button>
+                    <button class="glass-btn theme-btn" onclick="abrirModal('temaModal')" title="Cambiar Estilo del Memorial" aria-label="Cambiar estilo del memorial"><i class="fas fa-palette"></i></button>
                     <form id="portadaForm" class="admin-only" style="display:none;"><input type="file" id="portadaInput" accept="image/*,video/mp4,video/quicktime" multiple onchange="cambiarFotoPortada()"></form>
                     <button class="glass-btn admin-only" onclick="document.getElementById('portadaInput').click()" title="Cambiar Slider de Portada"><i class="fas fa-images"></i></button>
                     <form id="fotoForm" class="admin-only" style="display:none;"><input type="file" id="fotoInput" accept="image/*,video/mp4,video/quicktime" onchange="cambiarFotoPerfil()"></form>
@@ -541,7 +581,7 @@
             {% if es_video_perfil %}
                 <video class="profile-pic" src="{{ foto_perfil }}" autoplay muted playsinline loop></video>
             {% else %}
-                <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto">
+                <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto de {{ nombre }}">
             {% endif %}
         </div>
         
@@ -557,28 +597,32 @@
                 <span id="textoVela">Encender una vela</span>
             </button>
             <p class="candle-count-text">
-                <i class="fas fa-burn text-yellow-500 mr-1"></i>
-                <span id="contadorVelas">{{ velas }}</span> velas iluminan este memorial
+                <i class="fas fa-fire" style="color:#f39c12; margin-right:4px;"></i>
+                <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
             </p>
         </div>
 
         <!-- MURO DE VELAS -->
         <div class="velas-muro-section" data-aos="fade-up">
-            <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
-                <i class="fas fa-fire" style="color:#f39c12;"></i> Encender una Vela en su Memoria
-            </button>
+            <div class="velas-muro-header">
+                <h3 class="velas-muro-title">Velas dedicadas</h3>
+                <p class="velas-muro-sub">Un homenaje con nombre y mensaje que brilla por un tiempo</p>
+            </div>
             <div id="velasMuroGrid" class="velas-muro-grid"></div>
             <div id="velasEmpty" class="velas-empty" style="display:none;">
                 <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom:8px;"></i>
-                Sé el primero en encender una vela.
+                Sé el primero en dedicar una vela.
             </div>
+            <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
+                <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicar una vela con mensaje
+            </button>
         </div>
 
         {% if interacciones_hoy > 0 %}
         <div class="memoria-viva-banner" data-aos="fade-up">
             <i class="fas fa-seedling"></i>
             <p>Memoria Viva</p>
-            <span>Hoy {{ interacciones_hoy }} personas interactuaron con este memorial.</span>
+            <span>Hoy {{ interacciones_hoy }} {% if interacciones_hoy == 1 %}persona interactuó{% else %}personas interactuaron{% endif %} con este memorial.</span>
         </div>
         {% endif %}
 
@@ -775,17 +819,18 @@
 
         <div class="gallery-header" data-aos="fade-up">
             <h2 class="section-title">Galería de Vida</h2>
-            <p class="total-likes-text">❤️ {{ total_corazones_galeria }} recuerdos compartidos</p>
+            <p class="total-likes-text">❤️ {{ fotos|length }} {% if fotos|length == 1 %}recuerdo compartido{% else %}recuerdos compartidos{% endif %}</p>
         </div>
 
-        <div id="dropZone" class="upload-zone admin-only"><i id="dropZone" class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
-        
+        <div id="dropZone" class="upload-zone admin-only"><i class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
+
         <div class="gallery-container">
+            {% if fotos %}
             <div class="gallery-grid" id="mainGalleryGrid">
                 {% for foto in fotos %}
                 <div class="gallery-item" data-id="{{ foto.id }}" data-aos="zoom-in" onclick="interactuarFotoGrid('{{ foto.id }}', this)">
-                    <img src="{{ foto.url }}" alt="Recuerdo">
-                    
+                    <img src="{{ foto.url }}" alt="Recuerdo de {{ nombre }}">
+
                     <div class="item-likes-overlay {% if foto.likes > 0 %}has-likes{% endif %}" id="grid-like-badge-{{ foto.id }}">
                         <i class="fas fa-heart"></i> <span>{{ foto.likes }}</span>
                     </div>
@@ -794,6 +839,12 @@
                 </div>
                 {% endfor %}
             </div>
+            {% else %}
+            <div class="gallery-empty">
+                <i class="fas fa-images"></i>
+                <p>Aún no hay fotos en la galería.</p>
+            </div>
+            {% endif %}
         </div>
 
         <!-- QR visible solo en impresión -->
@@ -999,7 +1050,28 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 1000, once: true, offset: 50 });
+        // Fallback: si AOS no cargó (CDN caído/bloqueado), forzamos el contenido visible
+        // para que el memorial NUNCA quede en blanco.
+        function forzarContenidoVisible() {
+            document.querySelectorAll('[data-aos]').forEach(function(el){
+                el.style.opacity = '1';
+                el.style.transform = 'none';
+            });
+        }
+        if (typeof AOS !== 'undefined') {
+            try {
+                AOS.init({ duration: 1000, once: true, offset: 50 });
+                // Red de seguridad: si algo quedó invisible tras 3.5s, se muestra igual.
+                setTimeout(function(){
+                    document.querySelectorAll('[data-aos]:not(.aos-animate)').forEach(function(el){
+                        var r = el.getBoundingClientRect();
+                        if (r.top < window.innerHeight) { el.style.opacity = '1'; el.style.transform = 'none'; }
+                    });
+                }, 3500);
+            } catch(e) { forzarContenidoVisible(); }
+        } else {
+            forzarContenidoVisible();
+        }
         const ID_PERFIL = "{{ identificador }}";
         const CANCION_RAW = {{ cancion_favorita | tojson }};
 
@@ -1090,7 +1162,29 @@
         // =====================================
         // TRANSICIÓN DE INTRO Y YOUTUBE
         // =====================================
-        setTimeout(() => { document.body.style.backgroundColor = ""; document.body.classList.add('intro-finished'); actualizarIconoYBarra(); }, 4000);
+        function saltarIntro() {
+            const ws = document.getElementById('welcome-screen');
+            if (!ws || ws.classList.contains('oculto')) return;
+            ws.style.animation = 'none';
+            ws.classList.add('oculto');
+            document.body.style.backgroundColor = "";
+            document.body.classList.add('intro-finished');
+            try { localStorage.setItem('intro_seen_' + ID_PERFIL, '1'); } catch(e){}
+            if (typeof actualizarIconoYBarra === 'function') actualizarIconoYBarra();
+        }
+
+        // Visitas repetidas: no volvemos a bloquear con la intro completa
+        if (localStorage.getItem('intro_seen_' + ID_PERFIL) === '1') {
+            document.addEventListener('DOMContentLoaded', saltarIntro);
+        } else {
+            // Primera visita: la intro corre y al terminar se recuerda
+            setTimeout(() => {
+                document.body.style.backgroundColor = "";
+                document.body.classList.add('intro-finished');
+                try { localStorage.setItem('intro_seen_' + ID_PERFIL, '1'); } catch(e){}
+                actualizarIconoYBarra();
+            }, 4000);
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             const contenedorCancion = document.getElementById('contenedor-cancion');
@@ -1344,8 +1438,18 @@
         function prepararEliminarMomento(id) { itemAEliminarId = id; tipoEliminacion = 'momento'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este momento de la línea de tiempo?"; abrirModal('confirmModal'); }
         function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); } 
         function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE', headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
-        function abrirModal(id) { document.getElementById(id).classList.add('show'); }
         function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
+        // Cerrar cualquier modal al tocar el fondo oscuro (fuera del contenido) o con Escape
+        document.addEventListener('click', function(e) {
+            if (e.target.classList && e.target.classList.contains('system-modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.system-modal.show').forEach(function(m){ m.classList.remove('show'); });
+            }
+        });
         function prepararMomento(id, anio = "", titulo = "", desc = "") { document.getElementById('t_id').value = id || ""; document.getElementById('t_anio').value = anio; document.getElementById('t_titulo').value = titulo; document.getElementById('t_desc').value = desc; document.getElementById('modalMomentoTitulo').innerText = id ? "Editar Momento" : "Agregar Momento"; abrirModal('momentoModal'); }
         function guardarMomento() { let id = document.getElementById('t_id').value; let datos = { anio: document.getElementById('t_anio').value, titulo: document.getElementById('t_titulo').value, descripcion: document.getElementById('t_desc').value }; if(!datos.anio || !datos.titulo) { return alert("Por favor, llena el año y el título."); } let url = id ? `/editar_momento/${id}` : `/agregar_momento/${ID_PERFIL}`; fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
         function darLikeMensaje(mensajeId, element) { let icon = element.querySelector('i'); let countSpan = element.querySelector('.like-count'); icon.style.transform = 'scale(1.4)'; element.classList.add('liked'); setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200); fetch(`/likear_mensaje/${mensajeId}`, { method: 'POST' }).then(res => res.json()).then(data => { countSpan.innerText = data.likes; }); }
