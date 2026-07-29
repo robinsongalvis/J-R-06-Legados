@@ -113,10 +113,16 @@ class PerfilDifunto(Base):
     notas_internas = Column(Text, default="")
 
     # Relaciones con otras tablas
-    fotos_galeria = relationship("FotoGaleria", back_populates="perfil")
-    mensajes = relationship("MensajeRecuerdo", back_populates="perfil")
+    #
+    # order_by explícito: sin ORDER BY, Postgres puede devolver las filas en el
+    # orden que le convenga, y ese orden cambia cuando una fila se actualiza (por
+    # ejemplo al dar un corazón a una foto). El código las recorre con reversed()
+    # dando por hecho que van de la más vieja a la más nueva, así que el orden
+    # tiene que pedirse, no suponerse.
+    fotos_galeria = relationship("FotoGaleria", back_populates="perfil", order_by="FotoGaleria.id")
+    mensajes = relationship("MensajeRecuerdo", back_populates="perfil", order_by="MensajeRecuerdo.id")
     momentos = relationship("MomentoInolvidable", back_populates="perfil")
-    velas_list = relationship("VelaEncendida", back_populates="perfil", cascade="all, delete-orphan")
+    velas_list = relationship("VelaEncendida", back_populates="perfil", cascade="all, delete-orphan", order_by="VelaEncendida.id")
     familiares_arbol = relationship("FamiliarArbol", back_populates="perfil", cascade="all, delete-orphan")
 
 class FotoGaleria(Base):
@@ -165,7 +171,9 @@ class VelaEncendida(Base):
     mensaje = Column(String(150), default="")
     duracion_horas = Column(Integer, default=24)
     fecha_encendida = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None))
-    perfil_id = Column(Integer, ForeignKey("perfiles.id"))
+    # Indexado: esta tabla es la que más crece (una fila por vela encendida) y se
+    # consulta por perfil en cada visita al memorial.
+    perfil_id = Column(Integer, ForeignKey("perfiles.id"), index=True)
     perfil = relationship("PerfilDifunto", back_populates="velas_list")
 
 class FamiliarArbol(Base):
@@ -272,3 +280,11 @@ for _columna in _COLUMNAS_GESTION:
             conn.execute(text(f"ALTER TABLE perfiles ADD COLUMN {_columna}"))
     except Exception:
         pass
+
+# create_all no añade índices a tablas que ya existen, así que el de velas hay
+# que crearlo aparte para las bases que ya estaban en producción.
+try:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_velas_encendidas_perfil_id ON velas_encendidas (perfil_id)"))
+except Exception:
+    pass

@@ -832,7 +832,10 @@
             fetch('/api/admin/respaldo')
                 .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.blob(); })
                 .then(blob => {
-                    const fecha = new Date().toISOString().slice(0, 10);
+                    // Fecha local, no toISOString(): esa devuelve UTC y después de
+                    // las 7 de la noche bautizaba el respaldo con el día siguiente.
+                    const d = new Date();
+                    const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
