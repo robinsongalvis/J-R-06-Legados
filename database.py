@@ -101,6 +101,17 @@ class PerfilDifunto(Base):
     mapa_descripcion = Column(String, default="")
     mapa_privacidad = Column(String, default="publico")
 
+    # 📒 GESTIÓN DEL NEGOCIO (solo admin)
+    # Datos personales de la familia que compró el memorial. NUNCA se envían a
+    # perfil.html: la página pública se arma con un diccionario explícito en
+    # main.py, así que estos campos solo salen por los endpoints /api/admin/*.
+    fecha_creacion = Column(DateTime, default=datetime.datetime.utcnow)
+    contacto_nombre = Column(String, default="")
+    contacto_telefono = Column(String, default="")
+    contacto_email = Column(String, default="")
+    estado_pago = Column(String, default="pendiente")  # pendiente | pagado | cortesia
+    notas_internas = Column(Text, default="")
+
     # Relaciones con otras tablas
     fotos_galeria = relationship("FotoGaleria", back_populates="perfil")
     mensajes = relationship("MensajeRecuerdo", back_populates="perfil")
@@ -239,3 +250,25 @@ try:
         conn.execute(text("ALTER TABLE perfiles ADD COLUMN mapa_privacidad VARCHAR DEFAULT 'publico'"))
 except Exception:
     pass
+
+# Campos de gestión del negocio. Misma idea que los de arriba (si la columna ya
+# existe, el ALTER falla y se ignora), pero en lote porque entraron todos juntos.
+#
+# fecha_creacion va SIN DEFAULT a propósito: SQLite no acepta CURRENT_TIMESTAMP
+# como default en un ALTER TABLE. Los perfiles que ya existían quedan en NULL,
+# que es lo honesto: de esos no sabemos cuándo se vendieron.
+_COLUMNAS_GESTION = [
+    "fecha_creacion TIMESTAMP",
+    "contacto_nombre VARCHAR DEFAULT ''",
+    "contacto_telefono VARCHAR DEFAULT ''",
+    "contacto_email VARCHAR DEFAULT ''",
+    "estado_pago VARCHAR DEFAULT 'pendiente'",
+    "notas_internas TEXT DEFAULT ''",
+]
+
+for _columna in _COLUMNAS_GESTION:
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(f"ALTER TABLE perfiles ADD COLUMN {_columna}"))
+    except Exception:
+        pass
