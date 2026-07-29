@@ -8,7 +8,6 @@ from pydantic import BaseModel
 import datetime
 import os
 import socket
-import random
 from typing import List
 import re
 import hashlib
@@ -18,6 +17,38 @@ import base64
 import time
 from collections import defaultdict
 import httpx
+
+# ==========================================
+# HORA DE COLOMBIA
+# ==========================================
+# En la base todo se guarda en UTC, que es lo correcto: una fecha sin zona no
+# significa nada cuando el servidor vive en otro continente. Pero la familia lee
+# el memorial desde Colombia, así que el día hay que traducirlo al mostrarlo.
+#
+# Sin esto, un mensaje escrito a las 8 de la noche del 14 de febrero se guardaba
+# como 01:00 UTC del 15 y se mostraba con la fecha del día siguiente. Cinco de
+# cada veinticuatro horas caían en el día equivocado, y justo en la franja de la
+# noche, que es cuando más se visita un memorial.
+#
+# Offset fijo en vez de zoneinfo a propósito: Colombia no tiene horario de verano
+# desde 1993, así que -05:00 vale todo el año, y así no dependemos de que la
+# imagen del servidor traiga la base de datos de zonas horarias instalada.
+ZONA_COLOMBIA = datetime.timezone(datetime.timedelta(hours=-5))
+
+def a_hora_colombia(fecha):
+    """Convierte un datetime UTC sin zona (los que guarda la base) a hora local."""
+    if fecha is None:
+        return None
+    return fecha.replace(tzinfo=datetime.timezone.utc).astimezone(ZONA_COLOMBIA)
+
+def ahora_colombia():
+    """El instante actual en Colombia. Úsalo para saber en qué día estamos."""
+    return datetime.datetime.now(ZONA_COLOMBIA)
+
+def fecha_colombia_str(fecha, formato="%d/%m/%Y", vacio=""):
+    """Formatea una fecha guardada en UTC con el día que le corresponde acá."""
+    local = a_hora_colombia(fecha)
+    return local.strftime(formato) if local else vacio
 
 def parse_date_for_sorting(date_str):
     if not date_str: return (9999, 12, 31)
@@ -338,7 +369,9 @@ def comprimir_imagen(file_content):
         return io.BytesIO(file_content)
 
 def registrar_interaccion(perfil, db):
-    hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    # El día se corta a la medianoche de Colombia, no a las 7 de la noche, que
+    # es cuando cambia la fecha en UTC.
+    hoy_str = ahora_colombia().strftime("%Y-%m-%d")
     if perfil.dia_interacciones != hoy_str:
         perfil.interacciones_hoy = 1
         perfil.dia_interacciones = hoy_str
@@ -635,6 +668,21 @@ def encender_vela(identificador: str, request: Request, db: Session = Depends(ge
     if not perfil: raise HTTPException(status_code=404, detail="Perfil no encontrado")
     if perfil.velas is None: perfil.velas = 0
     perfil.velas += 1
+
+    # Además del contador, dejamos rastro de CUÁNDO se encendió. Antes esta vela
+    # solo sumaba un número: quedaba constancia de que alguien pasó, pero no del
+    # día, así que ese recuerdo no se podía devolver nunca.
+    #
+    # duracion_horas=0 la mantiene fuera del muro de dedicatorias (el muro filtra
+    # por horas restantes, y con 0 nunca entra). El muro es para velas con nombre
+    # y mensaje; esta es anónima y llenaría ese espacio de tarjetas vacías.
+    db.add(database.VelaEncendida(
+        nombre="Visitante Anónimo",
+        mensaje="",
+        duracion_horas=0,
+        perfil_id=perfil.id
+    ))
+
     registrar_interaccion(perfil, db)
     return {"velas": perfil.velas}
 
@@ -727,7 +775,7 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     ).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: return HTMLResponse(content="<h1>Error 404: Perfil no encontrado</h1>", status_code=404)
 
-    hoy_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    hoy_str = ahora_colombia().strftime("%Y-%m-%d")
     if getattr(perfil, 'dia_interacciones', '') != hoy_str:
         perfil.interacciones_hoy = 0
         perfil.dia_interacciones = hoy_str
@@ -749,10 +797,22 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         comentarios_feed = [{"texto": c.texto} for c in list(foto.comentarios)[-3:]]
         fotos_feed.append({"id": foto.id, "url": foto.url_foto, "likes": corazones, "comentarios": comentarios_feed})
 
-    foto_aleatoria = random.choice(fotos_feed) if fotos_feed else None
+    # El bloque se llama "Recuerdo de hoy", así que tiene que ser el de hoy: antes
+    # era un random.choice sin semilla y sacaba una foto distinta en cada recarga.
+    #
+    # Rotación y no azar sembrado: con azar salían tres días seguidos con la misma
+    # foto, que parece que estuviera fallando. Así avanza una foto por día y pasa
+    # por todas antes de repetir. El desplazamiento por identificador evita que
+    # todos los memoriales muestren la misma posición el mismo día.
+    if fotos_feed:
+        dia_absoluto = ahora_colombia().date().toordinal()
+        desplazamiento = int(hashlib.sha256(identificador.encode()).hexdigest()[:8], 16)
+        foto_aleatoria = fotos_feed[(dia_absoluto + desplazamiento) % len(fotos_feed)]
+    else:
+        foto_aleatoria = None
     foto_mas_recordada = max(fotos_feed, key=lambda f: f["likes"]) if fotos_feed and total_corazones_galeria > 0 else None
 
-    mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": m.fecha_creacion.strftime("%d/%m/%Y"), "likes": m.likes} for m in reversed(perfil.mensajes)]
+    mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": fecha_colombia_str(m.fecha_creacion), "likes": m.likes} for m in reversed(perfil.mensajes)]
     momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion, "icono": obtener_icono_momento(m.titulo)} for m in perfil.momentos]
     momentos_feed.sort(key=lambda x: parse_date_for_sorting(x["anio"])) # ✅ CRONOLOGÍA AUTOMÁTICA
     
@@ -765,7 +825,7 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         "identificador": perfil.identificador, "nombre": perfil.nombre, "fechas": perfil.fechas,
         "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, 
         "portadas": lista_portadas, "foto_portada_og": lista_portadas[0]["url"] if lista_portadas else "",
-        "es_video_perfil": es_video_perfil, "visitas": perfil.visitas, "ultima_visita": perfil.ultima_visita.strftime("%d/%m/%Y"), 
+        "es_video_perfil": es_video_perfil, "visitas": perfil.visitas, "ultima_visita": fecha_colombia_str(perfil.ultima_visita),
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
         "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed, "velas": perfil.velas or 0,
@@ -806,8 +866,8 @@ def estadisticas_admin(request: Request, db: Session = Depends(get_db), admin: b
     return {
         "total_perfiles": len(perfiles), "total_visitas": sum([p.visitas for p in perfiles]),
         "total_pendientes": sum(1 for p in perfiles if _estado_pago_valido(p.estado_pago) == "pendiente"),
-        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva",
-                      "fecha_creacion": p.fecha_creacion.strftime("%d/%m/%Y") if p.fecha_creacion else "",
+        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": fecha_colombia_str(p.ultima_visita, vacio="Nueva"),
+                      "fecha_creacion": fecha_colombia_str(p.fecha_creacion),
                       "contacto_nombre": p.contacto_nombre or "", "contacto_telefono": p.contacto_telefono or "",
                       "contacto_email": p.contacto_email or "", "estado_pago": _estado_pago_valido(p.estado_pago),
                       "notas_internas": p.notas_internas or ""} for p in perfiles]
@@ -902,14 +962,23 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
                 {"nombre": fa.nombre, "relacion": fa.relacion, "foto_url": fa.foto_url, "orden": fa.orden}
                 for fa in p.familiares_arbol
             ],
+            # Las dedicadas (con nombre y mensaje) van enteras. Las anónimas, que
+            # son solo "alguien pasó por aquí", van como lista de fechas: guardan
+            # el dato que importa sin sepultar las dedicatorias reales bajo miles
+            # de objetos con el mensaje vacío.
             "velas_dedicadas": [
                 {"nombre": v.nombre, "mensaje": v.mensaje, "duracion_horas": v.duracion_horas,
                  "fecha": cuando(v.fecha_encendida)}
-                for v in p.velas_list
+                for v in p.velas_list if v.duracion_horas > 0
+            ],
+            "velas_anonimas": [
+                cuando(v.fecha_encendida) for v in p.velas_list if not v.duracion_horas
             ],
         })
 
-    marca = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
+    # Hora de Colombia: el nombre del archivo lo lee el dueño, y tiene que decir
+    # el día en que lo descargó. El "generado" de adentro sí queda en UTC con su Z.
+    marca = ahora_colombia().strftime("%Y-%m-%d_%H%M")
     return Response(
         content=json.dumps(datos, ensure_ascii=False, indent=2),
         media_type="application/json",
@@ -947,7 +1016,26 @@ def listar_velas_muro(identificador: str, db: Session = Depends(get_db)):
     if not perfil: raise HTTPException(status_code=404)
     ahora = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     velas_activas = []
-    for v in reversed(perfil.velas_list):
+
+    # Filtramos en SQL y no en Python. Este endpoint se llama en cada visita al
+    # memorial, y desde que la vela simple también deja fila, recorrer la relación
+    # entera significaba leer todo el historial del memorial para devolver, casi
+    # siempre, un puñado de velas vigentes.
+    #
+    # El corte de 72 horas es seguro porque encender_vela_muro limita la duración
+    # a ese máximo: ninguna vela puede seguir encendida más allá. Y duracion_horas
+    # > 0 deja fuera las anónimas, que nunca se muestran acá.
+    candidatas = (
+        db.query(database.VelaEncendida)
+          .filter(
+              database.VelaEncendida.perfil_id == perfil.id,
+              database.VelaEncendida.duracion_horas > 0,
+              database.VelaEncendida.fecha_encendida > ahora - datetime.timedelta(hours=72),
+          )
+          .order_by(database.VelaEncendida.id.desc())
+    )
+
+    for v in candidatas:
         horas_transcurridas = (ahora - v.fecha_encendida).total_seconds() / 3600
         if horas_transcurridas < v.duracion_horas:
             horas_restantes = max(0, v.duracion_horas - int(horas_transcurridas))
@@ -955,7 +1043,7 @@ def listar_velas_muro(identificador: str, db: Session = Depends(get_db)):
                 "id": v.id, "nombre": v.nombre, "mensaje": v.mensaje,
                 "horas_restantes": horas_restantes,
                 "duracion_horas": v.duracion_horas,
-                "fecha": v.fecha_encendida.strftime("%d/%m/%Y")
+                "fecha": fecha_colombia_str(v.fecha_encendida)
             })
         if len(velas_activas) >= 24:
             break
