@@ -251,6 +251,21 @@ class PerfilDatos(BaseModel):
     cancion_favorita: str = ""
     juego_favorito: str = ""
     pin_familia: str = "0000"
+    # Datos de gestión: los usa /crear_perfil/ (solo admin). editar_perfil/
+    # comparte este modelo pero NO los copia, porque ahí entra la familia con
+    # su PIN y no debe poder tocar el estado de pago ni las notas internas.
+    contacto_nombre: str = ""
+    contacto_telefono: str = ""
+    contacto_email: str = ""
+    estado_pago: str = "pendiente"
+    notas_internas: str = ""
+
+class GestionUpdate(BaseModel):
+    contacto_nombre: str = ""
+    contacto_telefono: str = ""
+    contacto_email: str = ""
+    estado_pago: str = "pendiente"
+    notas_internas: str = ""
 
 class MensajeNuevo(BaseModel):
     autor: str
@@ -424,12 +439,26 @@ def verificar_pin(identificador: str, req: PinRequest, request: Request, db: Ses
     registrar_fallo(request, alcance)
     raise HTTPException(status_code=401, detail="PIN incorrecto")
 
+ESTADOS_PAGO = ("pendiente", "pagado", "cortesia")
+
+def _estado_pago_valido(valor: str) -> str:
+    """Solo deja pasar los tres estados conocidos; cualquier otra cosa es 'pendiente'.
+
+    Así el semáforo del panel nunca queda en un estado que no sabe pintar.
+    """
+    limpio = (valor or "").strip().lower()
+    return limpio if limpio in ESTADOS_PAGO else "pendiente"
+
 # --- CRUD PROTEGIDO POR ADMIN ---
 @app.post("/crear_perfil/")
 def crear_perfil(perfil: PerfilDatos, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     existente = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == perfil.identificador).first()
     if existente: raise HTTPException(status_code=400, detail="Ese identificador ya existe.")
-    nuevo_difunto = database.PerfilDifunto(identificador=perfil.identificador, nombre=perfil.nombre, fechas=perfil.fechas, biografia=perfil.biografia, foto_perfil="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png", foto_portada="https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop", en_memoria_de=perfil.en_memoria_de, esposa=perfil.esposa, hijos=perfil.hijos, cancion_favorita=perfil.cancion_favorita, juego_favorito=perfil.juego_favorito, pin_familia=perfil.pin_familia)
+    nuevo_difunto = database.PerfilDifunto(identificador=perfil.identificador, nombre=perfil.nombre, fechas=perfil.fechas, biografia=perfil.biografia, foto_perfil="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png", foto_portada="https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop", en_memoria_de=perfil.en_memoria_de, esposa=perfil.esposa, hijos=perfil.hijos, cancion_favorita=perfil.cancion_favorita, juego_favorito=perfil.juego_favorito, pin_familia=perfil.pin_familia,
+        fecha_creacion=datetime.datetime.utcnow(),
+        contacto_nombre=perfil.contacto_nombre.strip(), contacto_telefono=perfil.contacto_telefono.strip(),
+        contacto_email=perfil.contacto_email.strip(), estado_pago=_estado_pago_valido(perfil.estado_pago),
+        notas_internas=perfil.notas_internas.strip())
     db.add(nuevo_difunto)
     db.commit()
     return {"mensaje": f"Perfil creado."}
@@ -770,11 +799,37 @@ def panel_admin(request: Request):
 
 @app.get("/api/admin/estadisticas")
 def estadisticas_admin(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Alimenta el panel. Incluye los datos de contacto de la familia, que son
+    información personal: este endpoint exige sesión de admin y nada de esto
+    viaja a la página pública del memorial."""
     perfiles = db.query(database.PerfilDifunto).all()
     return {
-        "total_perfiles": len(perfiles), "total_visitas": sum([p.visitas for p in perfiles]), 
-        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva"} for p in perfiles]
+        "total_perfiles": len(perfiles), "total_visitas": sum([p.visitas for p in perfiles]),
+        "total_pendientes": sum(1 for p in perfiles if _estado_pago_valido(p.estado_pago) == "pendiente"),
+        "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva",
+                      "fecha_creacion": p.fecha_creacion.strftime("%d/%m/%Y") if p.fecha_creacion else "",
+                      "contacto_nombre": p.contacto_nombre or "", "contacto_telefono": p.contacto_telefono or "",
+                      "contacto_email": p.contacto_email or "", "estado_pago": _estado_pago_valido(p.estado_pago),
+                      "notas_internas": p.notas_internas or ""} for p in perfiles]
     }
+
+@app.put("/api/admin/gestion/{identificador}")
+def actualizar_gestion(identificador: str, datos: GestionUpdate, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Actualiza el estado de pago y los datos de contacto de la familia.
+
+    Deliberadamente separado de editar_perfil/: ese endpoint lo puede usar la
+    familia con su PIN, y esto es información del negocio que solo ve el dueño.
+    """
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404, detail="Memorial no encontrado.")
+
+    perfil.contacto_nombre = datos.contacto_nombre.strip()
+    perfil.contacto_telefono = datos.contacto_telefono.strip()
+    perfil.contacto_email = datos.contacto_email.strip()
+    perfil.estado_pago = _estado_pago_valido(datos.estado_pago)
+    perfil.notas_internas = datos.notas_internas.strip()
+    db.commit()
+    return {"mensaje": "Datos de gestión actualizados", "estado_pago": perfil.estado_pago}
 
 @app.get("/api/admin/respaldo")
 def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
@@ -784,6 +839,9 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
     reconstruir los memoriales. Incluye las URL de Cloudinary, así que también
     sirve para saber a qué perfil pertenece cada foto (sin él, las imágenes
     quedan huérfanas en la nube y no hay forma de reasignarlas).
+
+    OJO: el archivo lleva PINes y los datos de contacto de las familias. Es un
+    documento privado, hay que guardarlo como tal.
     """
     def cuando(fecha):
         return fecha.isoformat() if fecha else None
@@ -815,6 +873,14 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
             "visitas": p.visitas,
             "velas": p.velas,
             "ultima_visita": cuando(p.ultima_visita),
+            "fecha_creacion": cuando(p.fecha_creacion),
+            "gestion": {
+                "contacto_nombre": p.contacto_nombre or "",
+                "contacto_telefono": p.contacto_telefono or "",
+                "contacto_email": p.contacto_email or "",
+                "estado_pago": _estado_pago_valido(p.estado_pago),
+                "notas_internas": p.notas_internas or "",
+            },
             "mapa": {
                 "lat": p.mapa_lat, "lng": p.mapa_lng, "direccion": p.mapa_direccion,
                 "descripcion": p.mapa_descripcion, "privacidad": p.mapa_privacidad,

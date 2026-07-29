@@ -113,11 +113,31 @@
         .modal-content { transform: scale(0.95) translateY(20px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); opacity: 1; }
         
-        .input-pro { width: 100%; padding: 12px 16px; background: #0f172a; border: 1px solid var(--admin-border); border-radius: 12px; color: #f1f5f9; transition: all 0.3s; font-size: 16px;}
+        /* background-color (no el atajo background) para que el select conserve su flecha */
+        .input-pro { width: 100%; padding: 12px 16px; background-color: #0f172a; border: 1px solid var(--admin-border); border-radius: 12px; color: #f1f5f9; transition: all 0.3s; font-size: 16px;}
         .input-pro::placeholder { color: #64748b; }
-        .input-pro:focus { background: #111c2e; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12); outline: none; }
+        .input-pro:focus { background-color: #111c2e; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12); outline: none; }
         .input-label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
-        
+
+        /* El desplegable nativo se ve blanco en macOS/Windows: lo repintamos */
+        select.input-pro {
+            appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 42px;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; background-size: 15px;
+        }
+        select.input-pro option { background-color: #0f172a; color: #f1f5f9; }
+
+        /* Semáforo del estado de pago. Pendiente en naranja (no dorado) para que
+           no se confunda con el color de acento del sitio. */
+        .badge-pago { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; border: 1px solid; white-space: nowrap; }
+        .badge-pago.pagado { color: #4ade80; background: rgba(34,197,94,0.13); border-color: rgba(34,197,94,0.38); }
+        .badge-pago.pendiente { color: #fb923c; background: rgba(251,146,60,0.13); border-color: rgba(251,146,60,0.38); }
+        .badge-pago.cortesia { color: var(--gold-bright); background: rgba(212,175,55,0.13); border-color: rgba(212,175,55,0.38); }
+
+        .dato-contacto { display: block; font-size: 11px; color: #94a3b8; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+        .dato-contacto i { width: 12px; color: #64748b; margin-right: 4px; }
+        .sin-dato { color: #64748b; font-style: italic; }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -236,6 +256,50 @@
         </div>
     </div>
 
+    <div id="modalGestion" class="modal-overlay fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center overflow-y-auto p-4 md:py-10">
+        <div class="modal-content bg-white w-full max-w-lg rounded-3xl shadow-2xl my-auto border border-amber-100">
+            <div class="px-5 py-4 md:px-7 md:py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 bg-amber-100 text-amber-500 rounded-full flex justify-center items-center shrink-0"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="min-w-0">
+                        <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-tight">Gestión del Memorial</h2>
+                        <p class="text-xs text-slate-500 truncate" id="gestion-target-name"></p>
+                    </div>
+                </div>
+                <button onclick="cerrarModalGestion()" class="text-slate-400 hover:text-red-500 transition-colors text-xl p-2 shrink-0" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-5 md:p-7 max-h-[70vh] overflow-y-auto">
+                <p class="text-[11px] md:text-xs text-slate-400 mb-5"><i class="fas fa-eye-slash mr-1"></i> Información privada del negocio. La familia nunca la ve en el memorial.</p>
+
+                <div class="mb-5">
+                    <label class="input-label">Estado del Pago</label>
+                    <select id="g_estado_pago" class="input-pro">
+                        <option value="pendiente">Pendiente de pago</option>
+                        <option value="pagado">Pagado</option>
+                        <option value="cortesia">Cortesía</option>
+                    </select>
+                </div>
+
+                <div class="space-y-4 mb-5">
+                    <div><label class="input-label">Responsable de la Familia</label><input type="text" id="g_contacto_nombre" placeholder="Ej: María Galvis (hija)" class="input-pro"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div><label class="input-label"><i class="fas fa-phone mr-1"></i> Teléfono</label><input type="tel" id="g_contacto_telefono" placeholder="Ej: 320 357 4674" class="input-pro"></div>
+                        <div><label class="input-label"><i class="fas fa-envelope mr-1"></i> Correo</label><input type="email" id="g_contacto_email" placeholder="familia@correo.com" class="input-pro"></div>
+                    </div>
+                    <div><label class="input-label">Notas Internas</label><textarea id="g_notas" rows="3" placeholder="Ej: entregado en placa dorada, pendiente segunda cuota..." class="input-pro text-sm"></textarea></div>
+                </div>
+
+                <p class="text-[11px] text-slate-400 mb-5" id="gestion-fecha-alta"></p>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="cerrarModalGestion()" class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                    <button id="btnGuardarGestion" onclick="guardarGestion()" class="btn-premium w-full sm:flex-1 font-bold flex items-center justify-center gap-2"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="login-screen">
         <div class="login-box bg-white/10 backdrop-blur-xl border border-white/20 p-8 md:p-10 rounded-3xl shadow-2xl w-[90%] max-w-[400px] text-center">
             <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-tr from-blue-500 to-purple-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl md:text-3xl shadow-lg shadow-blue-500/50 transform rotate-3"><i class="fas fa-fingerprint"></i></div>
@@ -326,7 +390,7 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 mb-8 md:mb-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 mb-8 md:mb-10">
                     <div class="glass-card flex items-center gap-5 p-5 md:p-6">
                         <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0"><i class="fas fa-users"></i></div>
                         <div><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Perfiles Activos</p><h3 class="text-3xl md:text-4xl font-bold text-slate-800" id="stat-perfiles">0</h3></div>
@@ -336,7 +400,11 @@
                         <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-200 text-green-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0 z-10"><i class="fas fa-eye"></i></div>
                         <div class="z-10"><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Visitas Globales</p><h3 class="text-3xl md:text-4xl font-bold text-slate-800" id="stat-visitas">0</h3></div>
                     </div>
-                    <div class="glass-card flex items-center gap-5 p-5 md:p-6 sm:col-span-2 lg:col-span-1">
+                    <div class="glass-card flex items-center gap-5 p-5 md:p-6">
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0" style="background: rgba(251,146,60,0.15); color: #fb923c;"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Por Cobrar</p><h3 class="text-3xl md:text-4xl font-bold text-slate-800" id="stat-pendientes">0</h3></div>
+                    </div>
+                    <div class="glass-card flex items-center gap-5 p-5 md:p-6">
                         <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-fuchsia-200 text-purple-600 flex items-center justify-center text-2xl md:text-3xl shadow-inner shrink-0"><i class="fas fa-server"></i></div>
                         <div><p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Estado Nube</p><h3 class="text-xl md:text-2xl font-bold text-slate-800" id="estado-nube"><span class="w-2.5 h-2.5 inline-block bg-slate-400 rounded-full mr-2"></span>Verificando...</h3></div>
                     </div>
@@ -352,17 +420,18 @@
                         </button>
                     </div>
                     <div class="tabla-scroll p-2 md:p-4">
-                        <table class="w-full text-left border-collapse min-w-[600px]">
+                        <table class="w-full text-left border-collapse min-w-[980px]">
                             <thead>
                                 <tr class="text-slate-400 text-[10px] md:text-xs uppercase tracking-widest border-b border-slate-100">
                                     <th class="px-4 py-3 md:px-6 md:py-4 font-semibold">Memorial</th>
                                     <th class="px-4 py-3 md:px-6 md:py-4 font-semibold">Enlace Web</th>
+                                    <th class="px-4 py-3 md:px-6 md:py-4 font-semibold">Pago y Contacto</th>
                                     <th class="px-4 py-3 md:px-6 md:py-4 font-semibold text-center">Métricas</th>
                                     <th class="px-4 py-3 md:px-6 md:py-4 font-semibold text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-perfiles" class="text-slate-700">
-                                <tr><td colspan="4" class="px-6 py-12 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i><br>Cargando datos...</td></tr>
+                                <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i><br>Cargando datos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -461,6 +530,29 @@
                         </div>
                     </div>
                     
+                    <div class="mb-6 md:mb-8 p-5 rounded-2xl border shadow-sm" style="border-color: rgba(212,175,55,0.28); background: rgba(212,175,55,0.05);">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <label class="input-label m-0 text-sm" style="color: var(--gold-bright);"><i class="fas fa-lock mr-1"></i> Datos de la Venta</label>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider" style="color: var(--gold-bright); background: rgba(212,175,55,0.16);">Privado</span>
+                        </div>
+                        <p class="text-[11px] md:text-xs text-slate-400 mb-4"><i class="fas fa-eye-slash mr-1"></i> Esta información es solo para ti. Nunca aparece en la página del memorial.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                            <div><label class="input-label">Responsable de la Familia</label><input type="text" id="n_contacto_nombre" placeholder="Ej: María Galvis (hija)" class="input-pro"></div>
+                            <div>
+                                <label class="input-label">Estado del Pago</label>
+                                <select id="n_estado_pago" class="input-pro">
+                                    <option value="pendiente">Pendiente de pago</option>
+                                    <option value="pagado">Pagado</option>
+                                    <option value="cortesia">Cortesía</option>
+                                </select>
+                            </div>
+                            <div><label class="input-label"><i class="fas fa-phone mr-1"></i> Teléfono</label><input type="tel" id="n_contacto_telefono" placeholder="Ej: 320 357 4674" class="input-pro"></div>
+                            <div><label class="input-label"><i class="fas fa-envelope mr-1"></i> Correo</label><input type="email" id="n_contacto_email" placeholder="familia@correo.com" class="input-pro"></div>
+                            <div class="md:col-span-2"><label class="input-label">Notas Internas</label><textarea id="n_notas" rows="2" placeholder="Ej: entregado en placa dorada, pendiente segunda cuota..." class="input-pro text-sm"></textarea></div>
+                        </div>
+                    </div>
+
                     <div class="flex flex-col sm:flex-row justify-end gap-3 border-t border-slate-100 pt-5 mt-2">
                         <button type="button" onclick="cerrarModalCrear()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors">Cancelar</button>
                         <button type="submit" id="btnCrearSubmit" class="btn-premium w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg"><i class="fas fa-save"></i> Guardar Memorial</button>
@@ -614,16 +706,19 @@
 
         // === FUNCIONES DASHBOARD ===
         function animarContador(id, endValue, duration) {
-            let obj = document.getElementById(id), startValue = 0, startTime = null;
+            let obj = document.getElementById(id), startValue = 0, startTime = null, pendiente = null;
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 let progress = Math.min((timestamp - startTime) / duration, 1);
                 obj.innerHTML = Math.floor((1 - Math.pow(1 - progress, 3)) * (endValue - startValue) + startValue);
-                if (progress < 1) window.requestAnimationFrame(step);
+                if (progress < 1) pendiente = window.requestAnimationFrame(step);
             }
-            window.requestAnimationFrame(step);
-            // Garantía: si la pestaña estuvo en segundo plano (rAF pausado), fija el valor final
-            setTimeout(() => { obj.innerHTML = endValue; }, duration + 150);
+            pendiente = window.requestAnimationFrame(step);
+            // Garantía: si la pestaña estuvo en segundo plano (rAF pausado), fija el valor
+            // final Y CORTA la animación. Sin el cancel, el rAF se reanudaba al volver a
+            // la pestaña y repintaba un fotograma viejo encima: el panel se quedaba
+            // mostrando un número menor al real (feo en las visitas, grave en "Por cobrar").
+            setTimeout(() => { window.cancelAnimationFrame(pendiente); obj.innerHTML = endValue; }, duration + 150);
         }
 
         function actualizarEstadoNube(ok) {
@@ -636,6 +731,27 @@
             }
         }
 
+        // === ESTADO DE PAGO ===
+        const ETIQUETAS_PAGO = { pendiente: 'Por cobrar', pagado: 'Pagado', cortesia: 'Cortesía' };
+        const ICONOS_PAGO = { pendiente: 'fa-clock', pagado: 'fa-circle-check', cortesia: 'fa-gift' };
+
+        function badgePago(estado) {
+            const e = ETIQUETAS_PAGO[estado] ? estado : 'pendiente';
+            return `<span class="badge-pago ${e}"><i class="fas ${ICONOS_PAGO[e]}"></i> ${ETIQUETAS_PAGO[e]}</span>`;
+        }
+
+        function lineasContacto(perfil) {
+            let html = '';
+            if (perfil.contacto_nombre) html += `<span class="dato-contacto" title="${escapeHtml(perfil.contacto_nombre)}"><i class="fas fa-user"></i>${escapeHtml(perfil.contacto_nombre)}</span>`;
+            if (perfil.contacto_telefono) html += `<span class="dato-contacto"><i class="fas fa-phone"></i>${escapeHtml(perfil.contacto_telefono)}</span>`;
+            if (!html) html = `<span class="dato-contacto sin-dato"><i class="fas fa-user-slash"></i>Sin datos de contacto</span>`;
+            return html;
+        }
+
+        // Guardamos los perfiles tal cual llegan para abrir el modal de gestión sin
+        // volver a pedirlos (y sin meter notas internas dentro del HTML de la tabla).
+        let perfilesCargados = {};
+
         function cargarDatos() {
             fetch('/api/admin/estadisticas')
                 .then(response => { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
@@ -643,24 +759,34 @@
                     actualizarEstadoNube(true);
                     animarContador('stat-perfiles', data.total_perfiles, 1500);
                     animarContador('stat-visitas', data.total_visitas, 2000);
+                    animarContador('stat-pendientes', data.total_pendientes, 1200);
 
                     const tabla = document.getElementById('tabla-perfiles');
                     tabla.innerHTML = "";
+                    perfilesCargados = {};
 
-                    if (data.perfiles.length === 0) { tabla.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-400 italic">No hay legados registrados en el sistema.</td></tr>`; return; }
+                    if (data.perfiles.length === 0) { tabla.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400 italic">No hay legados registrados en el sistema.</td></tr>`; return; }
 
                     data.perfiles.forEach((perfil, index) => {
+                        perfilesCargados[perfil.identificador] = perfil;
                         let badgeColor = perfil.ultima_visita === "Nueva" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600";
                         const fila = `
                             <tr class="table-row-anim border-b border-slate-50 last:border-none" style="animation-delay: ${index * 0.1}s">
                                 <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div class="w-11 h-11 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-500 flex justify-center items-center font-bold font-serif shadow-sm shrink-0">${escapeHtml(perfil.nombre).charAt(0).toUpperCase()}</div>
-                                        <div class="font-bold text-slate-800 truncate max-w-[150px] md:max-w-none" title="${escapeHtml(perfil.nombre)}">${escapeHtml(perfil.nombre)}</div>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-slate-800 truncate max-w-[150px] md:max-w-none" title="${escapeHtml(perfil.nombre)}">${escapeHtml(perfil.nombre)}</div>
+                                            <span class="dato-contacto"><i class="fas fa-calendar-plus"></i>${perfil.fecha_creacion ? 'Alta ' + escapeHtml(perfil.fecha_creacion) : '<span class="sin-dato">Alta sin registrar</span>'}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
                                     <span class="bg-slate-100 border border-slate-200 text-slate-600 px-2 md:px-3 py-1 rounded-md text-[11px] md:text-xs font-mono shadow-sm">/${perfil.identificador}</span>
+                                </td>
+                                <td class="px-4 py-4 md:px-6 md:py-5 whitespace-nowrap">
+                                    ${badgePago(perfil.estado_pago)}
+                                    ${lineasContacto(perfil)}
                                 </td>
                                 <td class="px-4 py-4 md:px-6 md:py-5 text-center whitespace-nowrap">
                                     <div class="flex flex-col items-center">
@@ -668,10 +794,12 @@
                                         <span class="${badgeColor} px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold mt-1 shadow-sm uppercase tracking-wide">${perfil.ultima_visita}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 md:px-6 md:py-5 text-right whitespace-nowrap space-x-1 md:space-x-2">
+                                <td class="px-4 py-4 md:px-5 md:py-5 text-right whitespace-nowrap space-x-1">
                                     <a href="/perfil/${perfil.identificador}" target="_blank" title="Ver Memorial" class="inline-flex items-center justify-center w-11 h-11 md:w-10 md:h-10 bg-white border border-slate-200 text-slate-500 hover:text-blue-600 transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-external-link-alt"></i></a>
                                     
                                     <button onclick="enviarWhatsApp(this.getAttribute('data-nombre'), this.getAttribute('data-id'))" data-nombre="${escapeHtml(perfil.nombre)}" data-id="${escapeHtml(perfil.identificador)}" title="Entregar por WhatsApp" class="inline-flex items-center justify-center w-11 h-11 md:w-10 md:h-10 bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fab fa-whatsapp"></i></button>
+
+                                    <button onclick="abrirModalGestion(this.getAttribute('data-id'))" data-id="${escapeHtml(perfil.identificador)}" title="Pago y datos de contacto" class="inline-flex items-center justify-center w-11 h-11 md:w-10 md:h-10 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-file-invoice-dollar"></i></button>
 
                                     <button onclick="abrirModalResetPin(this.getAttribute('data-id'), this.getAttribute('data-nombre'))" data-nombre="${escapeHtml(perfil.nombre)}" data-id="${escapeHtml(perfil.identificador)}" title="Restablecer PIN" class="inline-flex items-center justify-center w-11 h-11 md:w-10 md:h-10 bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all rounded-lg shadow-sm hover:shadow-md"><i class="fas fa-key"></i></button>
 
@@ -687,7 +815,7 @@
                 .catch(() => {
                     actualizarEstadoNube(false);
                     const tabla = document.getElementById('tabla-perfiles');
-                    tabla.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                    tabla.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">
                         <i class="fas fa-wifi text-3xl mb-3 text-red-400"></i><br>
                         No se pudieron cargar los datos.<br>
                         <button onclick="cargarDatos()" class="mt-4 btn-premium text-sm font-bold"><i class="fas fa-rotate-right mr-1"></i> Reintentar</button>
@@ -829,6 +957,58 @@
             });
         }
 
+        // === GESTIÓN: PAGO Y CONTACTO DE LA FAMILIA ===
+        let perfilEnGestion = null;
+        function abrirModalGestion(id) {
+            const perfil = perfilesCargados[id];
+            if (!perfil) { mostrarToast("No se encontraron los datos del memorial. Recarga el panel.", 'error'); return; }
+
+            perfilEnGestion = id;
+            document.getElementById('gestion-target-name').innerText = perfil.nombre;
+            document.getElementById('g_estado_pago').value = perfil.estado_pago || 'pendiente';
+            document.getElementById('g_contacto_nombre').value = perfil.contacto_nombre || '';
+            document.getElementById('g_contacto_telefono').value = perfil.contacto_telefono || '';
+            document.getElementById('g_contacto_email').value = perfil.contacto_email || '';
+            document.getElementById('g_notas').value = perfil.notas_internas || '';
+            document.getElementById('gestion-fecha-alta').innerHTML = perfil.fecha_creacion
+                ? `<i class="fas fa-calendar-plus mr-1"></i> Memorial creado el ${escapeHtml(perfil.fecha_creacion)}.`
+                : `<i class="fas fa-calendar-plus mr-1"></i> Memorial anterior al registro de fechas.`;
+            document.getElementById('modalGestion').classList.add('active');
+        }
+
+        function cerrarModalGestion() {
+            perfilEnGestion = null;
+            document.getElementById('modalGestion').classList.remove('active');
+        }
+
+        function guardarGestion() {
+            if (!perfilEnGestion) return;
+            const btn = document.getElementById('btnGuardarGestion');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+
+            fetch(`/api/admin/gestion/${perfilEnGestion}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    contacto_nombre: document.getElementById('g_contacto_nombre').value,
+                    contacto_telefono: document.getElementById('g_contacto_telefono').value,
+                    contacto_email: document.getElementById('g_contacto_email').value,
+                    estado_pago: document.getElementById('g_estado_pago').value,
+                    notas_internas: document.getElementById('g_notas').value
+                })
+            })
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(() => {
+                mostrarToast(`Datos guardados: ${ETIQUETAS_PAGO[document.getElementById('g_estado_pago').value]}.`, 'exito');
+                cerrarModalGestion();
+                cargarDatos();
+            })
+            .catch(() => mostrarToast("No se pudieron guardar los datos de gestión.", 'error'))
+            .finally(() => { btn.innerHTML = original; btn.disabled = false; });
+        }
+
         // === ELIMINACIÓN DE PERFIL GLOBAL ===
         let perfilAEliminar = null;
         function abrirModalDelete(id, nombre) {
@@ -903,7 +1083,12 @@
                 nombre: document.getElementById('n_nombre').value, fechas: document.getElementById('n_fechas').value,
                 en_memoria_de: document.getElementById('n_memoria').value, esposa: document.getElementById('n_esposa').value,
                 hijos: document.getElementById('n_hijos').value, cancion_favorita: document.getElementById('n_cancion').value,
-                juego_favorito: document.getElementById('n_juego').value, biografia: document.getElementById('n_bio').value
+                juego_favorito: document.getElementById('n_juego').value, biografia: document.getElementById('n_bio').value,
+                contacto_nombre: document.getElementById('n_contacto_nombre').value,
+                contacto_telefono: document.getElementById('n_contacto_telefono').value,
+                contacto_email: document.getElementById('n_contacto_email').value,
+                estado_pago: document.getElementById('n_estado_pago').value,
+                notas_internas: document.getElementById('n_notas').value
             };
 
             fetch('/crear_perfil/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
