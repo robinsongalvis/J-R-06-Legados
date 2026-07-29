@@ -129,8 +129,24 @@ def validar_pin_o_admin(request: Request, perfil):
     if _es_admin(request):
         return  # Admin autenticado, acceso permitido
     pin = request.headers.get("x-family-pin", "")
-    if not pin or pin != perfil.pin_familia:
+    if not pin or not hmac.compare_digest(str(pin), str(perfil.pin_familia)):
         raise HTTPException(status_code=403, detail="PIN familiar requerido o incorrecto")
+
+
+def exigir_pin_o_admin(request: Request, perfil):
+    """Igual que validar_pin_o_admin, pero para elementos sueltos (una foto, un
+    mensaje) a los que se llega por su id numérico.
+
+    Antes se escribía `if foto.perfil: validar_pin_o_admin(...)`, así que un
+    elemento sin perfil asociado se podía borrar SIN ninguna credencial. Aquí la
+    ausencia de perfil deniega en vez de permitir: solo el admin puede tocar
+    huérfanos.
+    """
+    if _es_admin(request):
+        return
+    if perfil is None:
+        raise HTTPException(status_code=403, detail="Elemento sin memorial asociado: solo el administrador puede modificarlo.")
+    validar_pin_o_admin(request, perfil)
 
 # ==========================================
 # ⏱️ RATE LIMITER IN-MEMORY (MVP)
@@ -138,15 +154,64 @@ def validar_pin_o_admin(request: Request, perfil):
 # ==========================================
 _rate_store = defaultdict(list)
 
+def _ip_cliente(request: Request) -> str:
+    """IP real del visitante. Render entrega la original en X-Forwarded-For;
+    sin esto todas las peticiones parecerían venir del proxy y compartirían cupo."""
+    reenviada = request.headers.get("x-forwarded-for", "")
+    if reenviada:
+        return reenviada.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 def rate_limit_check(request: Request, endpoint: str, max_calls: int = 10, window: int = 60):
     """Limita las llamadas por IP a un endpoint específico."""
-    ip = request.client.host if request.client else "unknown"
-    key = f"{ip}:{endpoint}"
+    key = f"{_ip_cliente(request)}:{endpoint}"
     now = time.time()
     _rate_store[key] = [t for t in _rate_store[key] if now - t < window]
     if len(_rate_store[key]) >= max_calls:
         raise HTTPException(status_code=429, detail="Demasiadas solicitudes. Intenta más tarde.")
     _rate_store[key].append(now)
+
+
+# ==========================================
+# 🔒 FRENO A LA FUERZA BRUTA (PIN Y ADMIN)
+#
+# El PIN familiar son 4 dígitos: 10.000 combinaciones. Sin freno, un script las
+# prueba todas en minutos y entra a editar o borrar el memorial. Aquí contamos
+# los INTENTOS FALLIDOS y bloqueamos temporalmente; los aciertos no gastan cupo.
+# El contador es por proceso y se reinicia al desplegar (limitación conocida del
+# almacenamiento en memoria), pero convierte un ataque de minutos en uno de días.
+# ==========================================
+_intentos_fallidos = defaultdict(list)
+MAX_INTENTOS = 6
+VENTANA_BLOQUEO = 900  # 15 minutos
+
+
+def _clave_intentos(request: Request, alcance: str) -> str:
+    return f"{_ip_cliente(request)}:{alcance}"
+
+
+def verificar_bloqueo(request: Request, alcance: str):
+    """Corta el paso si esta IP ya falló demasiadas veces. Llamar ANTES de comparar."""
+    clave = _clave_intentos(request, alcance)
+    ahora = time.time()
+    _intentos_fallidos[clave] = [t for t in _intentos_fallidos[clave] if ahora - t < VENTANA_BLOQUEO]
+    if len(_intentos_fallidos[clave]) >= MAX_INTENTOS:
+        espera = int((VENTANA_BLOQUEO - (ahora - _intentos_fallidos[clave][0])) / 60) + 1
+        raise HTTPException(
+            status_code=429,
+            detail=f"Demasiados intentos fallidos. Vuelve a intentarlo en {espera} minutos."
+        )
+
+
+def registrar_fallo(request: Request, alcance: str):
+    """Anota un intento fallido para esta IP."""
+    _intentos_fallidos[_clave_intentos(request, alcance)].append(time.time())
+
+
+def limpiar_intentos(request: Request, alcance: str):
+    """Borra el historial tras un acceso correcto."""
+    _intentos_fallidos.pop(_clave_intentos(request, alcance), None)
 
 
 os.makedirs("static", exist_ok=True) 
@@ -270,10 +335,15 @@ def registrar_interaccion(perfil, db):
 # 🔐 AUTENTICACIÓN ADMIN: LOGIN / LOGOUT
 # ==========================================
 @app.post("/api/admin/login")
-def admin_login(datos: AdminLogin):
+def admin_login(datos: AdminLogin, request: Request):
+    verificar_bloqueo(request, "admin_login")
+
     hash_input = hashlib.sha256(datos.password.encode()).hexdigest()
     if not hmac.compare_digest(hash_input, ADMIN_PASSWORD_HASH):
+        registrar_fallo(request, "admin_login")
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+
+    limpiar_intentos(request, "admin_login")
     token = _firmar_cookie({"role": "admin"})
     response = JSONResponse(content={"mensaje": "Acceso concedido"})
     response.set_cookie(
@@ -340,10 +410,18 @@ async def generar_homenaje(datos: DatosHomenaje, request: Request):
         raise HTTPException(status_code=500, detail="Error general de la IA")
 
 @app.post("/api/verificar_pin/{identificador}")
-def verificar_pin(identificador: str, req: PinRequest, db: Session = Depends(get_db)):
+def verificar_pin(identificador: str, req: PinRequest, request: Request, db: Session = Depends(get_db)):
+    alcance = f"pin:{identificador}"
+    verificar_bloqueo(request, alcance)
+
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
-    if perfil.pin_familia == req.pin: return {"success": True}
+
+    if hmac.compare_digest(str(perfil.pin_familia), str(req.pin)):
+        limpiar_intentos(request, alcance)
+        return {"success": True}
+
+    registrar_fallo(request, alcance)
     raise HTTPException(status_code=401, detail="PIN incorrecto")
 
 # --- CRUD PROTEGIDO POR ADMIN ---
@@ -455,7 +533,7 @@ async def subir_audio_voz(identificador: str, request: Request, archivo: UploadF
 def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db)):
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
-    if foto.perfil: validar_pin_o_admin(request, foto.perfil)
+    exigir_pin_o_admin(request, foto.perfil)
     try:
         url_partes = foto.url_foto.split('/')
         cloudinary.uploader.destroy("/".join(url_partes[url_partes.index("memoriales"):]).split('.')[0], resource_type="image")
@@ -488,7 +566,7 @@ def likear_mensaje(mensaje_id: int, request: Request, db: Session = Depends(get_
 def eliminar_mensaje(mensaje_id: int, request: Request, db: Session = Depends(get_db)):
     mensaje = db.query(database.MensajeRecuerdo).filter(database.MensajeRecuerdo.id == mensaje_id).first()
     if not mensaje: raise HTTPException(status_code=404)
-    if mensaje.perfil: validar_pin_o_admin(request, mensaje.perfil)
+    exigir_pin_o_admin(request, mensaje.perfil)
     db.delete(mensaje)
     db.commit()
     return {"mensaje": "Mensaje eliminado"}
@@ -507,7 +585,7 @@ def agregar_momento(identificador: str, momento: MomentoNuevo, request: Request,
 def editar_momento(momento_id: int, momento: MomentoNuevo, request: Request, db: Session = Depends(get_db)):
     momento_db = db.query(database.MomentoInolvidable).filter(database.MomentoInolvidable.id == momento_id).first()
     if not momento_db: raise HTTPException(status_code=404)
-    if momento_db.perfil: validar_pin_o_admin(request, momento_db.perfil)
+    exigir_pin_o_admin(request, momento_db.perfil)
     momento_db.anio = momento.anio; momento_db.titulo = momento.titulo; momento_db.descripcion = momento.descripcion
     db.commit()
     return {"mensaje": "Momento actualizado"}
@@ -516,7 +594,7 @@ def editar_momento(momento_id: int, momento: MomentoNuevo, request: Request, db:
 def eliminar_momento(momento_id: int, request: Request, db: Session = Depends(get_db)):
     momento = db.query(database.MomentoInolvidable).filter(database.MomentoInolvidable.id == momento_id).first()
     if not momento: raise HTTPException(status_code=404)
-    if momento.perfil: validar_pin_o_admin(request, momento.perfil)
+    exigir_pin_o_admin(request, momento.perfil)
     db.delete(momento)
     db.commit()
     return {"mensaje": "Momento eliminado"}
@@ -698,6 +776,81 @@ def estadisticas_admin(request: Request, db: Session = Depends(get_db), admin: b
         "perfiles": [{"identificador": p.identificador, "nombre": p.nombre, "visitas": p.visitas, "ultima_visita": p.ultima_visita.strftime("%d/%m/%Y") if p.ultima_visita else "Nueva"} for p in perfiles]
     }
 
+@app.get("/api/admin/respaldo")
+def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Exporta TODA la plataforma a un archivo JSON descargable.
+
+    Es la red de seguridad: si se pierde la base de datos, este archivo permite
+    reconstruir los memoriales. Incluye las URL de Cloudinary, así que también
+    sirve para saber a qué perfil pertenece cada foto (sin él, las imágenes
+    quedan huérfanas en la nube y no hay forma de reasignarlas).
+    """
+    def cuando(fecha):
+        return fecha.isoformat() if fecha else None
+
+    perfiles = db.query(database.PerfilDifunto).all()
+    datos = {
+        "generado": datetime.datetime.utcnow().isoformat() + "Z",
+        "version": 1,
+        "total_perfiles": len(perfiles),
+        "perfiles": [],
+    }
+
+    for p in perfiles:
+        datos["perfiles"].append({
+            "identificador": p.identificador,
+            "nombre": p.nombre,
+            "fechas": p.fechas,
+            "biografia": p.biografia,
+            "en_memoria_de": p.en_memoria_de,
+            "esposa": p.esposa,
+            "hijos": p.hijos,
+            "cancion_favorita": p.cancion_favorita,
+            "juego_favorito": p.juego_favorito,
+            "pin_familia": p.pin_familia,
+            "foto_perfil": p.foto_perfil,
+            "foto_portada": p.foto_portada,
+            "audio_voz": getattr(p, "audio_voz", ""),
+            "tema_visual": p.tema_visual,
+            "visitas": p.visitas,
+            "velas": p.velas,
+            "ultima_visita": cuando(p.ultima_visita),
+            "mapa": {
+                "lat": p.mapa_lat, "lng": p.mapa_lng, "direccion": p.mapa_direccion,
+                "descripcion": p.mapa_descripcion, "privacidad": p.mapa_privacidad,
+            },
+            "fotos": [
+                {"url": f.url_foto, "likes": f.likes,
+                 "comentarios": [{"texto": c.texto, "fecha": cuando(c.fecha_creacion)} for c in f.comentarios]}
+                for f in p.fotos_galeria
+            ],
+            "mensajes": [
+                {"autor": m.autor, "texto": m.texto, "likes": m.likes, "fecha": cuando(m.fecha_creacion)}
+                for m in p.mensajes
+            ],
+            "momentos": [
+                {"anio": mo.anio, "titulo": mo.titulo, "descripcion": mo.descripcion}
+                for mo in p.momentos
+            ],
+            "familiares": [
+                {"nombre": fa.nombre, "relacion": fa.relacion, "foto_url": fa.foto_url, "orden": fa.orden}
+                for fa in p.familiares_arbol
+            ],
+            "velas_dedicadas": [
+                {"nombre": v.nombre, "mensaje": v.mensaje, "duracion_horas": v.duracion_horas,
+                 "fecha": cuando(v.fecha_encendida)}
+                for v in p.velas_list
+            ],
+        })
+
+    marca = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H%M")
+    return Response(
+        content=json.dumps(datos, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="respaldo-legados-{marca}.json"'},
+    )
+
+
 @app.get("/api/admin/moderacion")
 def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     fotos = db.query(database.FotoGaleria).all()
@@ -812,7 +965,7 @@ def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Reques
 def eliminar_familiar(familiar_id: int, request: Request, db: Session = Depends(get_db)):
     familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()
     if not familiar: raise HTTPException(status_code=404)
-    if familiar.perfil: validar_pin_o_admin(request, familiar.perfil)
+    exigir_pin_o_admin(request, familiar.perfil)
     db.delete(familiar)
     db.commit()
     return {"mensaje": "Familiar eliminado"}

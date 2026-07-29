@@ -10,7 +10,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 2. Leemos la URL de Neon.tech
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./memoriales.db")
+#
+# SIN valor por defecto a propósito. Antes caía a un SQLite local, y en Render ese
+# archivo vive en un disco que se borra en cada despliegue: la app arrancaba
+# "bien" y los memoriales desaparecían en silencio. Es preferible que no arranque
+# a que pierda los recuerdos de una familia.
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+_PERMITIR_SQLITE_LOCAL = os.getenv("ALLOW_INSECURE_DEV_AUTH", "false").lower() == "true"
+
+if not SQLALCHEMY_DATABASE_URL:
+    if _PERMITIR_SQLITE_LOCAL:
+        SQLALCHEMY_DATABASE_URL = "sqlite:///./memoriales.db"
+    else:
+        raise ValueError(
+            "FATAL: falta la variable de entorno DATABASE_URL. La aplicación no "
+            "arranca sin base de datos persistente para no perder los memoriales. "
+            "Configúrala en Render (Environment) o, solo para pruebas locales, "
+            "define ALLOW_INSECURE_DEV_AUTH=true para usar SQLite."
+        )
 
 # 3. EL CORTADOR MÁGICO: Borra cualquier parámetro extra que confunda al sistema
 if "?" in SQLALCHEMY_DATABASE_URL and not SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
