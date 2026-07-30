@@ -68,13 +68,23 @@
         /* ==========================================
            FIX DEFINITIVO SCROLL: LIBERTAD TOTAL AL BODY
            ========================================== */
-        html, body {
-            overflow-x: hidden; /* Previene scroll horizontal en iOS que traba la vista */
-        }
-        
+        /* overflow-x SOLO en html, nunca también en body.
+           Con la regla en los dos, el navegador promueve el body a contenedor de
+           scroll y el documento deja de serlo. Medido en producción: html no
+           scrolleaba y body sí. En Safari de iOS eso hace que el rebote se vuelva
+           errático y que el primer gesto se pierda mientras el navegador decide
+           qué contenedor mover, que es exactamente el síntoma reportado: la
+           pantalla se estira y vuelve al mismo sitio. Un solo scroller. */
         html {
-            scroll-behavior: smooth;
+            overflow-x: hidden;
             -webkit-text-size-adjust: 100%;
+        }
+
+        /* scroll-behavior condicionado: en iOS el desplazamiento suave puede pelear
+           con el gesto del dedo, y además es exactamente lo que alguien con vértigo
+           pide no tener cuando activa "reducir movimiento" en el sistema. */
+        @media (prefers-reduced-motion: no-preference) {
+            html { scroll-behavior: smooth; }
         }
 
         /* ==========================================
@@ -629,6 +639,31 @@
         }
         .mapa-static-print { display: none; }
         #qr-print { display: none; }
+
+        /* ==========================================
+           MOVIMIENTO REDUCIDO — al final para que gane
+           ==========================================
+           Antes esta preferencia cubría UNA de las catorce animaciones de la
+           página: las barritas de 2px del reproductor de voz. Justo la que menos
+           importa. El público de un memorial tiene la tasa más alta de vértigo y
+           migraña vestibular de cualquier grupo de edad, y muchos ya tienen la
+           opción activada sin saber cómo se llama. Prometerle que la respetamos y
+           no respetarla es peor que no ofrecerla.
+           Se apaga el movimiento, no el contenido: todo queda visible y usable. */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            /* AOS revela sin desplazar: sin esto el contenido queda invisible,
+               porque su estado de reposo es opacity 0 más un transform. */
+            [data-aos] { opacity: 1 !important; transform: none !important; }
+            /* La bienvenida no hace su zoom cinematográfico ni las partículas. */
+            .welcome-bg, .light-particle, .welcome-content, .welcome-delay,
+            #btnSaltarIntro { animation: none !important; opacity: 1 !important; transform: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -1430,7 +1465,10 @@
             //
             // Con esto la intro cumple su función: cubre el arranque en vez de
             // destaparlo a mitad de camino.
-            const INTRO_MINIMA = 2800;   // alcanza para leer un nombre, no para impacientarse
+            // Quien pidió movimiento reducido no debería esperar una película: la
+            // intro deja de ser un momento y pasa a ser solo la tapa del arranque.
+            const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const INTRO_MINIMA = sinMovimiento ? 0 : 2800;  // alcanza para leer un nombre, no para impacientarse
             const INTRO_TECHO  = 6200;   // una conexión mala no puede dejar a nadie encerrado
             const introDesde = performance.now();
             let paginaLista = document.readyState === 'complete';
