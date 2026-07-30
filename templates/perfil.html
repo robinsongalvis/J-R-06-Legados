@@ -941,16 +941,17 @@
         </div>
         {% endif %}
 
-        <div class="cards-container">
-            {% if esposa %}<div class="info-card" data-aos="fade-up"><i class="fas fa-heart"></i><strong>Compañera de vida</strong><span>{{ esposa }}</span></div>{% endif %}
-            {% if hijos %}<div class="info-card" data-aos="fade-up"><i class="fas fa-seedling"></i><strong>Legado</strong><span>{{ hijos }}</span></div>{% endif %}
-            {% if cancion_favorita %}<div class="info-card" data-aos="fade-up" id="card-cancion"><i class="fas fa-music"></i><strong>Su Melodía</strong><div id="contenedor-cancion" style="width: 100%; margin-top: var(--esp-1);"></div></div>{% endif %}
-            {% if juego_favorito %}<div class="info-card" data-aos="fade-up"><i class="fas fa-star"></i><strong>Pasatiempo</strong><span>{{ juego_favorito }}</span></div>{% endif %}
-        </div>
+        {# Fase 2 · Acá vivían cuatro tarjetas sueltas.
+           "Compañera de vida" y "Legado" repetían, peor, lo que el Árbol Familiar
+           ya cuenta con nombre, parentesco y foto: lo escrito se mudó allá.
+           "Pasatiempo" se fue: un juego favorito rompe el tono de un memorial, y
+           si de verdad importó, se cuenta mejor en la biografía o en un momento.
+           "Su Melodía" bajó a Su Historia, junto a la nota de voz: una canción no
+           es un dato de ficha, es parte del relato de quién era. #}
 
         <div class="bio-section" data-aos="fade-up">
             <h2 class="section-title">Su Historia</h2>
-            
+
             {% if audio_voz %}
             <div class="voz-card" id="vozCard">
                 <div class="voz-header">
@@ -972,6 +973,22 @@
                     <span id="vozTotal">--:--</span>
                 </div>
                 <audio id="audioVoz" preload="metadata" src="{{ audio_voz | audio_web }}"></audio>
+            </div>
+            {% endif %}
+
+            {# La canción vive acá y no en una tarjeta suelta: su voz y su música
+               son la misma cosa —cómo sonaba esta persona—, y separarlas convertía
+               una en relato y la otra en dato. #}
+            {% if cancion_favorita %}
+            <div class="voz-card" id="card-cancion" data-aos="fade-up">
+                <div class="voz-header">
+                    <div class="voz-icono"><i class="fas fa-music"></i></div>
+                    <div>
+                        <div class="voz-titulo">Su melodía</div>
+                        <div class="voz-sub">La canción que lo acompañaba</div>
+                    </div>
+                </div>
+                <div id="contenedor-cancion" style="width: 100%; margin-top: var(--esp-3);"></div>
             </div>
             {% endif %}
             
@@ -1222,7 +1239,7 @@
 
     <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Fecha del momento</label><input type="text" id="t_anio" class="input-pro" placeholder="Ej: 15 de agosto de 1972"><p class="form-hint">Si sabes el día y el mes, escríbelos: así el memorial podrá recordar el aniversario cada año.</p></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
     <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: var(--txt-2); font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: var(--txt-4); padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: var(--txt-2); padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
-    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
+    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
     <div id="modalPreviewUpload" class="system-modal">
         <div class="modal-body" style="text-align: center;">
             <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
@@ -1980,7 +1997,7 @@
         function confirmarSubidaBatch() { if (archivosAsubir.length === 0) return; const formData = new FormData(); archivosAsubir.forEach(file => formData.append('archivos', file)); document.getElementById('btnConfirmUpload').style.display = 'none'; document.getElementById('uploadProgressContainer').style.display = 'block'; const xhr = new XMLHttpRequest(); xhr.open('POST', `/subir_fotos/${ID_PERFIL}`, true); xhr.setRequestHeader('X-Family-Pin', sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''); xhr.upload.onprogress = function(e) { if (e.lengthComputable) { document.getElementById('uploadProgressBar').style.width = ((e.loaded / e.total) * 100) + '%'; } }; xhr.onload = function() { if (xhr.status === 200) { window.location.reload(); } else { alert('Error al subir imágenes'); cerrarModal('modalPreviewUpload'); } }; xhr.send(formData); }
         function cambiarFotoPerfil() { let input = document.getElementById('fotoInput'); if(input.files.length === 0) return; if(input.files[0].size > 15 * 1024 * 1024) { alert("El video es muy pesado. Máximo 15MB."); return; } let formData = new FormData(); formData.append("archivo", input.files[0]); let btn = document.querySelector('button[onclick="document.getElementById(\'fotoInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_perfil/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
         function cambiarFotoPortada() { let input = document.getElementById('portadaInput'); if(input.files.length === 0) return; if(input.files.length > 4) { alert("Máximo de 4 videos/fotos."); return; } let formData = new FormData(); let totalSize = 0; for(let i=0; i < input.files.length; i++) { totalSize += input.files[i].size; formData.append("archivos", input.files[i]); } if(totalSize > 40 * 1024 * 1024) { alert("Muy pesado en total."); return; } let btn = document.querySelector('button[onclick="document.getElementById(\'portadaInput\').click()"]'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`/cambiar_foto_portada/${ID_PERFIL}`, { method: 'POST', body: formData, headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
-        function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, esposa: document.getElementById('e_esposa').value, hijos: document.getElementById('e_hijos').value, cancion_favorita: document.getElementById('e_cancion').value, juego_favorito: document.getElementById('e_juego').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
+        function guardarEdicion() { let datos = { identificador: ID_PERFIL, nombre: document.getElementById('e_nombre').value, fechas: document.getElementById('e_fechas').value, en_memoria_de: document.getElementById('e_memoria').value, cancion_favorita: document.getElementById('e_cancion').value, biografia: document.getElementById('e_bio').value }; fetch(`/editar_perfil/${ID_PERFIL}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' }, body: JSON.stringify(datos) }).then(() => window.location.reload()); }
 
         // =====================================
         // 🖼️ GALERÍA: CARGA PROGRESIVA + DOBLE TOQUE
