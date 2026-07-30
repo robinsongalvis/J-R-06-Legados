@@ -627,9 +627,11 @@
     <div id="welcome-screen" onclick="saltarIntro()" title="Toca para entrar">
         {% if portadas %}
             {% if portadas[0].es_video %}
-                <video class="welcome-bg" src="{{ portadas[0].url }}" autoplay loop muted playsinline></video>
+                {# La intro es lo primero que baja, así que va transcodificada: en el
+                   memorial de referencia son 16.58 MB -> 1.06 MB, mismo video. #}
+                <video class="welcome-bg" src="{{ portadas[0].url | liviano(720) }}" autoplay loop muted playsinline></video>
             {% else %}
-                <div class="welcome-bg" style="background-image: url('{{ portadas[0].url }}');"></div>
+                <div class="welcome-bg" style="background-image: url('{{ portadas[0].url | liviano(1080) }}');"></div>
             {% endif %}
         {% endif %}
 
@@ -660,9 +662,13 @@
                 {% for portada in portadas %}
                 <div class="slide {% if loop.index0 == 0 %}active{% endif %}">
                     {% if portada.es_video %}
-                        <video src="{{ portada.url }}" class="cover-media" loop muted playsinline {% if loop.index0 == 0 %}autoplay{% endif %}></video>
+                        {# Solo la primera lleva autoplay; a las demás preload="none"
+                           para que no bajen hasta que alguien las deslice. #}
+                        <video src="{{ portada.url | liviano(720) }}" class="cover-media" loop muted playsinline
+                               {% if loop.index0 == 0 %}autoplay{% else %}preload="none"{% endif %}></video>
                     {% else %}
-                        <img src="{{ portada.url }}" class="cover-media" alt="Portada de {{ nombre }}">
+                        <img src="{{ portada.url | liviano(1080) }}" class="cover-media" alt="Portada de {{ nombre }}"
+                             {% if loop.index0 > 0 %}loading="lazy"{% endif %} decoding="async">
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -697,9 +703,11 @@
 
         <div class="profile-wrapper" data-aos="zoom-in" data-aos-duration="1200">
             {% if es_video_perfil %}
-                <video class="profile-pic" src="{{ foto_perfil }}" autoplay muted playsinline loop></video>
+                {# El retrato se ve en un círculo de ~130px y se estaba sirviendo
+                   crudo: 7.75 MB -> 0.60 MB pidiéndolo a 320 de ancho. #}
+                <video class="profile-pic" src="{{ foto_perfil | liviano(320) }}" autoplay muted playsinline loop></video>
             {% else %}
-                <img class="profile-pic" src="{{ foto_perfil }}" alt="Foto de {{ nombre }}">
+                <img class="profile-pic" src="{{ foto_perfil | liviano(320) }}" alt="Foto de {{ nombre }}">
             {% endif %}
         </div>
         
@@ -1367,17 +1375,26 @@
             if (typeof actualizarIconoYBarra === 'function') actualizarIconoYBarra();
         }
 
-        // Visitas repetidas: no volvemos a bloquear con la intro completa
+        // El cierre de la intro SIEMPRE pasa por saltarIntro(), en las dos ramas.
+        //
+        // Antes la primera visita tenía su propio bloque que repetía casi todo el
+        // cuerpo de saltarIntro() pero se olvidaba de la clase 'oculto'. Y esa
+        // clase es lo único que devuelve el contenido: el CSS lo esconde con
+        // "body > *:not(#welcome-screen) { opacity: 0 }" y solo lo revela el
+        // selector "#welcome-screen.oculto ~ *".
+        //
+        // Resultado: quien escaneaba el QR y se quedaba quieto -de pie frente a
+        // la lápida, que es lo respetuoso- veía el velo desvanecerse a los 4,5 s
+        // y quedaba mirando una pantalla en blanco. Solo funcionaba si tocaba.
+        // Verificado en producción: intro_seen quedaba en "1", 'oculto' en false
+        // y la opacidad del contenido en 0.
+        //
+        // Ahora hay una sola forma de terminar la intro, y es idempotente, así
+        // que el toque y el reloj pueden llegar en cualquier orden.
         if (localStorage.getItem('intro_seen_' + ID_PERFIL) === '1') {
             document.addEventListener('DOMContentLoaded', saltarIntro);
         } else {
-            // Primera visita: la intro corre y al terminar se recuerda
-            setTimeout(() => {
-                document.body.style.backgroundColor = "";
-                document.body.classList.add('intro-finished');
-                try { localStorage.setItem('intro_seen_' + ID_PERFIL, '1'); } catch(e){}
-                actualizarIconoYBarra();
-            }, 4000);
+            setTimeout(saltarIntro, 4000);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
