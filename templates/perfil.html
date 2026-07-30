@@ -9,10 +9,28 @@
 
     <title>Memorial - {{ nombre }}</title>
 
-    <meta property="og:title" content="En memoria de {{ nombre }}">
-    <meta property="og:description" content="Te invitamos a visitar este espacio dedicado a los recuerdos de {{ nombre }}.">
-    <meta property="og:image" content="{{ foto_portada_og }}">
-    <meta property="og:type" content="website">
+    <meta name="description" content="{{ og_descripcion }}">
+
+    <!-- Vista previa del enlace. og:image SIEMPRE tiene que ser una imagen: si acá
+         entra un video, WhatsApp muestra la tarjeta sin foto. main.py se encarga de
+         eso (imagen_para_compartir) y de dejarla en 1200x630. -->
+    <meta property="og:title" content="{{ og_titulo }}">
+    <meta property="og:description" content="{{ og_descripcion }}">
+    <meta property="og:image" content="{{ og_imagen }}">
+    <meta property="og:image:secure_url" content="{{ og_imagen }}">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="{{ og_ancho }}">
+    <meta property="og:image:height" content="{{ og_alto }}">
+    <meta property="og:image:alt" content="Fotografía de {{ nombre }}">
+    <meta property="og:url" content="{{ og_url }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Legados Angels">
+    <meta property="og:locale" content="es_CO">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ og_titulo }}">
+    <meta name="twitter:description" content="{{ og_descripcion }}">
+    <meta name="twitter:image" content="{{ og_imagen }}">
     
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -1605,7 +1623,20 @@
         // RESTO DE FUNCIONES (Admin, Mensajes, Momentos)
         // =====================================
         if (isFamilyAdmin) { document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('admin-only')); let btnLock = document.getElementById('btnAccesoFamiliar'); if (btnLock) btnLock.style.display = 'none'; }
-        function compartirHomenaje() { if (navigator.share) { navigator.share({ title: 'Memorial de {{ nombre }}', text: 'Te invito a visitar el espacio de recuerdos en memoria de {{ nombre }}.', url: window.location.href }).catch(console.error); } else { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Te invito a visitar el espacio de recuerdos de {{ nombre }}:\n\n' + window.location.href)}`, '_blank'); } }
+        // El texto va igual por los dos caminos (compartir nativo y WhatsApp), y
+        // sin el enlace metido dentro de la frase: WhatsApp arma la tarjeta de
+        // vista previa a partir del enlace, y se ve mejor si va en su propia línea.
+        const TEXTO_COMPARTIR = 'Te invito a visitar el espacio de recuerdos en memoria de {{ nombre }}{% if fechas %} ({{ fechas }}){% endif %}.';
+
+        function compartirHomenaje() {
+            const url = window.location.href.split('#')[0];
+            if (navigator.share) {
+                navigator.share({ title: '{{ og_titulo }}', text: TEXTO_COMPARTIR, url })
+                    .catch(() => {});
+                return;
+            }
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(TEXTO_COMPARTIR + '\n\n' + url)}`, '_blank');
+        }
         function verificarPinFamiliar() { let pin = document.getElementById('f_pin').value; let btn = document.getElementById('btnVerificarPin'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...'; fetch(`/api/verificar_pin/${ID_PERFIL}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pin: pin}) }).then(res => { if(!res.ok) throw new Error("Incorrecto"); return res.json(); }).then(data => { sessionStorage.setItem('family_auth_' + ID_PERFIL, 'true'); sessionStorage.setItem('family_pin_' + ID_PERFIL, pin); window.location.reload(); }).catch(err => { document.getElementById('errorPin').style.display = 'block'; btn.innerHTML = 'Desbloquear Funciones'; }); }
         
         let pressTimerGrid;
