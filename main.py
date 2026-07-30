@@ -374,6 +374,112 @@ def miniatura(url: str, ancho: int = 400) -> str:
 templates.env.filters["miniatura"] = miniatura
 
 
+# ==========================================
+# VISTA PREVIA DEL ENLACE (WhatsApp y redes)
+# ==========================================
+# 1200x630 es la medida que esperan WhatsApp, Facebook y compañía.
+# f_jpg y no f_auto a propósito: f_auto negocia el formato con quien pide (WebP,
+# AVIF), y los robots que arman la vista previa no siempre saben leerlos. Un JPG
+# lo entiende todo el mundo. g_auto centra en las caras, que es lo que importa acá.
+OG_ANCHO, OG_ALTO = 1200, 630
+_OG_TRANSFORMACION = f"f_jpg,q_auto,w_{OG_ANCHO},h_{OG_ALTO},c_fill,g_auto"
+
+def _es_video(url) -> bool:
+    return str(url or "").lower().endswith((".mp4", ".mov", ".webm", ".m4v"))
+
+def imagen_compartible(url) -> str:
+    """Convierte una URL de Cloudinary en una imagen apta para la vista previa.
+
+    Si le entra un video le saca un fotograma; si es imagen, la reencuadra. En
+    ambos casos sale un JPG del tamaño correcto. Devuelve "" cuando la URL no
+    sirve, para que quien llame siga probando con la siguiente candidata.
+    """
+    url = str(url or "").strip()
+    if not url or "res.cloudinary.com" not in url or "/upload/" not in url:
+        return ""
+    if _es_video(url):
+        # so_0 = el fotograma del segundo cero, y se cambia la extensión a .jpg
+        sin_extension = url[:url.rfind(".")]
+        return sin_extension.replace("/upload/", f"/upload/so_0,{_OG_TRANSFORMACION}/", 1) + ".jpg"
+    return url.replace("/upload/", f"/upload/{_OG_TRANSFORMACION}/", 1)
+
+_RUTA_IMAGEN_DEFECTO = "static/fotos/portada-compartir.jpg"
+
+def _medidas_imagen_defecto():
+    """Mide la imagen genérica del sitio una sola vez, al arrancar.
+
+    Hace falta porque og:image:width/height tienen que decir la verdad: si
+    declaramos 1200x630 para una imagen que mide otra cosa, algunos lectores de
+    vista previa la renderizan mal o la descartan. Las de Cloudinary sí salen
+    exactas porque nosotros pedimos el tamaño; esta es un archivo que el dueño
+    puede cambiar cuando quiera, así que se pregunta en vez de suponer.
+    """
+    try:
+        with Image.open(_RUTA_IMAGEN_DEFECTO) as img:
+            return img.size
+    except Exception:
+        return (OG_ANCHO, OG_ALTO)
+
+OG_DEFECTO_ANCHO, OG_DEFECTO_ALTO = _medidas_imagen_defecto()
+
+def imagen_para_compartir(perfil, lista_portadas, fotos_feed, url_base) -> dict:
+    """La foto que verá quien reciba el enlace del memorial.
+
+    Antes se mandaba la primera portada sin mirar qué era. En los memoriales con
+    portada en video eso significaba apuntar el og:image a un .mov de 16 MB:
+    WhatsApp lo pedía, se encontraba un QuickTime y mostraba la tarjeta pelada,
+    sin la cara de la persona. Justo el enlace que la familia va a repartir.
+
+    Se prueba en orden y la primera que dé una imagen gana: la portada que eligió
+    el dueño, la foto del perfil, la primera de la galería, y si nada sirve la
+    imagen genérica del sitio. Las URL que no son de Cloudinary (como el avatar
+    en blanco por defecto) se saltan solas, que es lo que queremos: mejor la
+    imagen del sitio que un muñeco gris.
+    """
+    candidatas = []
+    if lista_portadas:
+        candidatas.append(lista_portadas[0].get("url"))
+    candidatas.append(getattr(perfil, "foto_perfil", ""))
+    if fotos_feed:
+        candidatas.append(fotos_feed[0].get("url"))
+
+    for candidata in candidatas:
+        lista = imagen_compartible(candidata)
+        if lista:
+            return {"url": lista, "ancho": OG_ANCHO, "alto": OG_ALTO}
+    return {
+        "url": url_base.rstrip("/") + "/" + _RUTA_IMAGEN_DEFECTO,
+        "ancho": OG_DEFECTO_ANCHO, "alto": OG_DEFECTO_ALTO,
+    }
+
+def _resumir_para_vista_previa(texto, limite: int = 190) -> str:
+    """Deja un texto listo para una etiqueta de vista previa.
+
+    El epitafio lo escribe la familia a mano: puede traer saltos de línea y
+    espacios de más (que en una tarjeta se ven como un renglón roto) y puede ser
+    más largo de lo que muestra WhatsApp. Se colapsa el espaciado y, si hay que
+    cortar, se corta en una palabra completa y no a la mitad.
+    """
+    limpio = " ".join(str(texto or "").split())
+    if len(limpio) <= limite:
+        return limpio
+    recortado = limpio[:limite]
+    if " " in recortado:
+        recortado = recortado[:recortado.rfind(" ")]
+    return recortado.rstrip(" ,;:.") + "…"
+
+def url_publica(request: Request) -> str:
+    """La URL de esta página, sin parámetros y en https.
+
+    Render termina el TLS en su proxy, así que la petición puede llegar como http
+    y una vista previa con og:url en http sobre una página https se ve sospechosa.
+    """
+    url = str(request.url).split("?")[0]
+    if url.startswith("http://") and not any(h in url for h in ("localhost", "127.0.0.1")):
+        url = "https://" + url[len("http://"):]
+    return url
+
+
 @app.get("/", response_class=HTMLResponse)
 async def inicio(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -933,10 +1039,30 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     portadas_raw = perfil.foto_portada.split(',') if perfil.foto_portada else ["https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop"]
     lista_portadas = [{"url": p.strip(), "es_video": p.endswith(('.mp4', '.mov', '.webm'))} for p in portadas_raw if p.strip()]
     
+    # El nombre y las fechas se limpian acá: venían con espacios de sobra del
+    # formulario y salían en la vista previa del enlace como "Javier Galvis ."
+    nombre_limpio = (perfil.nombre or "").strip()
+    fechas_limpias = (perfil.fechas or "").strip()
+
+    # La descripción de la vista previa: si la familia escribió su dedicatoria,
+    # esa dice mucho más que cualquier frase que pongamos nosotros.
+    compartible = imagen_para_compartir(perfil, lista_portadas, fotos_feed, str(request.base_url))
+
+    epitafio = (perfil.en_memoria_de or "").strip()
+    og_descripcion = _resumir_para_vista_previa(epitafio) or (
+        f"Un espacio para recordar a {nombre_limpio}: sus fotos, su historia y "
+        "los mensajes de quienes lo quisieron."
+    )
+
     datos_diccionario = {
-        "identificador": perfil.identificador, "nombre": perfil.nombre, "fechas": perfil.fechas,
-        "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil, 
-        "portadas": lista_portadas, "foto_portada_og": lista_portadas[0]["url"] if lista_portadas else "",
+        "identificador": perfil.identificador, "nombre": nombre_limpio, "fechas": fechas_limpias,
+        "og_titulo": f"En memoria de {nombre_limpio}" + (f" ({fechas_limpias})" if fechas_limpias else ""),
+        "og_descripcion": og_descripcion,
+        "og_imagen": compartible["url"],
+        "og_ancho": compartible["ancho"], "og_alto": compartible["alto"],
+        "og_url": url_publica(request),
+        "biografia": perfil.biografia, "foto_perfil": perfil.foto_perfil,
+        "portadas": lista_portadas,
         "es_video_perfil": es_video_perfil, "visitas": perfil.visitas, "ultima_visita": fecha_colombia_str(perfil.ultima_visita),
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
