@@ -413,6 +413,24 @@
         #card-cancion { grid-column: 1 / -1; }
         #contenedor-cancion { width: 100%; }
         .yt-player { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 14px; display: block; box-shadow: 0 6px 18px var(--border-soft); }
+
+        /* Fachada de la canción: el iframe de YouTube pesa ~500KB de terceros y se
+           montaba al cargar la página, sin que nadie lo hubiera pedido. Ahora hasta
+           que alguien toca play hay solo esto, que además no mete el rojo de una
+           marca ajena en el memorial. */
+        .yt-fachada {
+            width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; border: 1px solid var(--border-soft);
+            background: var(--input-bg); box-shadow: 0 6px 18px var(--border-soft);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+            cursor: pointer; color: var(--text-light); font-size: 14px; padding: 12px; text-align: center;
+        }
+        .yt-fachada-play {
+            width: 54px; height: 54px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, var(--accent), var(--accent));
+            color: #1a1408; font-size: 20px; display: flex; align-items: center; justify-content: center;
+            padding-left: 4px;
+        }
+        .yt-fachada:active .yt-fachada-play { transform: scale(0.93); }
         .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: 20px; padding: 7px 16px; font-size: 12.5px; font-weight: bold; text-decoration: none; transition: 0.3s; }
         .btn-yt-rescue:hover { background: rgba(255,0,0,0.15); transform: translateY(-1px); }
         
@@ -779,9 +797,19 @@
                 <p class="velas-muro-sub">Un homenaje con nombre y mensaje que brilla por un tiempo</p>
             </div>
             <div id="velasMuroGrid" class="velas-muro-grid"></div>
+            {# El vacío no puede negar a quien ya pasó. Arriba dice "N velas iluminan
+               este memorial" con el contador acumulado, y acá abajo el muro solo
+               muestra las dedicadas que siguen vigentes: decir "sé el primero"
+               teniendo 18 encendidas se lee como que la página miente. Cuando ya
+               hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
             <div id="velasEmpty" class="velas-empty" style="display:none;">
                 <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom:8px;"></i>
+                {% if velas > 0 %}
+                Las velas dedicadas brillan tres días y luego descansan.<br>
+                Dedicá la tuya y quedará con tu nombre.
+                {% else %}
                 Sé el primero en dedicar una vela.
+                {% endif %}
             </div>
             <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
                 <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicar una vela con mensaje
@@ -826,7 +854,7 @@
                     <span id="vozActual">0:00</span>
                     <span id="vozTotal">--:--</span>
                 </div>
-                <audio id="audioVoz" preload="metadata" src="{{ audio_voz }}"></audio>
+                <audio id="audioVoz" preload="metadata" src="{{ audio_voz | audio_web }}"></audio>
             </div>
             {% endif %}
             
@@ -1490,12 +1518,7 @@
                 const match = CANCION_RAW.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
                 if(match && match[1]) {
                     contenedorCancion.innerHTML = '';
-                    const iframe = document.createElement('iframe');
-                    iframe.className = 'yt-player';
-                    iframe.src = `https://www.youtube.com/embed/${match[1]}?controls=1`;
-                    iframe.frameBorder = '0';
-                    iframe.allowFullscreen = true;
-                    
+
                     let safeUrl = '';
                     try {
                         const parsed = new URL(CANCION_RAW);
@@ -1504,14 +1527,44 @@
                             safeUrl = parsed.href;
                         }
                     } catch(e) {}
-                    
-                    contenedorCancion.appendChild(iframe);
-                    
+
+                    // Fachada: hasta que alguien toque play no se baja nada de YouTube.
+                    // Antes el iframe se montaba al cargar la página -medio mega de
+                    // terceros con su propio JS y sus cookies- compitiendo por el hilo
+                    // principal en los primeros segundos, que es cuando el visitante
+                    // intenta desplazarse. Y la mayoría nunca escucha la canción.
+                    const fachada = document.createElement('div');
+                    fachada.className = 'yt-fachada';
+                    fachada.setAttribute('role', 'button');
+                    fachada.setAttribute('tabindex', '0');
+                    fachada.setAttribute('aria-label', 'Reproducir la canción del memorial');
+                    fachada.innerHTML = '<span class="yt-fachada-play"><i class="fas fa-play"></i></span><span>Escuchar su canción</span>';
+
+                    function montarReproductor() {
+                        const iframe = document.createElement('iframe');
+                        iframe.className = 'yt-player';
+                        // youtube-nocookie y no youtube: el memorial no tiene por qué
+                        // dejarle cookies de seguimiento a la familia.
+                        // enablejsapi=1 hace que funcione el postMessage que pausa la
+                        // canción al reproducir la nota de voz; sin él no hacía nada.
+                        iframe.src = `https://www.youtube-nocookie.com/embed/${match[1]}?controls=1&autoplay=1&enablejsapi=1`;
+                        iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+                        iframe.frameBorder = '0';
+                        iframe.allowFullscreen = true;
+                        fachada.replaceWith(iframe);
+                    }
+                    fachada.addEventListener('click', montarReproductor);
+                    fachada.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); montarReproductor(); }
+                    });
+                    contenedorCancion.appendChild(fachada);
+
                     if (safeUrl) {
                         const a = document.createElement('a');
                         a.className = 'btn-yt-rescue';
                         a.href = safeUrl;
                         a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
                         a.innerHTML = '<i class="fab fa-youtube"></i> Escuchar en YouTube';
                         contenedorCancion.appendChild(a);
                     }
@@ -2391,6 +2444,33 @@
         }
 
         // =====================================
+        // EL VIDEO DE PORTADA DESCANSA FUERA DE PANTALLA
+        // =====================================
+        // Tiene loop, así que seguía decodificando y pidiendo segmentos aunque el
+        // visitante ya hubiera bajado y no lo viera. Medido en producción: cuatro
+        // peticiones de video después de los siete segundos. Decodificar cuadros
+        // para nadie le cuesta batería y fluidez al celular al que se le vende esto.
+        (function pausarPortadaFueraDePantalla() {
+            const slider = document.getElementById('coverSlider');
+            if (!slider || !('IntersectionObserver' in window)) return;
+            const vigia = new IntersectionObserver((entradas) => {
+                const visible = entradas.some(e => e.isIntersecting);
+                slider.querySelectorAll('video').forEach(v => {
+                    if (visible) {
+                        // Solo se reanuda el de la diapositiva activa: los demás
+                        // nunca estuvieron sonando y no hay que despertarlos.
+                        if (v.closest('.slide')?.classList.contains('active') && v.paused) {
+                            v.play().catch(() => {});
+                        }
+                    } else if (!v.paused) {
+                        v.pause();
+                    }
+                });
+            }, { threshold: 0.01 });
+            vigia.observe(slider);
+        })();
+
+        // =====================================
         // 📄 LIBRO DEL LEGADO (PDF/PRINT)
         // =====================================
         function imprimirLibroLegado() {
@@ -2414,7 +2494,36 @@
             cargarVelasMuro();
             renderArbol();
             if (MAPA_LAT && MAPA_LNG) {
-                setTimeout(initMapaVisor, 500);
+                // El mapa se monta cuando alguien llega hasta él, no a los 500 ms de
+                // cargar. Leaflet construye el mapa y baja teselas de un CDN, y eso
+                // estaba compitiendo por el hilo principal justo en los primeros
+                // segundos, que es cuando el visitante intenta desplazarse. La
+                // mayoría de las visitas ni siquiera llega al mapa.
+                const seccionMapa = document.getElementById('mapaLeaflet');
+                if (seccionMapa && 'IntersectionObserver' in window) {
+                    const vigia = new IntersectionObserver((entradas) => {
+                        if (entradas.some(e => e.isIntersecting)) {
+                            vigia.disconnect();
+                            initMapaVisor();
+                        }
+                    }, { rootMargin: '300px' });   // se adelanta para que ya esté cuando llegue
+                    vigia.observe(seccionMapa);
+
+                    // Red de seguridad: si el observador no llega a dispararse, el
+                    // mapa se monta igual cuando el visitante se acerca. Que el lugar
+                    // de descanso no aparezca es un fallo peor que cargarlo de más, y
+                    // initMapaVisor es idempotente. No se dispara para quien nunca
+                    // baja hasta ahí, que es lo que queríamos ahorrar.
+                    const alAcercarse = () => {
+                        if (seccionMapa.getBoundingClientRect().top < window.innerHeight * 2) {
+                            window.removeEventListener('scroll', alAcercarse);
+                            initMapaVisor();
+                        }
+                    };
+                    window.addEventListener('scroll', alAcercarse, { passive: true });
+                } else {
+                    setTimeout(initMapaVisor, 1500);   // sin IntersectionObserver, tarde pero seguro
+                }
             }
             // Mapa con privacidad restringida: cargar coordenadas vía API después de PIN
             if (isFamilyAdmin && TIENE_MAPA && !MAPA_LAT && (MAPA_PRIVACIDAD === 'invitados' || MAPA_PRIVACIDAD === 'privado')) {
