@@ -44,7 +44,7 @@ METAS = {
 # escribir es una excepción que alguien decidió, no una que se coló.
 EXCEPCIONES = {
     "tamaños de letra": {40.0, 72.0, 56.0},  # nombre en la intro · comillas · paloma
-    "espaciados": {20.0},                     # canaleta lateral: medida de página
+    "espaciados": set(),                      # el 20px ya es --esp-4, parte de la escala
     "radios": {"50%"},                        # círculos: retrato, avatares
     "duraciones": set(),                      # ahora las cubre RAMPA_ATMOSFERA
     "curvas": {"linear", "ease-in-out"},      # ver RAMPA_ATMOSFERA
@@ -77,6 +77,15 @@ RAMPA_ATMOSFERA = {
 # de la escala apuntaría hacia abajo, o sea fuera de la pantalla, o sea a nada.
 SOMBRAS_DECLARADAS = {
     "0 -10px 40px rgba(0,0,0,0.5)",
+}
+
+# Medidas que salen de otra dimensión de la página, no de una decisión de aire.
+# Redondearlas a la escala no las ordena: rompe la composición que sostienen.
+ESTRUCTURALES = {
+    85.0, 70.0,  # el retrato sube media altura suya para montarse en la portada
+    80.0,        # deja libre la franja del botón fijo, sobre el área segura del iPhone
+    218.0,       # alinea el botón fijo con el borde del contenedor de 600px
+    3.0,         # centrado óptico del ▶: un triángulo centrado a ojo, no a medida
 }
 
 
@@ -132,6 +141,22 @@ def sombras(css: str) -> set:
     return vals - SOMBRAS_DECLARADAS
 
 
+def espaciados(css: str) -> set:
+    """Los aires del sistema, más cualquier literal que se haya colado.
+
+    Mismo razonamiento que en duraciones(): contar solo literales dejaría al
+    guardián ciego apenas las reglas usan var(--esp-…). Se miden las dos cosas.
+
+    El cero no cuenta: 'padding: 0' es la ausencia de aire, no una medida de
+    cuánto. Mismo criterio que el cero de los radios y el 'none' de las sombras.
+    """
+    tokens = {float(v) for v in re.findall(r"--esp-[\w-]+\s*:\s*(\d+(?:\.\d+)?)px", css)}
+    literales = set()
+    for m in re.finditer(r"\b(?:padding|margin)(?:-\w+)?\s*:\s*([^;{}]+)", css):
+        literales.update(float(n) for n in re.findall(r"(\d+(?:\.\d+)?)px", m.group(1)))
+    return (tokens | literales) - ESTRUCTURALES - {0.0}
+
+
 def duraciones(css: str) -> set:
     """Los tiempos del sistema, más cualquier literal que se haya colado.
 
@@ -157,7 +182,7 @@ def medir(css: str) -> dict:
 
     return {
         "tamaños de letra": px(r"font-size") - EXCEPCIONES["tamaños de letra"] - RAMPA_ICONOS,
-        "espaciados": px(r"(?:padding|margin)(?:-\w+)?") - EXCEPCIONES["espaciados"],
+        "espaciados": espaciados(css),
         # Un radio en cero no es una elección de radio, es la ausencia de una
         # (el contenedor a sangre en móvil). Mismo criterio que el 'none' de las
         # sombras: no cuenta como valor del sistema.
