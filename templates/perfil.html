@@ -1452,9 +1452,21 @@
             <div class="form-group">
                 <label>Foto</label>
                 <div id="f_foto_elegida" class="foto-elegida"></div>
+
+                {# Sin capture a propósito: así el iPhone ofrece "Tomar foto" Y
+                   "Fototeca". Con capture solo abriría la cámara, y casi siempre
+                   la foto del familiar ya existe en el carrete. #}
+                <input type="file" id="f_archivo" accept="image/*" style="display:none" onchange="subirFotoFamiliar(this)">
+                <button type="button" class="btn-ir-mapa" style="width:100%; justify-content:center; margin-bottom:var(--esp-2);"
+                        onclick="document.getElementById('f_archivo').click()">
+                    <i class="fas fa-camera"></i> Subir una foto de esta persona
+                </button>
+                <p id="f_subiendo" class="form-hint" style="display:none;"></p>
+
+                <p class="form-hint" style="margin-bottom:var(--esp-1);">…o elige una de la galería:</p>
                 <div id="f_galeria" class="selector-fotos"></div>
                 <p id="f_galeria_vacia" class="form-hint" style="display:none;">
-                    Todavía no hay fotos en la galería. Súbelas y podrás elegir una desde acá.
+                    Todavía no hay fotos en la galería.
                 </p>
                 <input type="url" id="f_foto" class="input-pro" placeholder="…o pega el enlace de una foto"
                        style="font-size:var(--txt-4); margin-top: var(--esp-2);" oninput="pintarFotoElegida()">
@@ -2066,6 +2078,8 @@
         // desincronizan y dejan la página trabada para siempre—: se pregunta si
         // hay ALGUNO abierto y se decide desde ahí. Da igual por dónde se haya
         // cerrado (la ✕, el fondo, Escape o el botón de guardar).
+        const ROJO_ERROR = '#e74c3c';   // el mismo de .error-msg
+
         function sincronizarBloqueoDeFondo() {
             const hayAlguno = !!document.querySelector('.system-modal.show, #lightbox.show');
             document.documentElement.classList.toggle('modal-abierto', hayAlguno);
@@ -2562,17 +2576,16 @@
             };
             const original = btn.innerHTML;
             const restaurar = () => { btn.innerHTML = original; btn.disabled = false; };
-            const ROJO = '#e74c3c';   // el mismo de .error-msg
 
             btn.addEventListener('click', () => {
                 if (!navigator.geolocation) {
-                    decir('Este navegador no puede dar la ubicación. Marca el lugar tocando el mapa.', ROJO);
+                    decir('Este navegador no puede dar la ubicación. Marca el lugar tocando el mapa.', ROJO_ERROR);
                     return;
                 }
                 // La API exige HTTPS. En producción lo es; este aviso es para que
                 // nadie se quede mirando un botón que no responde.
                 if (!window.isSecureContext) {
-                    decir('La ubicación necesita una conexión segura (https). Marca el lugar tocando el mapa.', ROJO);
+                    decir('La ubicación necesita una conexión segura (https). Marca el lugar tocando el mapa.', ROJO_ERROR);
                     return;
                 }
 
@@ -2596,7 +2609,7 @@
                         if (metros <= 20) {
                             decir(`Ubicación tomada con una precisión de ±${metros} m. Si el pin no quedó justo, toca el mapa para corregirlo.`, 'var(--accent-text)');
                         } else {
-                            decir(`Ubicación tomada, pero con ±${metros} m de margen: a esa distancia el pin puede caer en otra tumba. <strong>Revísalo en el mapa y corrígelo tocando el lugar exacto.</strong>`, ROJO);
+                            decir(`Ubicación tomada, pero con ±${metros} m de margen: a esa distancia el pin puede caer en otra tumba. <strong>Revísalo en el mapa y corrígelo tocando el lugar exacto.</strong>`, ROJO_ERROR);
                         }
                         restaurar();
                     },
@@ -2606,7 +2619,7 @@
                             2: 'El teléfono no pudo determinar dónde estás. Si estás bajo techo, intenta al aire libre.',
                             3: 'La búsqueda tardó demasiado. Vuelve a intentarlo o marca el lugar tocando el mapa.'
                         };
-                        decir(mensajes[err.code] || 'No se pudo obtener la ubicación. Marca el lugar tocando el mapa.', ROJO);
+                        decir(mensajes[err.code] || 'No se pudo obtener la ubicación. Marca el lugar tocando el mapa.', ROJO_ERROR);
                         restaurar();
                     },
                     // Precisión alta y sin caché: la persona está parada en el lugar
@@ -2758,6 +2771,43 @@
         function elegirFoto(url) {
             document.getElementById('f_foto').value = url;
             pintarFotoElegida();
+        }
+
+        // Sube la foto del familiar y deja su enlace en el campo. La foto NO entra
+        // a la galería: esa es la vida del difunto, no un directorio de parientes.
+        function subirFotoFamiliar(input) {
+            const archivo = input.files && input.files[0];
+            if (!archivo) return;
+            const aviso = document.getElementById('f_subiendo');
+            const decir = (t, color) => {
+                aviso.style.display = 'block';
+                aviso.style.color = color || 'var(--text-light)';
+                aviso.innerText = t;
+            };
+            // Un retrato de 12 MP tarda una eternidad por datos móviles, y quien
+            // arma el árbol suele estar en la casa de la familia, no en wifi.
+            if (archivo.size > 12 * 1024 * 1024) {
+                decir('Esa foto pesa demasiado. Elige una más liviana.', ROJO_ERROR);
+                input.value = '';
+                return;
+            }
+            decir('Subiendo la foto…');
+            const datos = new FormData();
+            datos.append('archivo', archivo);
+            fetch(`/api/familiar/foto/${ID_PERFIL}`, {
+                method: 'POST',
+                headers: { 'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || '' },
+                body: datos
+            }).then(r => {
+                if (!r.ok) throw new Error(r.status === 403
+                    ? 'Sin permiso. Verifica el PIN familiar.'
+                    : 'No se pudo subir la foto. Intenta de nuevo.');
+                return r.json();
+            }).then(d => {
+                elegirFoto(d.url);
+                decir('Foto lista. Ahora guarda el familiar.', 'var(--accent-text)');
+            }).catch(e => decir(e.message, ROJO_ERROR))
+              .finally(() => { input.value = ''; });
         }
 
         // El estado elegido se lee del campo, no de una variable aparte: así da

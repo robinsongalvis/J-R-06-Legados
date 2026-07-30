@@ -1413,6 +1413,32 @@ def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Reques
     db.refresh(nuevo)
     return {"id": nuevo.id, "mensaje": "Familiar agregado"}
 
+@app.post("/api/familiar/foto/{identificador}")
+async def subir_foto_familiar(identificador: str, request: Request, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Sube la foto de un familiar y devuelve su URL. NO la mete a la galería.
+
+    La galería es la vida del difunto, no un directorio de parientes: si la foto
+    de una nieta apareciera entre sus recuerdos, el memorial dejaría de ser suyo.
+    Por eso va a su propia carpeta y solo se devuelve el enlace, que el árbol
+    guarda en foto_url.
+
+    Existe porque el selector solo ofrecía fotos ya subidas, y las caras de los
+    familiares no están ahí: quien arma el árbol las tiene en el teléfono."""
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404)
+    validar_pin_o_admin(request, perfil)
+    try:
+        contenido = await archivo.read()
+        respuesta = cloudinary.uploader.upload(
+            comprimir_imagen(contenido),
+            folder=f"memoriales/{identificador}/familiares",
+            resource_type="image",
+        )
+        return {"url": respuesta["secure_url"]}
+    except Exception as e:
+        print(f"Error subiendo foto de familiar: {e}")
+        raise HTTPException(status_code=500, detail="No se pudo subir la foto.")
+
 @app.put("/api/familiar/{familiar_id}")
 def editar_familiar(familiar_id: int, datos: FamiliarRequest, request: Request, db: Session = Depends(get_db)):
     """Corregir un familiar ya agregado, en vez de borrarlo y volver a escribirlo.
