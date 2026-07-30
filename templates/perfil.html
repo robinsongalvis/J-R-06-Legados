@@ -246,7 +246,7 @@
             .cover-header { border-top-left-radius: var(--radio-grande) !important; border-top-right-radius: var(--radio-grande) !important; }
         }
 
-        .info-card, .bio-text, .stats, .message-card, .modal-body, .timeline-item::before, .upload-zone, .input-pro, .pin-input, .highlight-card, .memoria-viva-banner, .efemeride-card {
+        .bio-text, .stats, .message-card, .modal-body, .timeline-item::before, .upload-zone, .input-pro, .pin-input, .highlight-card, .memoria-viva-banner, .efemeride-card {
             transition: background-color var(--mov-suave) var(--curva), color var(--mov-suave) var(--curva), border-color var(--mov-suave) var(--curva), box-shadow var(--mov-suave) var(--curva); 
         }
         .admin-only { display: none !important; }
@@ -515,11 +515,6 @@
         /* ==========================================
            RESTO DEL DISEÑO Y MODALES
            ========================================== */
-        .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: var(--esp-5) var(--esp-3); width: 100%;}
-        .info-card { background: var(--card-bg); padding: var(--esp-4) var(--esp-2); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
-        .info-card i { font-size: var(--ico-3); color: var(--accent); margin-bottom: var(--esp-2);}
-        .info-card strong { font-size: var(--txt-1); text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: var(--esp-2);}
-        .info-card span { font-size: var(--txt-3); font-weight: 700; color: var(--text-main); word-wrap: break-word;}
         /* La canción ocupa ancho completo para que el reproductor no se recorte */
         #card-cancion { grid-column: 1 / -1; }
         #contenedor-cancion { width: 100%; }
@@ -685,7 +680,6 @@
         .vela-tiempo { font-size: var(--txt-1); color: var(--accent-text); font-weight: bold; margin-top: var(--esp-1); }
         .velas-muro-header { text-align: center; margin-bottom: var(--esp-3); }
         .velas-muro-title { font-family: 'Playfair Display', serif; font-size: var(--txt-5); color: var(--text-main); margin:0; }
-        .velas-muro-sub { font-size: var(--txt-2); color: var(--text-light); margin: var(--esp-1) 0 0; font-style: italic; }
         .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: var(--esp-3) auto var(--esp-1); background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: var(--txt-3); font-weight: bold; cursor: pointer; transition: var(--mov-base); }
         .btn-encender-muro:hover { background: linear-gradient(135deg,rgba(255,140,50,0.3),rgba(255,80,0,0.15)); transform: translateY(-2px); }
         .velas-empty { text-align: center; padding: var(--esp-5) var(--esp-4); color: var(--text-light); font-style: italic; font-size: var(--txt-3); }
@@ -896,26 +890,37 @@
             {% if en_memoria_de %}<p class="memory-of">"{{ en_memoria_de }}"</p>{% endif %}
         </div>
 
-        <div class="candle-container" data-aos="fade-up" data-aos-delay="250">
-            <button id="btnEncenderVela" class="btn-candle" onclick="encenderVela()">
-                <i class="fas fa-fire candle-icon"></i>
-                <span id="textoVela">Encender una vela</span>
-            </button>
-            <p class="candle-count-text">
-                <i class="fas fa-fire" style="color:#f39c12; margin-right: var(--esp-1);"></i>
-                <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
-            </p>
-        </div>
+        {# Fase 2 · Acá había DOS bloques de velas, pegados uno al otro: un botón
+           con contador anónimo, y debajo el muro de dedicadas con su propio
+           título y su propio botón. Dos llamados al mismo gesto, compitiendo.
 
-        <!-- MURO DE VELAS -->
-        <div class="velas-muro-section" data-aos="fade-up">
+           Ahora es una sola sección. El contador dejó de ser un bloque aparte y
+           pasó a ser el encabezado del muro, que es lo que siempre fue: cuántas
+           luces hay encendidas acá. Y los dos gestos quedan juntos y en orden —
+           encender es un toque, dedicarla deja tu nombre—, para que se lean como
+           un gesto con dos profundidades y no como dos botones peleando. #}
+        <div class="velas-muro-section" data-aos="fade-up" data-aos-delay="250">
             <div class="velas-muro-header">
-                <h3 class="velas-muro-title">Velas dedicadas</h3>
-                <p class="velas-muro-sub">Un homenaje con nombre y mensaje que brilla por un tiempo</p>
+                <h3 class="velas-muro-title">Velas</h3>
+                <p class="candle-count-text">
+                    <i class="fas fa-fire" style="color:#f39c12; margin-right: var(--esp-1);"></i>
+                    <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
+                </p>
             </div>
+
+            <div class="candle-container">
+                <button id="btnEncenderVela" class="btn-candle" onclick="encenderVela()">
+                    <i class="fas fa-fire candle-icon"></i>
+                    <span id="textoVela">Encender una vela</span>
+                </button>
+                <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
+                    <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicarla con tu nombre y un mensaje
+                </button>
+            </div>
+
             <div id="velasMuroGrid" class="velas-muro-grid"></div>
-            {# El vacío no puede negar a quien ya pasó. Arriba dice "N velas iluminan
-               este memorial" con el contador acumulado, y acá abajo el muro solo
+            {# El vacío no puede negar a quien ya pasó. El encabezado dice "N velas
+               iluminan este memorial" con el contador acumulado, y el muro solo
                muestra las dedicadas que siguen vigentes: decir "sé el primero"
                teniendo 18 encendidas se lee como que la página miente. Cuando ya
                hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
@@ -923,14 +928,11 @@
                 <i class="fas fa-fire" style="font-size:var(--ico-3); color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
                 {% if velas > 0 %}
                 Las velas dedicadas brillan tres días y luego descansan.<br>
-                Dedicá la tuya y quedará con tu nombre.
+                Dedica la tuya y quedará con tu nombre.
                 {% else %}
-                Sé el primero en dedicar una vela.
+                Sé el primero en dedicar una vela con tu nombre.
                 {% endif %}
             </div>
-            <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
-                <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicar una vela con mensaje
-            </button>
         </div>
 
         {% if interacciones_hoy > 0 %}
