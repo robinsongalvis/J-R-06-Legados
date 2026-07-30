@@ -38,6 +38,7 @@ METAS = {
     "sombras": 4,
     "duraciones": 3,
     "curvas": 2,
+    "tintes del acento": 4,
 }
 
 # Excepciones firmadas. Están escritas porque una excepción que hay que
@@ -144,6 +145,25 @@ def sombras(css: str) -> set:
     return vals - SOMBRAS_DECLARADAS
 
 
+def tintes(css: str) -> set:
+    """Con cuántas fuerzas distintas el acento tiñe algo.
+
+    Cuenta los tokens declarados y cualquier opacidad suelta que se haya escrito
+    a mano junto a --acento-rgb. Había 15, y ninguna seguía al tema: un memorial
+    en "bosque" tenía botones de borde verde con relleno dorado.
+
+    Un color fijo del acento —rgba(212,175,55,…) escrito a pelo— también cuenta
+    como deriva, porque es exactamente la forma en que los cinco temas se
+    quedaron aplicados a medias.
+    """
+    tokens = {float(v) for v in re.findall(r"--tinte-[\w-]+\s*:\s*([\d.]+)\s*;", css)}
+    sueltas = {float(v) for v in
+               re.findall(r"rgba\(\s*var\(--acento-rgb\)\s*,\s*(\d+(?:\.\d+)?)\s*\)", css)}
+    fijos = {f"fijo:{v}" for v in
+             re.findall(r"rgba\(212,\s*175,\s*55,\s*(\d+(?:\.\d+)?)\)", css)}
+    return (tokens | sueltas | fijos) - {0.0}
+
+
 def tipografia(css: str) -> set:
     """La escala de LECTURA. Los iconos se miden aparte, a propósito.
 
@@ -216,6 +236,7 @@ def medir(css: str) -> dict:
                   - EXCEPCIONES["radios"],
         "sombras": sombras(css),
         "duraciones": duraciones(css),
+        "tintes del acento": tintes(css),
         "curvas": set(re.findall(
             r"(cubic-bezier\([^)]*\)|ease-in-out|ease-out|ease-in|linear|\bease\b)", css))
                   - EXCEPCIONES["curvas"],

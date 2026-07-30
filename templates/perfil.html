@@ -47,6 +47,35 @@
             --text-light: #657379;
             --accent: #d4af37;
             --accent-text: #8a6d10; /* dorado oscuro legible sobre fondos claros (AA) */
+
+            /* Los componentes del acento por separado, para poder teñir con él.
+               CSS no sabe sacarle la opacidad a un #hex, así que hace falta esta
+               segunda forma del mismo color. Cada tema la redefine junto a su
+               --accent: si se cambia uno sin el otro, la decoración deja de
+               seguir al tema y vuelve el problema que este PR arregla. */
+            --acento-rgb: 212, 175, 55;
+
+            /* El color de la sombra, aparte del color del borde. Se reusaba
+               --border-soft para las dos cosas, y en los 6 estados oscuros ese
+               color es MÁS CLARO que la tarjeta: las tarjetas no tenían sombra,
+               tenían un halo, y se veían como si emitieran luz. */
+            --sombra-color: rgba(0,0,0,0.05);
+
+            /* ── Tinte del acento ──────────────────────────────────────────
+               Cuatro fuerzas con las que el acento tiñe algo. Son OPACIDADES
+               sueltas, no colores, y eso es deliberado: se usan como
+               "rgba(var(--acento-rgb), var(--tinte-suave))" para que el color
+               se resuelva en el elemento y siga al tema. Si el color viniera
+               dentro del token quedaría congelado con el dorado de :root —
+               probado, y es exactamente el defecto que este PR arregla.
+
+               Había 15 opacidades escritas a mano, y ninguna seguía al tema:
+               un memorial en "bosque" tenía botones de borde verde con relleno
+               dorado. Los cinco temas estaban aplicados a medias. */
+            --tinte-velo: 0.08;    /* un fondo que apenas se nota */
+            --tinte-suave: 0.15;   /* relleno visible, decoración */
+            --tinte-borde: 0.3;    /* bordes y filos */
+            --tinte-pleno: 0.6;    /* el anillo de algo activo */
             --card-bg: #ffffff;
             --border-soft: rgba(0,0,0,0.05);
             --input-bg: #f8fafc;
@@ -110,7 +139,7 @@
             --sombra-1: 0 5px 15px;                         /* apoyado en la página */
             --sombra-2: 0 10px 30px;                        /* levantado: hover, paneles */
             --sombra-flotante: 0 12px 32px rgba(0,0,0,0.3); /* despegado: modal, contenedor */
-            --brillo: 0 0 20px rgba(212,175,55,0.35);       /* encendido, no elevado */
+            --brillo: 0 0 20px rgba(var(--acento-rgb), var(--tinte-borde));       /* encendido, no elevado */
 
             /* ── Espaciados ────────────────────────────────────────────────
                Una rejilla de 5, porque es la que la página ya tenía: sus
@@ -168,7 +197,7 @@
             --accent-text: #e3c15a; /* dorado claro legible sobre fondos oscuros */
             --card-bg: #1e293b;
             --border-soft: rgba(255,255,255,0.05);
-            --input-bg: #0f172a;
+            --input-bg: #0f172a; --sombra-color:rgba(0,0,0,0.45);
         }
 
         * { box-sizing: border-box; }
@@ -268,7 +297,7 @@
         body:not(.intro-finished) > *:not(#welcome-screen) { opacity: 0; transition: opacity var(--mov-suave) var(--curva); pointer-events: none; }
         .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; object-fit: cover; }
         .welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%); z-index: 1; }
-        .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
+        .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(var(--acento-rgb), var(--tinte-borde)) 0%, rgba(var(--acento-rgb), 0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
         .p1 { width: 250px; height: 250px; top: 15%; left: -10%; animation-delay: 0s; }
         .p2 { width: 350px; height: 350px; bottom: 5%; right: -15%; animation-delay: 1.5s; }
         .welcome-content-wrapper { position: relative; z-index: 10; text-align: center; padding:0 var(--esp-5); }
@@ -276,7 +305,7 @@
            de interfaz: no se tokeniza, o el ritmo de la apertura quedaría atado a
            la velocidad de los botones. */
         .welcome-content { opacity: 0; animation: fadeInUp 1.5s var(--curva-llegada) 0.5s forwards; }
-        .welcome-content i { font-size: var(--ico-4); color: var(--accent); margin-bottom: var(--esp-5); animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4)); }
+        .welcome-content i { font-size: var(--ico-4); color: var(--accent); margin-bottom: var(--esp-5); animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(var(--acento-rgb), var(--tinte-borde))); }
         .welcome-content p { font-size: var(--txt-3); font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin:0; }
         .welcome-content h1 { font-family: 'Playfair Display', serif; font-size: 40px; margin: var(--esp-2) 0; color: #ffffff; font-weight: 400; letter-spacing: 1px; text-shadow: 0 5px 20px rgba(0,0,0,0.6); line-height: 1.2; }
         .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: var(--esp-6); font-size: var(--txt-3); color: #94a3b8; font-style: italic; font-weight: 300; }
@@ -294,7 +323,7 @@
         /* ==========================================
            HEADER PORTADA & CONTROLES
            ========================================== */
-        .cover-header { height: 280px; width: 100%; position: relative; border-bottom-left-radius: var(--radio-grande); border-bottom-right-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); overflow: hidden; background: #000;}
+        .cover-header { height: 280px; width: 100%; position: relative; border-bottom-left-radius: var(--radio-grande); border-bottom-right-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--sombra-color); overflow: hidden; background: #000;}
         .slider-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
         .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease-in-out; }
         .slide.active { opacity: 1; z-index: 1; }
@@ -317,17 +346,17 @@
            FOTO PRINCIPAL Y VELAS
            ========================================== */
         .profile-wrapper { position: relative; width: 170px; height: 170px; margin: -85px auto 0px; z-index: 10; }
-        .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: var(--sombra-2) var(--border-soft), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color var(--mov-suave) var(--curva);}
-        .profile-pic:hover { transform: scale(1.05); box-shadow: var(--sombra-flotante), 0 0 0 2px rgba(212,175,55,0.6); }
+        .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: var(--sombra-2) var(--sombra-color), 0 0 0 1px rgba(var(--acento-rgb), var(--tinte-borde)); transition: border-color var(--mov-suave) var(--curva);}
+        .profile-pic:hover { transform: scale(1.05); box-shadow: var(--sombra-flotante), 0 0 0 2px rgba(var(--acento-rgb), var(--tinte-pleno)); }
         .main-info { text-align: center; padding:0 var(--esp-4); width: 100%; padding-top: var(--esp-3); }
         .name { font-family: 'Playfair Display', serif; font-size: var(--txt-7); margin: var(--esp-2) 0 var(--esp-1); font-weight: 600; color: var(--text-main); word-wrap: break-word;}
         .dates { font-size: var(--txt-3); color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; font-weight: bold;}
         .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: var(--esp-2); font-size: var(--txt-4); word-wrap: break-word;}
 
         .candle-container { margin: var(--esp-5) auto var(--esp-2); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: var(--txt-3); cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--border-soft); transition: all var(--mov-base) var(--curva); }
-        .btn-candle:hover { transform: translateY(-3px); box-shadow: var(--brillo); border-color: rgba(212, 175, 55, 0.3); }
-        .btn-candle.lit { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); cursor: default; transform: none; box-shadow: var(--brillo); }
+        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: var(--txt-3); cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--sombra-color); transition: all var(--mov-base) var(--curva); }
+        .btn-candle:hover { transform: translateY(-3px); box-shadow: var(--brillo); border-color: rgba(var(--acento-rgb), var(--tinte-borde)); }
+        .btn-candle.lit { background: rgba(var(--acento-rgb), var(--tinte-velo)); border-color: var(--accent); cursor: default; transform: none; box-shadow: var(--brillo); }
         .candle-icon { font-size: var(--ico-2); color: var(--text-light); transition: var(--mov-base); }
         .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
         .candle-count-text { margin-top: var(--esp-2); font-size: var(--txt-2); color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
@@ -348,8 +377,8 @@
            ========================================== */
         .memoria-viva-banner { 
             margin: var(--esp-4) var(--esp-5); padding: var(--esp-3); border-radius: var(--radio); 
-            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.02)); 
-            border: 1px solid rgba(212,175,55,0.2); text-align: center; color: var(--text-main); 
+            background: linear-gradient(135deg, rgba(var(--acento-rgb), var(--tinte-velo)), rgba(var(--acento-rgb), var(--tinte-velo))); 
+            border: 1px solid rgba(var(--acento-rgb), var(--tinte-suave)); text-align: center; color: var(--text-main); 
         }
         .memoria-viva-banner i { color: var(--accent); font-size: var(--ico-3); margin-bottom: var(--esp-2); animation: floatUp 3s infinite ease-in-out; }
         .memoria-viva-banner p { margin:0 0 var(--esp-1); font-family: 'Playfair Display', serif; font-size: var(--txt-4); }
@@ -366,7 +395,7 @@
             margin:0 var(--esp-4) var(--esp-5); padding: var(--esp-4); border-radius: var(--radio-grande);
             background: var(--card-bg); color: var(--text-main); text-align: center;
             border: 1px solid var(--border-soft); border-top: 3px solid var(--accent);
-            box-shadow: var(--sombra-2) var(--border-soft);
+            box-shadow: var(--sombra-2) var(--sombra-color);
         }
         .efemeride-etiqueta { font-size: var(--txt-1); text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: var(--esp-2); }
         .efemeride-icono { width: 46px; height: 46px; margin:0 auto var(--esp-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: var(--ico-2); }
@@ -382,7 +411,7 @@
         .highlights-row { display: flex; gap: 15px; padding:0 var(--esp-5); margin-bottom: var(--esp-5); }
         .highlight-card { 
             flex: 1; background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2); 
-            box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); text-align: center; 
+            box-shadow: var(--sombra-2) var(--sombra-color); border: 1px solid var(--border-soft); text-align: center; 
         }
         .highlight-card h4 { margin:0 0 var(--esp-2); font-size: var(--txt-2); text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
         .hl-img-wrap { width: 100%; aspect-ratio: 1; border-radius: var(--radio-chico); overflow: hidden; position: relative; cursor: pointer; }
@@ -425,10 +454,10 @@
         /* ==========================================
            NOTA DE VOZ — reproductor propio
            ========================================== */
-        .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(212,175,55,0.28); border-radius: var(--radio-grande); padding: var(--esp-4); margin-bottom: var(--esp-5); position: relative; overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); }
-        .voz-card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0) 70%); pointer-events: none; }
+        .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(var(--acento-rgb), var(--tinte-borde)); border-radius: var(--radio-grande); padding: var(--esp-4); margin-bottom: var(--esp-5); position: relative; overflow: hidden; box-shadow: var(--sombra-2) var(--sombra-color); }
+        .voz-card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--acento-rgb), var(--tinte-suave)) 0%, rgba(var(--acento-rgb), 0) 70%); pointer-events: none; }
         .voz-header { display: flex; align-items: center; gap: 11px; margin-bottom: var(--esp-4); position: relative; z-index: 1; }
-        .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(212,175,55,0.14); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: var(--ico-1); flex-shrink: 0; }
+        .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(var(--acento-rgb), var(--tinte-suave)); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: var(--ico-1); flex-shrink: 0; }
         .voz-titulo { font-weight: 700; font-size: var(--txt-3); line-height: 1.25; }
         .voz-sub { font-size: var(--txt-2); color: var(--text-light); margin-top: var(--esp-1); }
         .voz-player { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
@@ -518,7 +547,7 @@
         /* La canción ocupa ancho completo para que el reproductor no se recorte */
         #card-cancion { grid-column: 1 / -1; }
         #contenedor-cancion { width: 100%; }
-        .yt-player { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radio); display: block; box-shadow: var(--sombra-1) var(--border-soft); }
+        .yt-player { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radio); display: block; box-shadow: var(--sombra-1) var(--sombra-color); }
 
         /* Fachada de la canción: el iframe de YouTube pesa ~500KB de terceros y se
            montaba al cargar la página, sin que nadie lo hubiera pedido. Ahora hasta
@@ -526,7 +555,7 @@
            marca ajena en el memorial. */
         .yt-fachada {
             width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radio); border: 1px solid var(--border-soft);
-            background: var(--input-bg); box-shadow: var(--sombra-1) var(--border-soft);
+            background: var(--input-bg); box-shadow: var(--sombra-1) var(--sombra-color);
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
             cursor: pointer; color: var(--text-light); font-size: var(--txt-3); padding: var(--esp-2); text-align: center;
         }
@@ -542,20 +571,20 @@
         
         .bio-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: var(--txt-6); margin-bottom: var(--esp-5); color: var(--text-main); position: relative;}
-        .bio-text { line-height: 1.8; text-align: center; font-size: var(--txt-4); color: var(--text-light); font-weight: 300; position: relative; padding: var(--esp-5) var(--esp-4); background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); font-style: italic; word-wrap: break-word;}
-        .bio-text::before { content: "❝"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; top: -15px; left: 15px; font-family: serif; line-height: 1;}
-        .bio-text::after { content: "❞"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; bottom: -45px; right: 15px; font-family: serif; line-height: 1;}
+        .bio-text { line-height: 1.8; text-align: center; font-size: var(--txt-4); color: var(--text-light); font-weight: 300; position: relative; padding: var(--esp-5) var(--esp-4); background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--sombra-color); font-style: italic; word-wrap: break-word;}
+        .bio-text::before { content: "❝"; font-size: 80px; color: rgba(var(--acento-rgb), var(--tinte-suave)); position: absolute; top: -15px; left: 15px; font-family: serif; line-height: 1;}
+        .bio-text::after { content: "❞"; font-size: 80px; color: rgba(var(--acento-rgb), var(--tinte-suave)); position: absolute; bottom: -45px; right: 15px; font-family: serif; line-height: 1;}
 
         .timeline-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .title-with-btn { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: var(--esp-5);}
-        .add-timeline-btn { background: rgba(212, 175, 55, 0.1); color: var(--accent); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer;}
+        .add-timeline-btn { background: rgba(var(--acento-rgb), var(--tinte-velo)); color: var(--accent); border: 1px solid rgba(var(--acento-rgb), var(--tinte-borde)); border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer;}
         .timeline { border-left: 3px solid var(--accent); margin-left: var(--esp-3); padding-left: var(--esp-5); position: relative;}
-        .timeline-item { position: relative; margin-bottom: var(--esp-6); padding: var(--esp-4); background: var(--card-bg); border-radius: var(--radio); box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); padding-right: var(--esp-5); transition: var(--transition-smooth);}
+        .timeline-item { position: relative; margin-bottom: var(--esp-6); padding: var(--esp-4); background: var(--card-bg); border-radius: var(--radio); box-shadow: var(--sombra-2) var(--sombra-color); border: 1px solid var(--border-soft); padding-right: var(--esp-5); transition: var(--transition-smooth);}
         /* Sube Y se enciende: la sombra dice la altura, el brillo dice el foco. */
-        .timeline-item:hover { transform: translateY(-5px); box-shadow: var(--sombra-2) var(--border-soft), var(--brillo); }
+        .timeline-item:hover { transform: translateY(-5px); box-shadow: var(--sombra-2) var(--sombra-color), var(--brillo); }
         .timeline-icon { position: absolute; left: -43px; top: 15px; width: 32px; height: 32px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: var(--brillo); display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: var(--ico-1); transition: var(--mov-base); z-index: 2;}
         .timeline-item:hover .timeline-icon { background: var(--accent); color: white; transform: scale(1.1); }
-        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-weight: 900; font-size: var(--txt-3); margin-bottom: var(--esp-2); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: var(--sombra-1) var(--border-soft);}
+        .timeline-year { display: inline-block; background: rgba(var(--acento-rgb), var(--tinte-suave)); color: var(--accent-text); padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-weight: 700; font-size: var(--txt-3); margin-bottom: var(--esp-2); border: 1px solid rgba(var(--acento-rgb), var(--tinte-borde)); box-shadow: var(--sombra-1) var(--sombra-color);}
         .timeline-event { font-size: var(--txt-3); color: var(--text-light); margin-top: var(--esp-1); line-height: 1.5; word-wrap: break-word;}
         .timeline-event strong { color: var(--text-main); display: block; font-size: var(--txt-4); margin-bottom: var(--esp-1);}
         .timeline-controls { position: absolute; right: 10px; top: 15px; display: flex; gap: 8px; opacity: 0; transition: var(--mov-base); z-index: 10;}
@@ -573,9 +602,9 @@
         
         .collapsible-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, rgba(15,23,42,0) 0%, var(--primary-bg) 100%); pointer-events: none; z-index: 5; transition: opacity var(--mov-base); }
         .collapsible-wrapper.expanded .collapsible-fade, .expanded .collapsible-fade { opacity: 0; }
-        .btn-ver-mas { display: block; margin: var(--esp-2) auto var(--esp-4); background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-size: var(--txt-3); font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--border-soft); }
+        .btn-ver-mas { display: block; margin: var(--esp-2) auto var(--esp-4); background: rgba(var(--acento-rgb), var(--tinte-velo)); border: 1px solid var(--accent); color: var(--accent); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-size: var(--txt-3); font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--sombra-color); }
         .btn-ver-mas:hover { background: var(--accent); color: white; transform: translateY(-2px); }
-        .message-card { background: var(--card-bg); padding: var(--esp-4); border-radius: var(--radio); border-left: 4px solid var(--accent); box-shadow: var(--sombra-1) var(--border-soft); position: relative; }
+        .message-card { background: var(--card-bg); padding: var(--esp-4); border-radius: var(--radio); border-left: 4px solid var(--accent); box-shadow: var(--sombra-1) var(--sombra-color); position: relative; }
         .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: var(--ico-1); padding: var(--esp-1); opacity: 0.5;}
         .message-text { font-style: italic; color: var(--text-light); font-size: var(--txt-3); line-height: 1.5; margin-bottom: var(--esp-3); padding-right: var(--esp-3); word-wrap: break-word;}
         .message-author { display: block; font-weight: bold; font-size: var(--txt-3); color: var(--text-main); text-align: right; margin-bottom: var(--esp-1);}
@@ -615,10 +644,10 @@
         .confirm-actions button { flex: 1; padding: var(--esp-3); border-radius: var(--radio-chico); border: none; font-weight: bold; font-size: var(--txt-3); cursor: pointer; }
         .btn-cancel-modal { background: var(--primary-bg); color: var(--text-main); border: 1px solid var(--border-soft); }
         .btn-delete-confirm { background: #e74c3c; color: white; }
-        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(212, 175, 55, 0.1); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: var(--ico-3); margin:0 auto var(--esp-3); }
+        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(var(--acento-rgb), var(--tinte-velo)); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: var(--ico-3); margin:0 auto var(--esp-3); }
         .pin-input { width: 160px; font-size: var(--txt-7); letter-spacing: 12px; text-align: center; padding: var(--esp-2); border: 2px solid var(--border-soft); background: transparent; border-radius: var(--radio-chico); margin: var(--esp-4) auto var(--esp-5); display: block; color: var(--text-main); font-family: 'Lato', sans-serif; font-weight: bold; }
         .error-msg { color: #e74c3c; font-size: var(--txt-3); margin-top: var(--esp-3); display: none; font-weight: bold;}
-        .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(212,175,55,0.2); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--mov-base); z-index: 10; font-size: var(--ico-1); display: flex; justify-content: center; align-items: center; }
+        .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(var(--acento-rgb), var(--tinte-suave)); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--mov-base); z-index: 10; font-size: var(--ico-1); display: flex; justify-content: center; align-items: center; }
         .btn-ia-magic:hover { background: var(--accent); color: white; transform: rotate(15deg) scale(1.1); box-shadow: var(--brillo); }
 
         /* ==========================================
@@ -638,19 +667,19 @@
            pasar 4.75 contra el fondo más difícil de los dos. Las variantes
            oscuras no se tocan: ya venían entre 5.3 y 7.1.
            Esto lo lee mucha gente mayor; es la diferencia entre leer y adivinar. */
-        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#8d6455; --accent:#c97a4a; --accent-text:#a85c2e; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
-        body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --accent-text:#e0a070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; }
+        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#8d6455; --accent:#c97a4a; --accent-text:#a85c2e; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; --acento-rgb:201, 122, 74; --sombra-color:rgba(201,122,74,0.15); }
+        body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --accent-text:#e0a070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; --sombra-color:rgba(0,0,0,0.45); }
 
-        body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --accent-text:#a8c4e8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; }
+        body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --accent-text:#a8c4e8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; --acento-rgb:143, 175, 216; --sombra-color:rgba(0,0,0,0.45); }
 
-        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#5e6c53; --accent:#4a7a3a; --accent-text:#3d6630; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
-        body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --accent-text:#8cc078; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; }
+        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#5e6c53; --accent:#4a7a3a; --accent-text:#3d6630; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; --acento-rgb:74, 122, 58; --sombra-color:rgba(74,122,58,0.15); }
+        body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --accent-text:#8cc078; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; --sombra-color:rgba(0,0,0,0.45); }
 
-        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#6d6d6d; --accent:#b8962e; --accent-text:#7d6416; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
-        body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --accent-text:#d8b850; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; }
+        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#6d6d6d; --accent:#b8962e; --accent-text:#7d6416; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; --acento-rgb:184, 150, 46; --sombra-color:rgba(184,150,46,0.12); }
+        body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --accent-text:#d8b850; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; --sombra-color:rgba(0,0,0,0.45); }
 
-        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#736398; --accent:#9b7fca; --accent-text:#6f55a8; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
-        body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --accent-text:#b9a0e0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; }
+        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#736398; --accent:#9b7fca; --accent-text:#6f55a8; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; --acento-rgb:155, 127, 202; --sombra-color:rgba(155,127,202,0.15); }
+        body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --accent-text:#b9a0e0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; --sombra-color:rgba(0,0,0,0.45); }
 
         /* ==========================================
            🎨 SELECTOR DE TEMA
@@ -663,7 +692,7 @@
         .swatch { width: 18px; height: 18px; border-radius: 50%; }
         .tema-card h4 { font-size: var(--txt-2); font-weight: bold; color: var(--text-main); margin:0; text-align: center; }
         .tema-card p { font-size: var(--txt-1); color: var(--text-light); margin:0; text-align: center; line-height: 1.3; }
-        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: var(--txt-2); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
+        .btn-tema-toggle { background: rgba(var(--acento-rgb), var(--tinte-suave)); border: 1px solid rgba(var(--acento-rgb), var(--tinte-borde)); color: var(--accent); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: var(--txt-2); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
         .btn-tema-toggle:hover { background: var(--accent); color: white; }
 
         /* ==========================================
@@ -672,7 +701,7 @@
         .velas-muro-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .velas-muro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: var(--esp-4); }
         @media (min-width: 400px) { .velas-muro-grid { grid-template-columns: repeat(4, 1fr); } }
-        .vela-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-2); text-align: center; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .vela-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-2); text-align: center; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--sombra-color); display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .vela-flame { font-size: var(--ico-3); animation: flickerVela 2s infinite alternate ease-in-out; line-height: 1; }
         @keyframes flickerVela { 0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(255,180,0,0.7)); } 50% { transform: scale(1.08) rotate(2deg); filter: drop-shadow(0 0 14px rgba(255,120,0,0.8)); } }
         .vela-nombre { font-size: var(--txt-1); font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
@@ -688,7 +717,7 @@
            🗺️ MAPA DEL ÚLTIMO DESCANSO
            ========================================== */
         .mapa-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
-        .mapa-container { border-radius: var(--radio-grande); overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); }
+        .mapa-container { border-radius: var(--radio-grande); overflow: hidden; box-shadow: var(--sombra-2) var(--sombra-color); border: 1px solid var(--border-soft); }
         #mapaLeaflet { height: 260px; width: 100%; z-index: 1; }
         .mapa-info { background: var(--card-bg); padding: var(--esp-3); border-top: 1px solid var(--border-soft); }
         .mapa-direccion { font-size: var(--txt-3); font-weight: bold; color: var(--text-main); margin-bottom: var(--esp-1); display: flex; align-items: flex-start; gap: 8px; }
@@ -705,7 +734,7 @@
         .arbol-grupo { display: flex; flex-direction: column; gap: 6px; }
         .arbol-grupo-label { font-size: var(--txt-1); text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: var(--esp-1); }
         .arbol-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
-        .familiar-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-3); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: var(--mov-base); }
+        .familiar-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-3); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--sombra-color); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: var(--mov-base); }
         .familiar-card:hover { transform: translateY(-3px); box-shadow: var(--brillo); }
         .familiar-foto { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
         .familiar-info { min-width: 0; }
@@ -714,9 +743,9 @@
         .familiar-link { font-size: var(--txt-1); color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: var(--esp-1); }
         .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: var(--ico-1); opacity: 0; transition: var(--mov-rapido); background: none; border: none; padding: var(--esp-1); }
         .familiar-card:hover .familiar-delete { opacity: 0.7; }
-        .familiar-card-deceased { border-color: var(--accent); background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03)); }
-        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: var(--radio); padding: var(--esp-2); min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--txt-2); font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
-        .arbol-add-btn:hover { background: rgba(212,175,55,0.15); }
+        .familiar-card-deceased { border-color: var(--accent); background: linear-gradient(135deg, rgba(var(--acento-rgb), var(--tinte-velo)), rgba(var(--acento-rgb), var(--tinte-velo))); }
+        .arbol-add-btn { background: rgba(var(--acento-rgb), var(--tinte-velo)); border: 1.5px dashed rgba(var(--acento-rgb), var(--tinte-borde)); color: var(--accent); border-radius: var(--radio); padding: var(--esp-2); min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--txt-2); font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
+        .arbol-add-btn:hover { background: rgba(var(--acento-rgb), var(--tinte-suave)); }
         .arbol-connector { display: flex; justify-content: center; }
         .arbol-line { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), transparent); opacity: 0.4; }
 
@@ -969,7 +998,7 @@
             
             <div style="text-align: center; margin-bottom: var(--esp-4);" class="admin-only">
                 <input type="file" id="audioVozInput" accept="audio/*" style="display:none;" onchange="subirAudioVoz()">
-                <button class="btn-elegant" style="padding: var(--esp-2) var(--esp-4); font-size: var(--txt-2); min-width: auto; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
+                <button class="btn-elegant" style="padding: var(--esp-2) var(--esp-4); font-size: var(--txt-2); min-width: auto; background: rgba(var(--acento-rgb), var(--tinte-velo)); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
                     <i class="fas fa-upload"></i> {% if audio_voz %}Cambiar{% else %}Subir{% endif %} Audio Real (MP3)
                 </button>
             </div>
@@ -1265,7 +1294,7 @@
     </div>
 
     <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Fecha del momento</label><input type="text" id="t_anio" class="input-pro" placeholder="Ej: 15 de agosto de 1972"><p class="form-hint">Si sabes el día y el mes, escríbelos: así el memorial podrá recordar el aniversario cada año.</p></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
-    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: var(--txt-2); font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: var(--txt-4); padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: var(--txt-2); padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
+    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(var(--acento-rgb), var(--tinte-velo)); border: 1px solid rgba(var(--acento-rgb), var(--tinte-borde)); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: var(--txt-2); font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: var(--txt-4); padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: var(--txt-2); padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
     <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
     <div id="modalPreviewUpload" class="system-modal">
         <div class="modal-body" style="text-align: center;">
