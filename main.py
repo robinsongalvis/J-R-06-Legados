@@ -65,6 +65,106 @@ def parse_date_for_sorting(date_str):
     day = int(match_day.group()) if match_day else 31
     return (year, month, day)
 
+# ==========================================
+# EFEMÉRIDES: "UN DÍA COMO HOY, HACE X AÑOS"
+# ==========================================
+MESES_ES = {
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+    "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10,
+    "noviembre": 11, "diciembre": 12,
+}
+
+def _dia_valido(anio, mes, dia):
+    try:
+        datetime.date(anio, mes, dia)
+        return True
+    except ValueError:
+        return False
+
+def partes_fecha_momento(texto):
+    """Saca (año, mes, día) del campo libre de un momento. mes y día pueden ser None.
+
+    Devolver None cuando no se sabe es TODA la gracia de esta función.
+    parse_date_for_sorting rellena con mes 12 y día 31 cuando no encuentra nada,
+    que sirve para ordenar pero es veneno para una efeméride: publicaría
+    aniversarios inventados cada 31 de diciembre. Y su regex de día agarra
+    cualquier número de dos cifras, así que "Cumplió 15 años en 1985" le saldría
+    como día 15.
+
+    Regla firme: nunca se devuelve un día sin mes. Un día suelto no identifica
+    ninguna fecha, y el campo lo llena el dueño a mano escribiendo frases.
+    """
+    if not texto:
+        return (None, None, None)
+    t = str(texto).strip().lower()
+
+    # El año va aparte: puede estar en cualquier parte de la frase.
+    m_anio = re.search(r'\b(?:18|19|20)\d{2}\b', t)
+    anio = int(m_anio.group()) if m_anio else None
+
+    # 15/08/1972 · 15-8-1972 (día primero, como se escribe en Colombia)
+    m = re.search(r'\b(\d{1,2})[/\-.](\d{1,2})[/\-.](?:18|19|20)(\d{2})\b', t)
+    if m and _dia_valido(anio or 2000, int(m.group(2)), int(m.group(1))):
+        return (anio, int(m.group(2)), int(m.group(1)))
+
+    # 1972-08-15 (ISO)
+    m = re.search(r'\b(?:18|19|20)\d{2}[/\-.](\d{1,2})[/\-.](\d{1,2})\b', t)
+    if m and _dia_valido(anio or 2000, int(m.group(1)), int(m.group(2))):
+        return (anio, int(m.group(1)), int(m.group(2)))
+
+    nombres = "|".join(MESES_ES)
+
+    # "15 de agosto" · "15 agosto"
+    m = re.search(rf'\b(\d{{1,2}})\s+(?:de\s+)?({nombres})\b', t)
+    if m and _dia_valido(anio or 2000, MESES_ES[m.group(2)], int(m.group(1))):
+        return (anio, MESES_ES[m.group(2)], int(m.group(1)))
+
+    # "agosto de 1972" · "en agosto": mes sí, día no
+    m = re.search(rf'\b({nombres})\b', t)
+    if m:
+        return (anio, MESES_ES[m.group(1)], None)
+
+    return (anio, None, None)
+
+def efemeride_del_dia(momentos, hoy):
+    """Elige el momento cuyo aniversario cae hoy, o None si no hay ninguno.
+
+    Tres niveles de precisión, y se prefiere siempre el más exacto:
+      dia  -> el texto trae día y mes, y coinciden con hoy
+      mes  -> trae el mes, y es el mes en curso
+      anio -> solo trae el año; entonces rota uno por día para que el bloque no
+              repita lo mismo 365 días seguidos
+
+    `momentos` son los diccionarios que ya arma la vista, con 'anio' como texto.
+    """
+    exactos, del_mes, del_anio = [], [], []
+
+    for mo in momentos:
+        anio, mes, dia = partes_fecha_momento(mo.get("anio"))
+        if not anio:
+            continue
+        cumple = hoy.year - anio
+        if cumple < 1:  # todavía no hay aniversario que celebrar
+            continue
+        candidato = {**mo, "hace_anios": cumple}
+        if mes and dia and (mes, dia) == (hoy.month, hoy.day):
+            exactos.append(candidato)
+        elif mes and mes == hoy.month:
+            del_mes.append(candidato)
+        elif not mes:
+            del_anio.append(candidato)
+
+    if exactos:
+        return {**max(exactos, key=lambda c: c["hace_anios"]), "precision": "dia"}
+    if del_mes:
+        return {**max(del_mes, key=lambda c: c["hace_anios"]), "precision": "mes"}
+    if del_anio:
+        # Rotación por día, igual que el recuerdo de hoy: sin esto el bloque
+        # diría lo mismo todo el año y se vuelve parte del decorado.
+        elegido = del_anio[hoy.toordinal() % len(del_anio)]
+        return {**elegido, "precision": "anio"}
+    return None
+
 def obtener_icono_momento(titulo):
     t = str(titulo).lower()
     if any(x in t for x in ["nace", "nacimiento", "bebe", "hijo", "hija", "nieto", "nieta"]): return "fa-baby"
@@ -815,7 +915,12 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
     mensajes_feed = [{"id": m.id, "autor": m.autor, "texto": m.texto, "fecha": fecha_colombia_str(m.fecha_creacion), "likes": m.likes} for m in reversed(perfil.mensajes)]
     momentos_feed = [{"id": m.id, "anio": m.anio, "titulo": m.titulo, "descripcion": m.descripcion, "icono": obtener_icono_momento(m.titulo)} for m in perfil.momentos]
     momentos_feed.sort(key=lambda x: parse_date_for_sorting(x["anio"])) # ✅ CRONOLOGÍA AUTOMÁTICA
-    
+
+    # Aniversario que cae hoy, si hay alguno. Sale de los momentos que ya tenemos:
+    # son el único contenido con fechas de hace décadas, así que es lo único que
+    # puede decir "hace 40 años" en una plataforma que lleva meses en pie.
+    efemeride = efemeride_del_dia(momentos_feed, ahora_colombia().date())
+
     es_video_perfil = perfil.foto_perfil.endswith(('.mp4', '.mov', '.webm'))
     
     portadas_raw = perfil.foto_portada.split(',') if perfil.foto_portada else ["https://images.unsplash.com/photo-1444065707204-12decac917e8?q=80&w=1200&auto=format&fit=crop"]
@@ -829,6 +934,7 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         "en_memoria_de": perfil.en_memoria_de, "esposa": perfil.esposa, "hijos": perfil.hijos, 
         "cancion_favorita": perfil.cancion_favorita, "juego_favorito": perfil.juego_favorito, 
         "fotos": fotos_feed, "mensajes": mensajes_feed, "momentos": momentos_feed, "velas": perfil.velas or 0,
+        "efemeride": efemeride,
         "interacciones_hoy": perfil.interacciones_hoy,
         "total_corazones_galeria": total_corazones_galeria,
         "foto_aleatoria": foto_aleatoria,

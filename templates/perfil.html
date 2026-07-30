@@ -110,7 +110,7 @@
             .cover-header { border-top-left-radius: 27px !important; border-top-right-radius: 27px !important; }
         }
 
-        .info-card, .bio-text, .stats, .message-card, .modal-body, .timeline-item::before, .upload-zone, .input-pro, .pin-input, .highlight-card, .memoria-viva-banner { 
+        .info-card, .bio-text, .stats, .message-card, .modal-body, .timeline-item::before, .upload-zone, .input-pro, .pin-input, .highlight-card, .memoria-viva-banner, .efemeride-card {
             transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; 
         }
         .admin-only { display: none !important; }
@@ -206,6 +206,30 @@
         .memoria-viva-banner i { color: var(--accent); font-size: 24px; margin-bottom: 8px; animation: floatUp 3s infinite ease-in-out; }
         .memoria-viva-banner p { margin: 0 0 5px; font-family: 'Playfair Display', serif; font-size: 18px; }
         .memoria-viva-banner span { font-size: 13px; color: var(--text-light); }
+
+        /* Efeméride: "un día como hoy, hace X años". Cumple el mismo papel que
+           el memoria-viva-banner (un aviso cálido, no una sección más), pero
+           SIN el dorado fijo rgba(212,175,55,...) que usa aquel: de los cinco
+           temas, tres no son dorados (bosque verde, jardín violeta, atardecer
+           terracota) y un bloque dorado ahí se ve pegado con cinta. Todo el
+           color sale de las variables del tema, así que se adapta a los cinco.
+           La barra superior es lo que lo distingue de una tarjeta cualquiera. */
+        .efemeride-card {
+            margin: 0 20px 25px; padding: 20px; border-radius: 20px;
+            background: var(--card-bg); color: var(--text-main); text-align: center;
+            border: 1px solid var(--border-soft); border-top: 3px solid var(--accent);
+            box-shadow: 0 10px 30px var(--border-soft);
+        }
+        .efemeride-etiqueta { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: 10px; }
+        .efemeride-icono { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: 19px; }
+        .efemeride-anios { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; margin: 0 0 6px; color: var(--text-main); }
+        .efemeride-titulo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; margin: 0 0 8px; color: var(--accent-text); word-wrap: break-word; }
+        /* --text-main y no --text-light: sobre las tarjetas claras de los temas
+           atardecer, bosque y mármol, el gris secundario se queda en 4.1-4.3:1,
+           por debajo del mínimo accesible. Y esto lo lee mucha gente mayor.
+           break-word porque este es el campo de texto libre del momento y puede
+           traer una frase larga, no solo "1972". */
+        .efemeride-cuando { font-size: 12px; color: var(--text-main); margin-top: 12px; display: block; word-wrap: break-word; }
 
         .highlights-row { display: flex; gap: 15px; padding: 0 25px; margin-bottom: 25px; }
         .highlight-card { 
@@ -435,19 +459,25 @@
         /* ==========================================
            🎨 TEMAS PREMIUM
            ========================================== */
-        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#9e7060; --accent:#c97a4a; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
-        body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; }
+        /* Cada tema DEBE redefinir --accent-text además de --accent.
+           Cuando no lo hacía, heredaba el #8a6d10 de :root, que es un dorado
+           pensado para fondos claros, y quedaba casi ilegible sobre los oscuros:
+           el tema noche (el que viene por defecto) daba 3.95:1, por debajo del
+           mínimo accesible de 4.5. Afecta al epitafio, al año de cada momento,
+           al tiempo de las velas y al parentesco del árbol familiar. */
+        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#9e7060; --accent:#c97a4a; --accent-text:#a85c2e; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
+        body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --accent-text:#e0a070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; }
 
-        body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; }
+        body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --accent-text:#a8c4e8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; }
 
-        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#6b7a5e; --accent:#4a7a3a; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
-        body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; }
+        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#6b7a5e; --accent:#4a7a3a; --accent-text:#3d6630; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
+        body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --accent-text:#8cc078; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; }
 
-        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#7a7a7a; --accent:#b8962e; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
-        body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; }
+        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#7a7a7a; --accent:#b8962e; --accent-text:#7d6416; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
+        body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --accent-text:#d8b850; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; }
 
-        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#7a6a9e; --accent:#9b7fca; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
-        body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; }
+        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#7a6a9e; --accent:#9b7fca; --accent-text:#6f55a8; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
+        body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --accent-text:#b9a0e0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; }
 
         /* ==========================================
            🎨 SELECTOR DE TEMA
@@ -790,6 +820,28 @@
             </div>
         </div>
         {% endif %}
+        {% endif %}
+
+        <!-- EFEMÉRIDE: UN DÍA COMO HOY -->
+        {% if efemeride %}
+        <div class="efemeride-card" data-aos="fade-up">
+            <span class="efemeride-etiqueta">
+                {% if efemeride.precision == 'dia' %}Un día como hoy
+                {% elif efemeride.precision == 'mes' %}Este mes
+                {% else %}Este año{% endif %}
+            </span>
+            <div class="efemeride-icono"><i class="fas {{ efemeride.icono }}"></i></div>
+            <p class="efemeride-anios">
+                {% if efemeride.precision == 'anio' %}
+                    {% if efemeride.hace_anios == 1 %}Se cumple un año{% else %}Se cumplen {{ efemeride.hace_anios }} años{% endif %}
+                {% else %}Hace {{ efemeride.hace_anios }} año{{ '' if efemeride.hace_anios == 1 else 's' }}{% endif %}
+            </p>
+            {# La descripción vive en la línea de tiempo, que queda justo debajo:
+               repetirla acá hacía que la tarjeta se leyera como un bloque clonado
+               en la misma pantalla. Acá basta el título para señalar el momento. #}
+            <p class="efemeride-titulo">{{ efemeride.titulo }}</p>
+            <span class="efemeride-cuando">{{ efemeride.anio }}</span>
+        </div>
         {% endif %}
 
         <div class="timeline-section" id="timelineSection">
