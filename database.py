@@ -288,3 +288,84 @@ try:
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_velas_encendidas_perfil_id ON velas_encendidas (perfil_id)"))
 except Exception:
     pass
+
+# ==========================================
+# 🌳 FASE 2 · La familia deja de vivir en dos lugares
+# ==========================================
+# El memorial guardaba la familia dos veces: 'esposa' e 'hijos' como texto suelto
+# en tarjetas, y el Árbol Familiar como tabla con nombre, parentesco y foto. El
+# Árbol lo hace mejor, así que las tarjetas se van — pero lo que las familias ya
+# escribieron NO se pierde: se muda al Árbol.
+#
+# Las columnas viejas NO se borran. Quedan como respaldo hasta que la migración
+# esté verificada en producción; borrarlas es un paso aparte y deliberado.
+
+def _partes_de_hijos(texto: str) -> list:
+    """Separa 'Ana, Luis y Pedro' en tres, pero solo cuando es claramente una lista.
+
+    Si el campo trae una frase —'Sus tres hijos, que lo adoraban'— partirla la
+    destroza. Ante la duda se deja entera: una fila con el texto exacto es fea
+    pero recuperable; tres filas mal cortadas no.
+
+    La prueba es si CADA pieza parece un nombre: empieza en mayúscula, tiene tres
+    palabras o menos y no arrastra puntuación interna. 'que lo adoraban siempre'
+    falla la primera condición, y con eso la frase entera se salva de la tijera.
+    """
+    import re as _re
+    limpio = texto.strip()
+    if not limpio:
+        return []
+    if "." in limpio.rstrip("."):          # un punto interior delata una frase
+        return [limpio]
+    piezas = [p.strip() for p in _re.split(r",| y ", limpio.rstrip(".")) if p.strip()]
+
+    def parece_nombre(p):
+        return p[:1].isupper() and len(p.split()) <= 3 and len(p) <= 40
+
+    if len(piezas) > 1 and all(parece_nombre(p) for p in piezas):
+        return piezas
+    return [limpio]
+
+
+def _migrar_familia_al_arbol():
+    """Muda 'esposa' e 'hijos' al Árbol Familiar. Idempotente y sin pérdida.
+
+    La idempotencia no usa una bandera: comprueba si ya existe un familiar con
+    ese mismo nombre y parentesco. Así, correrla mil veces no duplica a nadie, y
+    si la familia borró a mano el registro migrado, no vuelve a aparecer.
+    """
+    sesion = SessionLocal()
+    try:
+        movidos = 0
+        for perfil in sesion.query(PerfilDifunto).all():
+            existentes = {(f.nombre or "").strip().lower()
+                          for f in sesion.query(FamiliarArbol).filter_by(perfil_id=perfil.id)}
+            siguiente = max([f.orden or 0 for f in
+                             sesion.query(FamiliarArbol).filter_by(perfil_id=perfil.id)] or [0])
+
+            candidatos = []
+            if (perfil.esposa or "").strip():
+                candidatos.append((perfil.esposa.strip(), "Compañera de vida"))
+            for hijo in _partes_de_hijos(perfil.hijos or ""):
+                if hijo:
+                    candidatos.append((hijo, "Su legado"))
+
+            for nombre, relacion in candidatos:
+                if nombre.lower() in existentes:
+                    continue
+                siguiente += 1
+                sesion.add(FamiliarArbol(nombre=nombre, relacion=relacion, foto_url="",
+                                         perfil_id=perfil.id, orden=siguiente))
+                existentes.add(nombre.lower())
+                movidos += 1
+        if movidos:
+            sesion.commit()
+            print(f"  Fase 2: {movidos} familiares mudados al Árbol Familiar.")
+    except Exception as e:
+        sesion.rollback()
+        print(f"  Fase 2: la migración de familia no corrió ({e}). Las tarjetas viejas siguen intactas.")
+    finally:
+        sesion.close()
+
+
+_migrar_familia_al_arbol()

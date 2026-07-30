@@ -764,7 +764,17 @@ def editar_perfil(identificador: str, datos_nuevos: PerfilDatos, request: Reques
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     validar_pin_o_admin(request, perfil)
-    perfil.nombre = datos_nuevos.nombre; perfil.fechas = datos_nuevos.fechas; perfil.biografia = datos_nuevos.biografia; perfil.en_memoria_de = datos_nuevos.en_memoria_de; perfil.esposa = datos_nuevos.esposa; perfil.hijos = datos_nuevos.hijos; perfil.cancion_favorita = datos_nuevos.cancion_favorita; perfil.juego_favorito = datos_nuevos.juego_favorito
+    perfil.nombre = datos_nuevos.nombre
+    perfil.fechas = datos_nuevos.fechas
+    perfil.biografia = datos_nuevos.biografia
+    perfil.en_memoria_de = datos_nuevos.en_memoria_de
+    perfil.cancion_favorita = datos_nuevos.cancion_favorita
+    # esposa, hijos y juego_favorito YA NO SE ESCRIBEN (Fase 2).
+    #
+    # El formulario dejó de pedirlos, así que llegarían siempre vacíos por el
+    # valor por defecto del modelo — y esta línea borraría el texto original
+    # apenas la familia guardara cualquier otro cambio. Esas columnas son el
+    # respaldo de lo que se mudó al Árbol Familiar: se leen, no se pisan.
     db.commit()
     return {"mensaje": "Perfil actualizado"}
 

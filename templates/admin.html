@@ -493,12 +493,9 @@
                         </div>
 
                         <div class="space-y-4 md:space-y-5">
-                            <div><label class="input-label">Esposa / Esposo</label><input type="text" id="n_esposa" placeholder="Nombre de su pareja" class="input-pro"></div>
-                            <div><label class="input-label">Hijos (Legado)</label><input type="text" id="n_hijos" placeholder="Ej: Juan, María y Pedro" class="input-pro"></div>
                             <div class="grid grid-cols-2 gap-3 md:gap-4">
                                 <div><label class="input-label"><i class="fas fa-music mr-1"></i> Canción</label><input type="text" id="n_cancion" placeholder="Link de YouTube" class="input-pro"></div>
-                                <div><label class="input-label"><i class="fas fa-star mr-1"></i> Hobby</label><input type="text" id="n_juego" placeholder="Hobby" class="input-pro"></div>
-                            </div>
+                                </div>
                         </div>
                     </div>
                     
@@ -1084,9 +1081,9 @@
             let datos = {
                 identificador: document.getElementById('n_id').value, pin_familia: document.getElementById('n_pin').value,
                 nombre: document.getElementById('n_nombre').value, fechas: document.getElementById('n_fechas').value,
-                en_memoria_de: document.getElementById('n_memoria').value, esposa: document.getElementById('n_esposa').value,
-                hijos: document.getElementById('n_hijos').value, cancion_favorita: document.getElementById('n_cancion').value,
-                juego_favorito: document.getElementById('n_juego').value, biografia: document.getElementById('n_bio').value,
+                en_memoria_de: document.getElementById('n_memoria').value,
+                cancion_favorita: document.getElementById('n_cancion').value,
+                biografia: document.getElementById('n_bio').value,
                 contacto_nombre: document.getElementById('n_contacto_nombre').value,
                 contacto_telefono: document.getElementById('n_contacto_telefono').value,
                 contacto_email: document.getElementById('n_contacto_email').value,
