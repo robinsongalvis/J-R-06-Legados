@@ -890,66 +890,39 @@
             {% if en_memoria_de %}<p class="memory-of">"{{ en_memoria_de }}"</p>{% endif %}
         </div>
 
-        {# Fase 2 · Acá había DOS bloques de velas, pegados uno al otro: un botón
-           con contador anónimo, y debajo el muro de dedicadas con su propio
-           título y su propio botón. Dos llamados al mismo gesto, compitiendo.
 
-           Ahora es una sola sección. El contador dejó de ser un bloque aparte y
-           pasó a ser el encabezado del muro, que es lo que siempre fue: cuántas
-           luces hay encendidas acá. Y los dos gestos quedan juntos y en orden —
-           encender es un toque, dedicarla deja tu nombre—, para que se lean como
-           un gesto con dos profundidades y no como dos botones peleando. #}
-        <div class="velas-muro-section" data-aos="fade-up" data-aos-delay="250">
-            <div class="velas-muro-header">
-                <h3 class="velas-muro-title">Velas</h3>
-                <p class="candle-count-text">
-                    <i class="fas fa-fire" style="color:#f39c12; margin-right: var(--esp-1);"></i>
-                    <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
-                </p>
-            </div>
+        {# ─────────────────────────────────────────────────────────
+           ACTO 1 · QUIÉN FUE
+           Portada, retrato, nombre y epitafio ya vinieron arriba. La
+           efeméride cierra la presentación: es lo más emotivo del producto y
+           estaba enterrada en el puesto 12, entre el mapa y los momentos. #}
 
-            <div class="candle-container">
-                <button id="btnEncenderVela" class="btn-candle" onclick="encenderVela()">
-                    <i class="fas fa-fire candle-icon"></i>
-                    <span id="textoVela">Encender una vela</span>
-                </button>
-                <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
-                    <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicarla con tu nombre y un mensaje
-                </button>
-            </div>
-
-            <div id="velasMuroGrid" class="velas-muro-grid"></div>
-            {# El vacío no puede negar a quien ya pasó. El encabezado dice "N velas
-               iluminan este memorial" con el contador acumulado, y el muro solo
-               muestra las dedicadas que siguen vigentes: decir "sé el primero"
-               teniendo 18 encendidas se lee como que la página miente. Cuando ya
-               hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
-            <div id="velasEmpty" class="velas-empty" style="display:none;">
-                <i class="fas fa-fire" style="font-size:var(--ico-3); color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
-                {% if velas > 0 %}
-                Las velas dedicadas brillan tres días y luego descansan.<br>
-                Dedica la tuya y quedará con tu nombre.
-                {% else %}
-                Sé el primero en dedicar una vela con tu nombre.
-                {% endif %}
-            </div>
-        </div>
-
-        {% if interacciones_hoy > 0 %}
-        <div class="memoria-viva-banner" data-aos="fade-up">
-            <i class="fas fa-seedling"></i>
-            <p>Memoria Viva</p>
-            <span>Hoy {{ interacciones_hoy }} {% if interacciones_hoy == 1 %}persona interactuó{% else %}personas interactuaron{% endif %} con este memorial.</span>
+        <!-- EFEMÉRIDE: UN DÍA COMO HOY -->
+        {% if efemeride %}
+        <div class="efemeride-card" data-aos="fade-up">
+            <span class="efemeride-etiqueta">
+                {% if efemeride.precision == 'dia' %}Un día como hoy
+                {% elif efemeride.precision == 'mes' %}Este mes
+                {% else %}Este año{% endif %}
+            </span>
+            <div class="efemeride-icono"><i class="fas {{ efemeride.icono }}"></i></div>
+            <p class="efemeride-anios">
+                {% if efemeride.precision == 'anio' %}
+                    {% if efemeride.hace_anios == 1 %}Se cumple un año{% else %}Se cumplen {{ efemeride.hace_anios }} años{% endif %}
+                {% else %}Hace {{ efemeride.hace_anios }} año{{ '' if efemeride.hace_anios == 1 else 's' }}{% endif %}
+            </p>
+            {# La descripción vive en la línea de tiempo, que queda justo debajo:
+               repetirla acá hacía que la tarjeta se leyera como un bloque clonado
+               en la misma pantalla. Acá basta el título para señalar el momento. #}
+            <p class="efemeride-titulo">{{ efemeride.titulo }}</p>
+            <span class="efemeride-cuando">{{ efemeride.anio }}</span>
         </div>
         {% endif %}
 
-        {# Fase 2 · Acá vivían cuatro tarjetas sueltas.
-           "Compañera de vida" y "Legado" repetían, peor, lo que el Árbol Familiar
-           ya cuenta con nombre, parentesco y foto: lo escrito se mudó allá.
-           "Pasatiempo" se fue: un juego favorito rompe el tono de un memorial, y
-           si de verdad importó, se cuenta mejor en la biografía o en un momento.
-           "Su Melodía" bajó a Su Historia, junto a la nota de voz: una canción no
-           es un dato de ficha, es parte del relato de quién era. #}
+        {# ─────────────────────────────────────────────────────────
+           ACTO 2 · SU ESENCIA
+           Cómo era. Su historia contada, su voz, su canción — y el
+           llamado a encender una vela, que es el primer gesto que se ofrece. #}
 
         <div class="bio-section" data-aos="fade-up">
             <h2 class="section-title">Su Historia</h2>
@@ -1003,6 +976,209 @@
             
             <div class="bio-text" id="biografiaTexto">{{ biografia }}</div>
         </div>
+
+        {# Fase 2 · Acá había DOS bloques de velas, pegados uno al otro: un botón
+           con contador anónimo, y debajo el muro de dedicadas con su propio
+           título y su propio botón. Dos llamados al mismo gesto, compitiendo.
+
+           Ahora es una sola sección. El contador dejó de ser un bloque aparte y
+           pasó a ser el encabezado del muro, que es lo que siempre fue: cuántas
+           luces hay encendidas acá. Y los dos gestos quedan juntos y en orden —
+           encender es un toque, dedicarla deja tu nombre—, para que se lean como
+           un gesto con dos profundidades y no como dos botones peleando. #}
+        <div class="velas-muro-section" data-aos="fade-up" data-aos-delay="250">
+            <div class="velas-muro-header">
+                <h3 class="velas-muro-title">Velas</h3>
+                <p class="candle-count-text">
+                    <i class="fas fa-fire" style="color:#f39c12; margin-right: var(--esp-1);"></i>
+                    <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
+                </p>
+            </div>
+
+            <div class="candle-container">
+                <button id="btnEncenderVela" class="btn-candle" onclick="encenderVela()">
+                    <i class="fas fa-fire candle-icon"></i>
+                    <span id="textoVela">Encender una vela</span>
+                </button>
+                <button class="btn-encender-muro" onclick="abrirModal('candleModal')">
+                    <i class="fas fa-feather-alt" style="color:#f39c12;"></i> Dedicarla con tu nombre y un mensaje
+                </button>
+            </div>
+
+            <div id="velasMuroGrid" class="velas-muro-grid"></div>
+            {# El vacío no puede negar a quien ya pasó. El encabezado dice "N velas
+               iluminan este memorial" con el contador acumulado, y el muro solo
+               muestra las dedicadas que siguen vigentes: decir "sé el primero"
+               teniendo 18 encendidas se lee como que la página miente. Cuando ya
+               hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
+            <div id="velasEmpty" class="velas-empty" style="display:none;">
+                <i class="fas fa-fire" style="font-size:var(--ico-3); color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
+                {% if velas > 0 %}
+                Las velas dedicadas brillan tres días y luego descansan.<br>
+                Dedica la tuya y quedará con tu nombre.
+                {% else %}
+                Sé el primero en dedicar una vela con tu nombre.
+                {% endif %}
+            </div>
+        </div>
+
+        {# ─────────────────────────────────────────────────────────
+           ACTO 3 · SU HISTORIA
+           Lo que hizo y lo que dejó: los momentos, las fotos y los
+           recuerdos que otros escriben. #}
+
+        <div class="timeline-section" id="timelineSection">
+            <div class="title-with-btn" data-aos="fade-up">
+                <h2 class="section-title" style="margin:0;">Momentos Inolvidables</h2>
+                <button class="add-timeline-btn admin-only" onclick="prepararMomento(null)"><i class="fas fa-plus"></i></button>
+            </div>
+            
+            <div class="collapsible-wrapper" id="timelineWrapper">
+                <div class="timeline">
+                    {% for mom in momentos %}
+                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="0">
+                        <div class="timeline-icon" title="Icono Integrado"><i class="fas {{ mom.icono }}"></i></div>
+                        <div class="timeline-controls admin-only"><button class="tl-ctrl-btn" onclick="event.stopPropagation(); prepararMomento('{{ mom.id }}', '{{ mom.anio }}', '{{ mom.titulo }}', '{{ mom.descripcion }}')"><i class="fas fa-pen"></i></button><button class="tl-ctrl-btn delete" onclick="event.stopPropagation(); prepararEliminarMomento('{{ mom.id }}')"><i class="fas fa-trash"></i></button></div>
+                        <div class="timeline-year">{{ mom.anio }}</div>
+                        <div class="timeline-event"><strong>{{ mom.titulo }}</strong>{{ mom.descripcion }}</div>
+                    </div>
+                    {% else %}
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Aún no hay momentos agregados.</p>
+                    {% endfor %}
+                </div>
+                {% if momentos|length > 2 %}
+                <div class="collapsible-fade" onclick="toggleTimeline()"></div>
+                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
+                    <button class="btn-ver-mas" id="btnTimelineMenos" onclick="toggleTimeline(event)" style="display:none; margin:0 auto;">Ocultar momentos <i class="fas fa-chevron-up"></i></button>
+                </div>
+                {% endif %}
+            </div>
+            {% if momentos|length > 2 %}
+            <button class="btn-ver-mas" id="btnTimelineMas" onclick="toggleTimeline()">Ver todos los momentos ({{ momentos|length }})</button>
+            {% endif %}
+        </div>
+
+        {% if foto_aleatoria or foto_mas_recordada %}
+        <div class="highlights-row">
+            {% if foto_aleatoria %}
+            <div class="highlight-card" data-aos="zoom-in">
+                <h4>✨ Recuerdo de hoy</h4>
+                <div class="hl-img-wrap" onclick="abrirLightboxPorId('{{ foto_aleatoria.id }}')">
+                    <img src="{{ foto_aleatoria.url }}" alt="Aleatoria">
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if foto_mas_recordada %}
+            <div class="highlight-card" data-aos="zoom-in" data-aos-delay="100">
+                <h4>⭐ Más recordada</h4>
+                <div class="hl-img-wrap" onclick="abrirLightboxPorId('{{ foto_mas_recordada.id }}')">
+                    <img src="{{ foto_mas_recordada.url }}" alt="Destacada">
+                    <div class="hl-likes-badge"><i class="fas fa-heart"></i> {{ foto_mas_recordada.likes }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="gallery-header" data-aos="fade-up">
+            <h2 class="section-title">Galería de Vida</h2>
+            <p class="total-likes-text">❤️ {{ fotos|length }} {% if fotos|length == 1 %}recuerdo compartido{% else %}recuerdos compartidos{% endif %}</p>
+        </div>
+
+        <div id="dropZone" class="upload-zone admin-only"><i class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
+
+        <div class="gallery-container">
+            {% if fotos %}
+            <div class="gallery-grid" id="mainGalleryGrid">
+                {% for foto in fotos %}
+                <div class="gallery-item {% if loop.index > 12 %}pendiente{% endif %}" data-id="{{ foto.id }}" onclick="interactuarFotoGrid('{{ foto.id }}', this)">
+                    {# Las fotos del primer pantallazo se piden ya; el resto guarda la URL en
+                       data-src y solo se descarga cuando el scroll la revela. #}
+                    <img {% if loop.index > 12 %}data-src="{{ foto.url | miniatura(400) }}"{% else %}src="{{ foto.url | miniatura(400) }}"{% endif %}
+                         alt="Recuerdo de {{ nombre }}"
+                         loading="lazy" decoding="async" width="400" height="400"
+                         onload="this.classList.add('cargada')">
+
+                    <div class="item-likes-overlay {% if foto.likes > 0 %}has-likes{% endif %}" id="grid-like-badge-{{ foto.id }}">
+                        <i class="fas fa-heart"></i> <span>{{ foto.likes }}</span>
+                    </div>
+
+                    <div class="desktop-delete-btn admin-only" onclick="event.stopPropagation(); activarModoEliminar('{{ foto.id }}', this.parentElement)"><i class="fas fa-ellipsis-v"></i></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if fotos|length > 12 %}
+            <div id="galeriaSentinel"></div>
+            <p class="galeria-cargando" id="galeriaCargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando más recuerdos…</p>
+            {% endif %}
+            {% else %}
+            <div class="gallery-empty">
+                <i class="fas fa-images"></i>
+                <p>Aún no hay fotos en la galería.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="guestbook-section" data-aos="fade-up">
+            <h2 class="section-title">Recuerdos</h2>
+            <div class="collapsible-wrapper" id="recuerdosWrapper">
+                <div class="messages-list">
+                    {% for msj in mensajes %}
+                    <div class="message-card">
+                        <div class="msg-delete-btn admin-only" onclick="event.stopPropagation(); prepararEliminarMensaje('{{ msj.id }}')"><i class="fas fa-times"></i></div>
+                        <div class="message-text">"{{ msj.texto }}"</div>
+                        <span class="message-author">- {{ msj.autor }}</span>
+                        <div class="message-footer"><span><i class="far fa-clock"></i> {{ msj.fecha }}</span><div class="like-btn {% if msj.likes > 0 %}liked{% endif %}" onclick="event.stopPropagation(); darLikeMensaje('{{ msj.id }}', this)"><i class="fas fa-heart"></i> <span class="like-count">{{ msj.likes }}</span></div></div>
+                    </div>
+                    {% else %}
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Sé el primero en dejar un recuerdo.</p>
+                    {% endfor %}
+                </div>
+                {% if mensajes|length > 2 %}
+                <div class="collapsible-fade" onclick="toggleRecuerdos()"></div>
+                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
+                    <button class="btn-ver-mas" id="btnRecuerdosMenos" onclick="toggleRecuerdos(event)" style="display:none; margin:0 auto;">Ocultar recuerdos <i class="fas fa-chevron-up"></i></button>
+                </div>
+                {% endif %}
+            </div>
+            {% if mensajes|length > 2 %}
+            <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="toggleRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
+            {% endif %}
+            
+            <div class="action-buttons-container" style="margin-top: var(--esp-3);">
+                <button class="btn-elegant" onclick="abrirModal('mensajeModal')"><i class="fas fa-pen-fancy"></i> Escribir un Mensaje</button>
+            </div>
+        </div>
+
+        {# ─────────────────────────────────────────────────────────
+           ACTO 4 · SU FAMILIA Y SU LEGADO
+           Las personas que dejó. #}
+
+        <!-- ÁRBOL FAMILIAR -->
+        <div class="arbol-section" id="arbolSection" data-aos="fade-up">
+            <div class="title-with-btn">
+                <h2 class="section-title" style="margin:0;">Árbol Familiar</h2>
+                <button class="add-timeline-btn admin-only" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="arbol-container" id="arbolContainer">
+                <!-- Renderizado por JS -->
+            </div>
+        </div>
+
+        {# ─────────────────────────────────────────────────────────
+           ACTO 5 · CÓMO SEGUIR RECORDÁNDOLO
+           Herramientas, no relato: la señal de que el
+           memorial sigue vivo, cómo llegar al lugar, cómo compartirlo y cómo
+           llevárselo impreso. #}
+
+        {% if interacciones_hoy > 0 %}
+        <div class="memoria-viva-banner" data-aos="fade-up">
+            <i class="fas fa-seedling"></i>
+            <p>Memoria Viva</p>
+            <span>Hoy {{ interacciones_hoy }} {% if interacciones_hoy == 1 %}persona interactuó{% else %}personas interactuaron{% endif %} con este memorial.</span>
+        </div>
+        {% endif %}
 
         <!-- MAPA DEL ÚLTIMO DESCANSO -->
         {% if mapa_lat and mapa_lng %}
@@ -1067,163 +1243,12 @@
         {% endif %}
         {% endif %}
 
-        <!-- EFEMÉRIDE: UN DÍA COMO HOY -->
-        {% if efemeride %}
-        <div class="efemeride-card" data-aos="fade-up">
-            <span class="efemeride-etiqueta">
-                {% if efemeride.precision == 'dia' %}Un día como hoy
-                {% elif efemeride.precision == 'mes' %}Este mes
-                {% else %}Este año{% endif %}
-            </span>
-            <div class="efemeride-icono"><i class="fas {{ efemeride.icono }}"></i></div>
-            <p class="efemeride-anios">
-                {% if efemeride.precision == 'anio' %}
-                    {% if efemeride.hace_anios == 1 %}Se cumple un año{% else %}Se cumplen {{ efemeride.hace_anios }} años{% endif %}
-                {% else %}Hace {{ efemeride.hace_anios }} año{{ '' if efemeride.hace_anios == 1 else 's' }}{% endif %}
-            </p>
-            {# La descripción vive en la línea de tiempo, que queda justo debajo:
-               repetirla acá hacía que la tarjeta se leyera como un bloque clonado
-               en la misma pantalla. Acá basta el título para señalar el momento. #}
-            <p class="efemeride-titulo">{{ efemeride.titulo }}</p>
-            <span class="efemeride-cuando">{{ efemeride.anio }}</span>
-        </div>
-        {% endif %}
-
-        <div class="timeline-section" id="timelineSection">
-            <div class="title-with-btn" data-aos="fade-up">
-                <h2 class="section-title" style="margin:0;">Momentos Inolvidables</h2>
-                <button class="add-timeline-btn admin-only" onclick="prepararMomento(null)"><i class="fas fa-plus"></i></button>
-            </div>
-            
-            <div class="collapsible-wrapper" id="timelineWrapper">
-                <div class="timeline">
-                    {% for mom in momentos %}
-                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="0">
-                        <div class="timeline-icon" title="Icono Integrado"><i class="fas {{ mom.icono }}"></i></div>
-                        <div class="timeline-controls admin-only"><button class="tl-ctrl-btn" onclick="event.stopPropagation(); prepararMomento('{{ mom.id }}', '{{ mom.anio }}', '{{ mom.titulo }}', '{{ mom.descripcion }}')"><i class="fas fa-pen"></i></button><button class="tl-ctrl-btn delete" onclick="event.stopPropagation(); prepararEliminarMomento('{{ mom.id }}')"><i class="fas fa-trash"></i></button></div>
-                        <div class="timeline-year">{{ mom.anio }}</div>
-                        <div class="timeline-event"><strong>{{ mom.titulo }}</strong>{{ mom.descripcion }}</div>
-                    </div>
-                    {% else %}
-                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Aún no hay momentos agregados.</p>
-                    {% endfor %}
-                </div>
-                {% if momentos|length > 2 %}
-                <div class="collapsible-fade" onclick="toggleTimeline()"></div>
-                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
-                    <button class="btn-ver-mas" id="btnTimelineMenos" onclick="toggleTimeline(event)" style="display:none; margin:0 auto;">Ocultar momentos <i class="fas fa-chevron-up"></i></button>
-                </div>
-                {% endif %}
-            </div>
-            {% if momentos|length > 2 %}
-            <button class="btn-ver-mas" id="btnTimelineMas" onclick="toggleTimeline()">Ver todos los momentos ({{ momentos|length }})</button>
-            {% endif %}
-        </div>
-
-        <!-- ÁRBOL FAMILIAR -->
-        <div class="arbol-section" id="arbolSection" data-aos="fade-up">
-            <div class="title-with-btn">
-                <h2 class="section-title" style="margin:0;">Árbol Familiar</h2>
-                <button class="add-timeline-btn admin-only" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i></button>
-            </div>
-            <div class="arbol-container" id="arbolContainer">
-                <!-- Renderizado por JS -->
-            </div>
-        </div>
-
-        <div class="guestbook-section" data-aos="fade-up">
-            <h2 class="section-title">Recuerdos</h2>
-            <div class="collapsible-wrapper" id="recuerdosWrapper">
-                <div class="messages-list">
-                    {% for msj in mensajes %}
-                    <div class="message-card">
-                        <div class="msg-delete-btn admin-only" onclick="event.stopPropagation(); prepararEliminarMensaje('{{ msj.id }}')"><i class="fas fa-times"></i></div>
-                        <div class="message-text">"{{ msj.texto }}"</div>
-                        <span class="message-author">- {{ msj.autor }}</span>
-                        <div class="message-footer"><span><i class="far fa-clock"></i> {{ msj.fecha }}</span><div class="like-btn {% if msj.likes > 0 %}liked{% endif %}" onclick="event.stopPropagation(); darLikeMensaje('{{ msj.id }}', this)"><i class="fas fa-heart"></i> <span class="like-count">{{ msj.likes }}</span></div></div>
-                    </div>
-                    {% else %}
-                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Sé el primero en dejar un recuerdo.</p>
-                    {% endfor %}
-                </div>
-                {% if mensajes|length > 2 %}
-                <div class="collapsible-fade" onclick="toggleRecuerdos()"></div>
-                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
-                    <button class="btn-ver-mas" id="btnRecuerdosMenos" onclick="toggleRecuerdos(event)" style="display:none; margin:0 auto;">Ocultar recuerdos <i class="fas fa-chevron-up"></i></button>
-                </div>
-                {% endif %}
-            </div>
-            {% if mensajes|length > 2 %}
-            <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="toggleRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
-            {% endif %}
-            
-            <div class="action-buttons-container" style="margin-top: var(--esp-3);">
-                <button class="btn-elegant" onclick="abrirModal('mensajeModal')"><i class="fas fa-pen-fancy"></i> Escribir un Mensaje</button>
+        {# Compartir el memorial y llevárselo impreso son herramientas, no relato.
+           Vivían dentro de Recuerdos, junto al botón de escribir: tres acciones
+           de tres actos distintos en la misma fila. #}
+        <div class="action-buttons-container" style="margin-top: var(--esp-3);">
                 <button class="btn-elegant btn-share" onclick="compartirHomenaje()"><i class="fas fa-share-alt"></i> Compartir Homenaje</button>
                 <button class="btn-pdf" onclick="imprimirLibroLegado()"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>
-            </div>
-        </div>
-
-        {% if foto_aleatoria or foto_mas_recordada %}
-        <div class="highlights-row">
-            {% if foto_aleatoria %}
-            <div class="highlight-card" data-aos="zoom-in">
-                <h4>✨ Recuerdo de hoy</h4>
-                <div class="hl-img-wrap" onclick="abrirLightboxPorId('{{ foto_aleatoria.id }}')">
-                    <img src="{{ foto_aleatoria.url }}" alt="Aleatoria">
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if foto_mas_recordada %}
-            <div class="highlight-card" data-aos="zoom-in" data-aos-delay="100">
-                <h4>⭐ Más recordada</h4>
-                <div class="hl-img-wrap" onclick="abrirLightboxPorId('{{ foto_mas_recordada.id }}')">
-                    <img src="{{ foto_mas_recordada.url }}" alt="Destacada">
-                    <div class="hl-likes-badge"><i class="fas fa-heart"></i> {{ foto_mas_recordada.likes }}</div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <div class="gallery-header" data-aos="fade-up">
-            <h2 class="section-title">Galería de Vida</h2>
-            <p class="total-likes-text">❤️ {{ fotos|length }} {% if fotos|length == 1 %}recuerdo compartido{% else %}recuerdos compartidos{% endif %}</p>
-        </div>
-
-        <div id="dropZone" class="upload-zone admin-only"><i class="fas fa-cloud-upload-alt"></i><p>Toca aquí o arrastra fotos</p><small>Sube varios recuerdos al mismo tiempo</small><input type="file" id="fotoInputMultiple" multiple accept="image/*" style="display:none;"></div>
-
-        <div class="gallery-container">
-            {% if fotos %}
-            <div class="gallery-grid" id="mainGalleryGrid">
-                {% for foto in fotos %}
-                <div class="gallery-item {% if loop.index > 12 %}pendiente{% endif %}" data-id="{{ foto.id }}" onclick="interactuarFotoGrid('{{ foto.id }}', this)">
-                    {# Las fotos del primer pantallazo se piden ya; el resto guarda la URL en
-                       data-src y solo se descarga cuando el scroll la revela. #}
-                    <img {% if loop.index > 12 %}data-src="{{ foto.url | miniatura(400) }}"{% else %}src="{{ foto.url | miniatura(400) }}"{% endif %}
-                         alt="Recuerdo de {{ nombre }}"
-                         loading="lazy" decoding="async" width="400" height="400"
-                         onload="this.classList.add('cargada')">
-
-                    <div class="item-likes-overlay {% if foto.likes > 0 %}has-likes{% endif %}" id="grid-like-badge-{{ foto.id }}">
-                        <i class="fas fa-heart"></i> <span>{{ foto.likes }}</span>
-                    </div>
-
-                    <div class="desktop-delete-btn admin-only" onclick="event.stopPropagation(); activarModoEliminar('{{ foto.id }}', this.parentElement)"><i class="fas fa-ellipsis-v"></i></div>
-                </div>
-                {% endfor %}
-            </div>
-            {% if fotos|length > 12 %}
-            <div id="galeriaSentinel"></div>
-            <p class="galeria-cargando" id="galeriaCargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando más recuerdos…</p>
-            {% endif %}
-            {% else %}
-            <div class="gallery-empty">
-                <i class="fas fa-images"></i>
-                <p>Aún no hay fotos en la galería.</p>
-            </div>
-            {% endif %}
         </div>
 
         <!-- QR visible solo en impresión -->
