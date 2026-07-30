@@ -1247,14 +1247,45 @@
         function reiniciarIntervaloSlider() { clearInterval(intervaloSlider); if (slidesPortada.length > 1) { intervaloSlider = setInterval(() => { cambiarSlide(1); }, 7000); } }
         if (slidesPortada.length > 1) { reiniciarIntervaloSlider(); }
 
-        let touchstartXSlider = 0;
+        // ======================================================================
+        // GESTOS: DISTINGUIR "MOVER LA FOTO" DE "PASAR A LA SIGUIENTE"
+        // ======================================================================
+        // El zoom de este sitio es el NATIVO del navegador (el viewport permite
+        // maximum-scale=5), y ese no toca el transform de ningún elemento:
+        // amplía la ventana visual completa. visualViewport.scale es lo único
+        // que lo refleja.
+        //
+        // Sin esto, al ampliar una foto y arrastrarla con un dedo para ver un
+        // detalle, el arrastre se leía como "pasar a la siguiente" y la foto se
+        // iba. Estando ampliado, el dedo mueve la imagen y nada más.
+        function hayZoomNativo() {
+            const vv = window.visualViewport;
+            return !!vv && vv.scale > 1.05;
+        }
+
+        // Un swipe solo cuenta si es claramente horizontal. Antes bastaba con
+        // 40px de deriva lateral, así que bajar por la página con el pulgar algo
+        // torcido cambiaba de foto sin que nadie lo pidiera.
+        function direccionSwipe(dx, dy, minimo = 40) {
+            if (Math.abs(dx) < minimo) return 0;
+            if (Math.abs(dx) < Math.abs(dy) * 1.5) return 0;
+            return dx < 0 ? 1 : -1;
+        }
+
+        let touchstartXSlider = 0, touchstartYSlider = 0;
         const contSlider = document.getElementById('coverSlider');
         if (contSlider && slidesPortada.length > 1) {
-            contSlider.addEventListener('touchstart', e => touchstartXSlider = e.changedTouches[0].screenX, {passive: true});
+            contSlider.addEventListener('touchstart', e => {
+                touchstartXSlider = e.changedTouches[0].screenX;
+                touchstartYSlider = e.changedTouches[0].screenY;
+            }, {passive: true});
             contSlider.addEventListener('touchend', e => {
-                let touchendXSlider = e.changedTouches[0].screenX;
-                if (touchstartXSlider - touchendXSlider > 40) cambiarSlide(1); 
-                if (touchendXSlider - touchstartXSlider > 40) cambiarSlide(-1); 
+                if (hayZoomNativo()) return;
+                const dir = direccionSwipe(
+                    e.changedTouches[0].screenX - touchstartXSlider,
+                    e.changedTouches[0].screenY - touchstartYSlider
+                );
+                if (dir) cambiarSlide(dir);
             }, {passive: true});
         }
 
@@ -1527,30 +1558,39 @@
             });
         }
 
-        // JS FIX: Swipe Inteligente (Versión Mejorada y Robusta para iOS Multi-Touch)
-        let touchstartXLB = 0;
+        // Swipe de la foto grande. Tres condiciones para pasar de foto, y las
+        // tres existen para que mirar una foto no la haga desaparecer:
+        //   1. que no se esté pinzando con dos dedos
+        //   2. que la vista no esté ampliada (ahí el dedo mueve la imagen)
+        //   3. que el gesto sea claramente horizontal
+        //
+        // El guard anterior leía img.style.transform buscando el zoom, pero nada
+        // en el sitio escribe ahí: el único transform que recibe esa imagen es el
+        // scale(1) de resetZoom(). O sea que la escala siempre valía 1 y el guard
+        // no frenaba nada. En celular las flechas están ocultas y el swipe es la
+        // única forma de navegar, así que el gesto perdido se sentía doble.
+        let touchstartXLB = 0, touchstartYLB = 0;
         let isMultiTouchLB = false;
-        
-        document.getElementById('lb-content-area').addEventListener('touchstart', e => { 
+
+        document.getElementById('lb-content-area').addEventListener('touchstart', e => {
             if (e.touches.length > 1) {
                 isMultiTouchLB = true;
                 return;
             }
             isMultiTouchLB = false;
-            touchstartXLB = e.changedTouches[0].screenX; 
+            touchstartXLB = e.changedTouches[0].screenX;
+            touchstartYLB = e.changedTouches[0].screenY;
         }, {passive: true});
 
         document.getElementById('lb-content-area').addEventListener('touchend', e => {
-            if (isMultiTouchLB) return; // Evita cambiar imagen si se hizo un gesto de zoom con dos dedos
-            
-            const touchendX = e.changedTouches[0].screenX;
-            const img = document.getElementById('lightbox-img');
-            const currentScale = parseFloat(img.style.transform.replace(/[^0-9.]/g, '')) || 1;
-            
-            if (currentScale > 1.05) return; // no swipe si está zoomeado
-            
-            if (touchstartXLB - touchendX > 40) cambiarImagenLightbox(1);
-            if (touchendX - touchstartXLB > 40) cambiarImagenLightbox(-1);
+            if (isMultiTouchLB) return;
+            if (hayZoomNativo()) return;
+
+            const dir = direccionSwipe(
+                e.changedTouches[0].screenX - touchstartXLB,
+                e.changedTouches[0].screenY - touchstartYLB
+            );
+            if (dir) cambiarImagenLightbox(dir);
         }, {passive: true});
         
         document.addEventListener('keydown', function(e) { 
