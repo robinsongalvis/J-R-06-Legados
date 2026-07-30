@@ -1193,6 +1193,13 @@
             <h2 style="font-family:'Playfair Display',serif;">Mapa del Último Descanso</h2>
             <p style="color:var(--text-light); font-size:13px; margin-bottom:15px;">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
             <div id="mapaEditorLeaflet" style="height:220px; border-radius:12px; overflow:hidden; margin-bottom:15px; border:1px solid var(--border-soft);"></div>
+
+            <!-- Para quien está parado frente a la tumba y no sabe las coordenadas -->
+            <button type="button" id="btnUsarMiUbicacion" class="btn-ir-mapa" style="width:100%; justify-content:center; margin-bottom:10px;">
+                <i class="fas fa-location-crosshairs"></i> Usar mi ubicación actual
+            </button>
+            <p id="estadoUbicacion" style="display:none; font-size:13px; margin:0 0 10px; color:var(--text-light);"></p>
+
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <div class="form-group" style="flex:1; margin:0;"><label>Latitud</label><input type="text" id="m_lat" class="input-pro" placeholder="-7.0700" style="font-size:16px;"></div>
                 <div class="form-group" style="flex:1; margin:0;"><label>Longitud</label><input type="text" id="m_lng" class="input-pro" placeholder="-73.1086" style="font-size:16px;"></div>
@@ -2271,13 +2278,98 @@
                 if (mapaEditorMarker) mapaEditorLeaflet.removeLayer(mapaEditorMarker);
                 mapaEditorMarker = L.marker([lat, lng]).addTo(mapaEditorLeaflet);
             });
+
+            conectarBotonUbicacion();
+        }
+
+        // =====================================
+        // UBICACIÓN ACTUAL: "estoy parado frente a la tumba"
+        // =====================================
+        // Nadie sabe la latitud del cementerio, pero sí puede estar de pie en el
+        // lugar. El navegador la da con una sola condición: que la pida una acción
+        // de la persona, nunca sola.
+        //
+        // Se muestra la PRECISIÓN a propósito. Un GPS con 40 metros de error pone
+        // el pin en la tumba del vecino, y quien está marcando el lugar de descanso
+        // de su papá merece saber si puede confiar en lo que acaba de capturar.
+        function conectarBotonUbicacion() {
+            const btn = document.getElementById('btnUsarMiUbicacion');
+            if (!btn || btn.dataset.listo) return;
+            btn.dataset.listo = '1';
+
+            const estado = document.getElementById('estadoUbicacion');
+            const decir = (texto, color) => {
+                estado.style.display = 'block';
+                estado.style.color = color || 'var(--text-light)';
+                estado.innerHTML = texto;
+            };
+            const original = btn.innerHTML;
+            const restaurar = () => { btn.innerHTML = original; btn.disabled = false; };
+            const ROJO = '#e74c3c';   // el mismo de .error-msg
+
+            btn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    decir('Este navegador no puede dar la ubicación. Marca el lugar tocando el mapa.', ROJO);
+                    return;
+                }
+                // La API exige HTTPS. En producción lo es; este aviso es para que
+                // nadie se quede mirando un botón que no responde.
+                if (!window.isSecureContext) {
+                    decir('La ubicación necesita una conexión segura (https). Marca el lugar tocando el mapa.', ROJO);
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Buscando tu ubicación...';
+                decir('Puede tardar unos segundos. Si el teléfono lo pregunta, permite el acceso.');
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const { latitude, longitude, accuracy } = pos.coords;
+                        document.getElementById('m_lat').value = latitude.toFixed(6);
+                        document.getElementById('m_lng').value = longitude.toFixed(6);
+
+                        if (mapaEditorLeaflet) {
+                            mapaEditorLeaflet.setView([latitude, longitude], 18);
+                            if (mapaEditorMarker) mapaEditorLeaflet.removeLayer(mapaEditorMarker);
+                            mapaEditorMarker = L.marker([latitude, longitude]).addTo(mapaEditorLeaflet);
+                        }
+
+                        const metros = Math.round(accuracy);
+                        if (metros <= 20) {
+                            decir(`Ubicación tomada con una precisión de ±${metros} m. Si el pin no quedó justo, toca el mapa para corregirlo.`, 'var(--accent-text)');
+                        } else {
+                            decir(`Ubicación tomada, pero con ±${metros} m de margen: a esa distancia el pin puede caer en otra tumba. <strong>Revísalo en el mapa y corrígelo tocando el lugar exacto.</strong>`, ROJO);
+                        }
+                        restaurar();
+                    },
+                    (err) => {
+                        const mensajes = {
+                            1: 'No diste permiso para la ubicación. Puedes activarlo en los ajustes del navegador, o marcar el lugar tocando el mapa.',
+                            2: 'El teléfono no pudo determinar dónde estás. Si estás bajo techo, intenta al aire libre.',
+                            3: 'La búsqueda tardó demasiado. Vuelve a intentarlo o marca el lugar tocando el mapa.'
+                        };
+                        decir(mensajes[err.code] || 'No se pudo obtener la ubicación. Marca el lugar tocando el mapa.', ROJO);
+                        restaurar();
+                    },
+                    // Precisión alta y sin caché: la persona está parada en el lugar
+                    // ahora, no queremos una lectura vieja de otro sitio.
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
+            });
         }
 
         function abrirModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.add('show');
-            if (id === 'mapaModal') setTimeout(initMapaEditor, 150);
+            if (id === 'mapaModal') {
+                // El botón de ubicación se conecta aparte del mapa a propósito: si
+                // Leaflet no carga, el GPS igual llena las coordenadas y se puede
+                // guardar. conectarBotonUbicacion es idempotente.
+                conectarBotonUbicacion();
+                setTimeout(initMapaEditor, 150);
+            }
         }
 
         function guardarMapa() {
