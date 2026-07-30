@@ -644,6 +644,19 @@
         .foto-elegida { display: flex; align-items: center; gap: var(--esp-2); margin-bottom: var(--esp-2); min-height: 44px; }
         .foto-elegida img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
         .foto-elegida span { font-size: var(--txt-2); color: var(--text-light); }
+        /* Aviso de que esto se publica. Con el tinte del acento y no en rojo: es un
+           dato que hay que saber antes de decidir, no un error que alguien cometió.
+
+           Usa --text-main y no el gris de los otros textos de apoyo, aunque eso lo
+           haga menos discreto de lo que pide el principio rector. Con el gris, el
+           tema atardecer en oscuro daba 4.48:1 y no llegaba a AA por dos centésimas;
+           y un aviso sobre la cara de un tercero no es decoración: tiene que leerse.
+           A 13px, contraste alto no grita. */
+        .aviso-publico { display: flex; gap: var(--esp-1); align-items: flex-start; font-size: var(--txt-2); color: var(--text-main); background: rgba(var(--acento-rgb), var(--tinte-velo)); border-radius: var(--radio-chico); padding: var(--esp-2); margin: 0 0 var(--esp-3); line-height: 1.45; }
+        /* El ícono se alinea con la misma altura de línea del texto, no con un
+           empujón de 2px: así queda a la altura de la primera línea por tipografía
+           y no por un número que nadie sabría de dónde salió. */
+        .aviso-publico i { color: var(--accent); line-height: inherit; }
         .system-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.75); z-index: 12000; justify-content: center; align-items: center; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity var(--mov-base); }
         .system-modal.show { display: flex; opacity: 1; }
         .modal-body { background: var(--card-bg); padding: var(--esp-5); border-radius: var(--radio-grande); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; box-shadow: var(--sombra-flotante); transform: scale(0.9); transition: transform var(--mov-base); }
@@ -1472,6 +1485,21 @@
                        style="font-size:var(--txt-4); margin-top: var(--esp-2);" oninput="pintarFotoElegida()">
             </div>
             <div class="form-group"><label>ID memorial propio (opcional)</label><input type="text" id="f_memorial" class="input-pro" placeholder="identificador en la plataforma" style="font-size:var(--txt-4);"></div>
+
+            {# El aviso va acá y no arriba del formulario a propósito: nada se hace
+               público hasta pulsar Guardar, y recibir a alguien con una advertencia
+               cuando viene a agregar a su abuela es frío. Se dice en el momento de
+               decidir, en el tono de un dato y no de una alarma.
+
+               Hace falta porque el árbol es la única parte del memorial donde se
+               publican datos de TERCEROS, y muchos están vivos: el nombre y la cara
+               de una nieta quedan a la vista de cualquiera que abra la página. #}
+            <p class="aviso-publico">
+                <i class="fas fa-eye"></i>
+                El árbol se ve en la página pública del memorial: el nombre y la foto
+                que pongas aquí los verá cualquiera que la abra.
+            </p>
+
             <button class="btn-save" onclick="guardarFamiliar()">Guardar</button>
         </div>
     </div>
