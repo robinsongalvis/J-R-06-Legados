@@ -130,6 +130,34 @@
             --esp-4: 20px;   /* la canaleta lateral de la página */
             --esp-5: 25px;   /* entre bloques */
             --esp-6: 40px;   /* entre secciones */
+
+            /* ── Tipografía ────────────────────────────────────────────────
+               Siete tamaños de lectura. El salto entre dos vecinos siempre se
+               nota: 1px de diferencia no es jerarquía, es indecisión, y la
+               página tenía botones en 13 y botones en 14 fingiendo ser
+               distintos.
+
+               --txt-4 son 17px y no 16 por una razón concreta: Safari en iPhone
+               hace zoom solo cuando enfocas un campo con letra menor a 16px.
+               Los campos usan este tamaño, así que el formulario nunca da ese
+               salto que descoloca a quien está escribiendo un recuerdo.
+
+               Y UN ICONO NO ES TEXTO. La llama de la vela, el corazón del doble
+               toque y la paloma del intro son glifos: se miden por cuánto pesan
+               en pantalla, no por si se leen cómodo. Tienen su propia rampa, y
+               el 44 no es estético: es el objetivo táctil mínimo de iOS. */
+            --txt-1: 11px;   /* etiqueta: metadatos, parentesco */
+            --txt-2: 13px;   /* secundario: botones de apoyo, pies */
+            --txt-3: 15px;   /* el cuerpo: mensajes, fechas, botón principal */
+            --txt-4: 17px;   /* lectura larga: la biografía. Y los campos. */
+            --txt-5: 20px;   /* título de sección */
+            --txt-6: 26px;   /* destacado: el año de la efeméride */
+            --txt-7: 32px;   /* el nombre de la persona */
+
+            --ico-1: 16px;   /* dentro de un botón, junto a su palabra */
+            --ico-2: 20px;   /* el glifo de un control */
+            --ico-3: 28px;   /* destacado: la llama de la vela */
+            --ico-4: 44px;   /* estado vacío y ceremonia · mínimo táctil iOS */
         }
 
         body.dark-mode {
@@ -248,11 +276,11 @@
            de interfaz: no se tokeniza, o el ritmo de la apertura quedaría atado a
            la velocidad de los botones. */
         .welcome-content { opacity: 0; animation: fadeInUp 1.5s var(--curva-llegada) 0.5s forwards; }
-        .welcome-content i { font-size: 55px; color: var(--accent); margin-bottom: var(--esp-5); animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4)); }
-        .welcome-content p { font-size: 14px; font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin:0; }
+        .welcome-content i { font-size: var(--ico-4); color: var(--accent); margin-bottom: var(--esp-5); animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4)); }
+        .welcome-content p { font-size: var(--txt-3); font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin:0; }
         .welcome-content h1 { font-family: 'Playfair Display', serif; font-size: 40px; margin: var(--esp-2) 0; color: #ffffff; font-weight: 400; letter-spacing: 1px; text-shadow: 0 5px 20px rgba(0,0,0,0.6); line-height: 1.2; }
-        .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: var(--esp-6); font-size: 15px; color: #94a3b8; font-style: italic; font-weight: 300; }
-        #btnSaltarIntro { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); opacity: 0; animation: fadeIn 1s ease-in-out 2.2s forwards; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background var(--mov-base), transform var(--mov-base); z-index: 2; }
+        .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: var(--esp-6); font-size: var(--txt-3); color: #94a3b8; font-style: italic; font-weight: 300; }
+        #btnSaltarIntro { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); opacity: 0; animation: fadeIn 1s ease-in-out 2.2s forwards; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-size: var(--txt-3); font-weight: bold; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background var(--mov-base), transform var(--mov-base); z-index: 2; }
         #btnSaltarIntro:hover { background: rgba(255,255,255,0.25); transform: translateX(-50%) translateY(-2px); }
         #welcome-screen.oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--mov-suave) var(--curva), visibility var(--mov-suave) var(--curva); }
 
@@ -273,7 +301,7 @@
         .cover-media { width: 100%; height: 100%; object-fit: cover; }
         .cover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, transparent 60%, var(--primary-bg) 100%); border-bottom-left-radius: var(--radio-grande); border-bottom-right-radius: var(--radio-grande); z-index: 2; transition: background var(--mov-suave) var(--curva); pointer-events: none;}
         .cover-controls { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 10; }
-        .glass-btn { background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; color: white; font-size: 18px; cursor: pointer; box-shadow: var(--sombra-flotante); transition: var(--mov-base); }
+        .glass-btn { background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; color: white; font-size: var(--ico-2); cursor: pointer; box-shadow: var(--sombra-flotante); transition: var(--mov-base); }
         .glass-btn:hover { background: rgba(0, 0, 0, 0.7); transform: scale(1.1); }
         .theme-btn { background: rgba(255, 255, 255, 0.15); color: #f1c40f; border: 1px solid rgba(255, 255, 255, 0.3); }
 
@@ -292,25 +320,25 @@
         .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: var(--sombra-2) var(--border-soft), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color var(--mov-suave) var(--curva);}
         .profile-pic:hover { transform: scale(1.05); box-shadow: var(--sombra-flotante), 0 0 0 2px rgba(212,175,55,0.6); }
         .main-info { text-align: center; padding:0 var(--esp-4); width: 100%; padding-top: var(--esp-3); }
-        .name { font-family: 'Playfair Display', serif; font-size: 32px; margin: var(--esp-2) 0 var(--esp-1); font-weight: 600; color: var(--text-main); word-wrap: break-word;}
-        .dates { font-size: 15px; color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; font-weight: bold;}
-        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: var(--esp-2); font-size: 18px; word-wrap: break-word;}
+        .name { font-family: 'Playfair Display', serif; font-size: var(--txt-7); margin: var(--esp-2) 0 var(--esp-1); font-weight: 600; color: var(--text-main); word-wrap: break-word;}
+        .dates { font-size: var(--txt-3); color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; font-weight: bold;}
+        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: var(--esp-2); font-size: var(--txt-4); word-wrap: break-word;}
 
         .candle-container { margin: var(--esp-5) auto var(--esp-2); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--border-soft); transition: all var(--mov-base) var(--curva); }
+        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: var(--txt-3); cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--border-soft); transition: all var(--mov-base) var(--curva); }
         .btn-candle:hover { transform: translateY(-3px); box-shadow: var(--brillo); border-color: rgba(212, 175, 55, 0.3); }
         .btn-candle.lit { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); cursor: default; transform: none; box-shadow: var(--brillo); }
-        .candle-icon { font-size: 18px; color: var(--text-light); transition: var(--mov-base); }
+        .candle-icon { font-size: var(--ico-2); color: var(--text-light); transition: var(--mov-base); }
         .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
-        .candle-count-text { margin-top: var(--esp-2); font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
+        .candle-count-text { margin-top: var(--esp-2); font-size: var(--txt-2); color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
         @keyframes flicker { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
 
         /* Pantallas pequeñas: hero más compacto para acercar el contenido */
         @media (max-width: 420px) {
             .cover-header { height: 240px; }
-            .name { font-size: 27px; }
-            .dates { font-size: 14px; letter-spacing: 2px; }
-            .memory-of { font-size: 16px; margin-top: var(--esp-2); }
+            .name { font-size: var(--txt-6); }
+            .dates { font-size: var(--txt-3); letter-spacing: 2px; }
+            .memory-of { font-size: var(--txt-4); margin-top: var(--esp-2); }
             .candle-container { margin: var(--esp-4) auto var(--esp-2); }
             .main-info { padding-top: var(--esp-2); }
         }
@@ -323,9 +351,9 @@
             background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.02)); 
             border: 1px solid rgba(212,175,55,0.2); text-align: center; color: var(--text-main); 
         }
-        .memoria-viva-banner i { color: var(--accent); font-size: 24px; margin-bottom: var(--esp-2); animation: floatUp 3s infinite ease-in-out; }
-        .memoria-viva-banner p { margin:0 0 var(--esp-1); font-family: 'Playfair Display', serif; font-size: 18px; }
-        .memoria-viva-banner span { font-size: 13px; color: var(--text-light); }
+        .memoria-viva-banner i { color: var(--accent); font-size: var(--ico-3); margin-bottom: var(--esp-2); animation: floatUp 3s infinite ease-in-out; }
+        .memoria-viva-banner p { margin:0 0 var(--esp-1); font-family: 'Playfair Display', serif; font-size: var(--txt-4); }
+        .memoria-viva-banner span { font-size: var(--txt-2); color: var(--text-light); }
 
         /* Efeméride: "un día como hoy, hace X años". Cumple el mismo papel que
            el memoria-viva-banner (un aviso cálido, no una sección más), pero
@@ -340,40 +368,40 @@
             border: 1px solid var(--border-soft); border-top: 3px solid var(--accent);
             box-shadow: var(--sombra-2) var(--border-soft);
         }
-        .efemeride-etiqueta { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: var(--esp-2); }
-        .efemeride-icono { width: 46px; height: 46px; margin:0 auto var(--esp-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: 19px; }
-        .efemeride-anios { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; margin:0 0 var(--esp-1); color: var(--text-main); }
-        .efemeride-titulo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; margin:0 0 var(--esp-2); color: var(--accent-text); word-wrap: break-word; }
+        .efemeride-etiqueta { font-size: var(--txt-1); text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: var(--esp-2); }
+        .efemeride-icono { width: 46px; height: 46px; margin:0 auto var(--esp-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: var(--ico-2); }
+        .efemeride-anios { font-family: 'Playfair Display', serif; font-size: var(--txt-6); line-height: 1.2; margin:0 0 var(--esp-1); color: var(--text-main); }
+        .efemeride-titulo { font-family: 'Playfair Display', serif; font-style: italic; font-size: var(--txt-4); margin:0 0 var(--esp-2); color: var(--accent-text); word-wrap: break-word; }
         /* --text-main y no --text-light: sobre las tarjetas claras de los temas
            atardecer, bosque y mármol, el gris secundario se queda en 4.1-4.3:1,
            por debajo del mínimo accesible. Y esto lo lee mucha gente mayor.
            break-word porque este es el campo de texto libre del momento y puede
            traer una frase larga, no solo "1972". */
-        .efemeride-cuando { font-size: 12px; color: var(--text-main); margin-top: var(--esp-2); display: block; word-wrap: break-word; }
+        .efemeride-cuando { font-size: var(--txt-2); color: var(--text-main); margin-top: var(--esp-2); display: block; word-wrap: break-word; }
 
         .highlights-row { display: flex; gap: 15px; padding:0 var(--esp-5); margin-bottom: var(--esp-5); }
         .highlight-card { 
             flex: 1; background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2); 
             box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); text-align: center; 
         }
-        .highlight-card h4 { margin:0 0 var(--esp-2); font-size: 12px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
+        .highlight-card h4 { margin:0 0 var(--esp-2); font-size: var(--txt-2); text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
         .hl-img-wrap { width: 100%; aspect-ratio: 1; border-radius: var(--radio-chico); overflow: hidden; position: relative; cursor: pointer; }
         .hl-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--mov-suave); }
         .hl-img-wrap:hover img { transform: scale(1.05); filter: brightness(1.1); }
-        .hl-likes-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-size: 11px; font-weight: bold; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+        .hl-likes-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-size: var(--txt-1); font-weight: bold; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 
         /* ==========================================
            GALERÍA INTERACTIVA (GRID)
            ========================================== */
         .gallery-header { padding:0 var(--esp-5) var(--esp-2); text-align: center; }
         .gallery-header .section-title { margin-bottom: var(--esp-1); }
-        .total-likes-text { font-size: 13px; color: var(--text-light); font-weight: bold; margin:0; }
+        .total-likes-text { font-size: var(--txt-2); color: var(--text-light); font-weight: bold; margin:0; }
 
         .gallery-container { padding:0 var(--esp-1); width: 100%;}
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
         .gallery-empty { text-align: center; padding: var(--esp-6) var(--esp-4); color: var(--text-light); }
-        .gallery-empty i { font-size: 34px; color: var(--accent); opacity: 0.4; display: block; margin-bottom: var(--esp-2); }
-        .gallery-empty p { font-size: 14px; font-style: italic; margin:0; }
+        .gallery-empty i { font-size: var(--ico-4); color: var(--accent); opacity: 0.4; display: block; margin-bottom: var(--esp-2); }
+        .gallery-empty p { font-size: var(--txt-3); font-style: italic; margin:0; }
         .gallery-item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; position: relative; background: rgba(128,128,128,0.12); }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--mov-suave) var(--curva), opacity var(--mov-suave) var(--curva); pointer-events: none; opacity: 0; }
         .gallery-item img.cargada { opacity: 1; }
@@ -382,10 +410,10 @@
         /* Fotos ocultas hasta que el scroll las pide (carga progresiva tipo Instagram) */
         .gallery-item.pendiente { display: none; }
         #galeriaSentinel { height: 1px; }
-        .galeria-cargando { text-align: center; padding: var(--esp-4); color: var(--text-light); font-size: 13px; }
+        .galeria-cargando { text-align: center; padding: var(--esp-4); color: var(--text-light); font-size: var(--txt-2); }
         .galeria-cargando i { color: var(--accent); margin-right: var(--esp-1); }
         /* Corazón al dar doble toque */
-        .doble-tap-corazon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); color: #fff; font-size: 46px; text-shadow: 0 3px 14px rgba(0,0,0,0.45); pointer-events: none; z-index: 12; }
+        .doble-tap-corazon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); color: #fff; font-size: var(--ico-4); text-shadow: 0 3px 14px rgba(0,0,0,0.45); pointer-events: none; z-index: 12; }
         .doble-tap-corazon.animar { animation: latidoCorazon 0.9s var(--curva-llegada) forwards; }
         @keyframes latidoCorazon {
             0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
@@ -400,11 +428,11 @@
         .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(212,175,55,0.28); border-radius: var(--radio-grande); padding: var(--esp-4); margin-bottom: var(--esp-5); position: relative; overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); }
         .voz-card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0) 70%); pointer-events: none; }
         .voz-header { display: flex; align-items: center; gap: 11px; margin-bottom: var(--esp-4); position: relative; z-index: 1; }
-        .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(212,175,55,0.14); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
-        .voz-titulo { font-weight: 700; font-size: 15px; line-height: 1.25; }
-        .voz-sub { font-size: 12px; color: var(--text-light); margin-top: var(--esp-1); }
+        .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(212,175,55,0.14); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: var(--ico-1); flex-shrink: 0; }
+        .voz-titulo { font-weight: 700; font-size: var(--txt-3); line-height: 1.25; }
+        .voz-sub { font-size: var(--txt-2); color: var(--text-light); margin-top: var(--esp-1); }
         .voz-player { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
-        .voz-play { width: 54px; height: 54px; min-width: 54px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #e3c15a, #b8952c); color: #1a1408; font-size: 19px; display: flex; align-items: center; justify-content: center; box-shadow: var(--brillo); transition: transform var(--mov-rapido) var(--curva); padding-left: 3px; }
+        .voz-play { width: 54px; height: 54px; min-width: 54px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #e3c15a, #b8952c); color: #1a1408; font-size: var(--ico-2); display: flex; align-items: center; justify-content: center; box-shadow: var(--brillo); transition: transform var(--mov-rapido) var(--curva); padding-left: 3px; }
         .voz-play:active { transform: scale(0.93); }
         .voz-play.sonando { padding-left:0; }
         .voz-onda { flex: 1; display: flex; align-items: center; gap: 2px; height: 46px; cursor: pointer; touch-action: manipulation; }
@@ -413,12 +441,12 @@
         .voz-card.sonando .voz-barra.reproducida:nth-child(3n) { animation: ondaLatido 0.85s ease-in-out infinite alternate; }
         .voz-card.sonando .voz-barra.reproducida:nth-child(3n+1) { animation: ondaLatido 1.05s ease-in-out infinite alternate; }
         @keyframes ondaLatido { from { transform: scaleY(0.82); } to { transform: scaleY(1.12); } }
-        .voz-tiempo { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); margin-top: var(--esp-2); font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
+        .voz-tiempo { display: flex; justify-content: space-between; font-size: var(--txt-1); color: var(--text-light); margin-top: var(--esp-2); font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
         @media (prefers-reduced-motion: reduce) { .voz-card.sonando .voz-barra { animation: none !important; } }
         
         .item-likes-overlay { 
             position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.5); 
-            color: white; padding: var(--esp-1) var(--esp-1); border-radius: var(--radio-pastilla); font-size: 10px; font-weight: bold; 
+            color: white; padding: var(--esp-1) var(--esp-1); border-radius: var(--radio-pastilla); font-size: var(--txt-1); font-weight: bold; 
             display: flex; align-items: center; gap: 4px; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); pointer-events: none;
         }
         .item-likes-overlay i { color: #fff; }
@@ -426,7 +454,7 @@
 
         .pop-heart { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); 
-            color: #e74c3c; font-size: 50px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            color: #e74c3c; font-size: var(--ico-4); text-shadow: 0 5px 15px rgba(0,0,0,0.5); 
             opacity: 0; pointer-events: none; z-index: 20;
         }
         .pop-heart.animate { animation: popHeartAnim var(--mov-suave) var(--curva-llegada) forwards; }
@@ -448,7 +476,7 @@
         #lightbox.show { display: flex; opacity: 1; }
         
         .lb-header-bar { width: 100%; padding: var(--esp-3) var(--esp-5); display: flex; justify-content: flex-end; z-index: 10002; }
-        .lb-close { color: white; font-size: 35px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .lb-close { color: white; font-size: var(--ico-4); cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         
         .lb-content-area { 
             flex: 1; display: flex; align-items: center; justify-content: center; position: relative; 
@@ -468,19 +496,19 @@
         #lightbox.show .lb-footer-panel { transform: translateY(0); }
         
         .lb-actions { display: flex; justify-content: space-between; margin-bottom: var(--esp-3); border-bottom: 1px solid var(--border-soft); padding-bottom: var(--esp-3);}
-        .lb-action-btn { background: none; border: none; color: var(--text-main); font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Lato';}
-        .lb-action-btn i { font-size: 22px; color: var(--text-light); transition: var(--mov-base);}
+        .lb-action-btn { background: none; border: none; color: var(--text-main); font-size: var(--txt-3); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Lato';}
+        .lb-action-btn i { font-size: var(--ico-2); color: var(--text-light); transition: var(--mov-base);}
         .lb-action-btn.liked i { color: #e74c3c; animation: pulse var(--mov-suave); }
         
         .lb-comments-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--esp-2); }
-        .lb-comment-item { background: var(--input-bg); padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-chico); font-size: 13px; color: var(--text-main); font-style: italic; border-left: 3px solid var(--accent);}
-        .lb-no-comments { text-align: center; color: var(--text-light); font-size: 13px; font-style: italic; margin:auto 0; }
+        .lb-comment-item { background: var(--input-bg); padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-chico); font-size: var(--txt-2); color: var(--text-main); font-style: italic; border-left: 3px solid var(--accent);}
+        .lb-no-comments { text-align: center; color: var(--text-light); font-size: var(--txt-2); font-style: italic; margin:auto 0; }
         
         .lb-input-group { display: flex; gap: 10px; display: none; animation: fadeIn var(--mov-base) forwards;}
-        .lb-input-group input { flex: 1; padding: var(--esp-2); border-radius: var(--radio-pastilla); border: 1px solid var(--border-soft); background: var(--input-bg); color: var(--text-main); outline: none; font-family: 'Lato'; font-size: 16px;}
+        .lb-input-group input { flex: 1; padding: var(--esp-2); border-radius: var(--radio-pastilla); border: 1px solid var(--border-soft); background: var(--input-bg); color: var(--text-main); outline: none; font-family: 'Lato'; font-size: var(--txt-4);}
         .lb-input-group button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
-        .lightbox-prev, .lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 30px; cursor: pointer; padding: var(--esp-4); z-index: 10001; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;}
+        .lightbox-prev, .lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: var(--ico-3); cursor: pointer; padding: var(--esp-4); z-index: 10001; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;}
         .lightbox-prev { left: 20px; } .lightbox-next { right: 20px; }
         @media (max-width: 768px) { .lightbox-prev, .lightbox-next { display: none; } }
 
@@ -489,9 +517,9 @@
            ========================================== */
         .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: var(--esp-5) var(--esp-3); width: 100%;}
         .info-card { background: var(--card-bg); padding: var(--esp-4) var(--esp-2); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
-        .info-card i { font-size: 26px; color: var(--accent); margin-bottom: var(--esp-2);}
-        .info-card strong { font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: var(--esp-2);}
-        .info-card span { font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;}
+        .info-card i { font-size: var(--ico-3); color: var(--accent); margin-bottom: var(--esp-2);}
+        .info-card strong { font-size: var(--txt-1); text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: var(--esp-2);}
+        .info-card span { font-size: var(--txt-3); font-weight: 700; color: var(--text-main); word-wrap: break-word;}
         /* La canción ocupa ancho completo para que el reproductor no se recorte */
         #card-cancion { grid-column: 1 / -1; }
         #contenedor-cancion { width: 100%; }
@@ -505,21 +533,21 @@
             width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radio); border: 1px solid var(--border-soft);
             background: var(--input-bg); box-shadow: var(--sombra-1) var(--border-soft);
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-            cursor: pointer; color: var(--text-light); font-size: 14px; padding: var(--esp-2); text-align: center;
+            cursor: pointer; color: var(--text-light); font-size: var(--txt-3); padding: var(--esp-2); text-align: center;
         }
         .yt-fachada-play {
             width: 54px; height: 54px; border-radius: 50%; border: none;
             background: linear-gradient(135deg, var(--accent), var(--accent));
-            color: #1a1408; font-size: 20px; display: flex; align-items: center; justify-content: center;
+            color: #1a1408; font-size: var(--ico-2); display: flex; align-items: center; justify-content: center;
             padding-left: var(--esp-1);
         }
         .yt-fachada:active .yt-fachada-play { transform: scale(0.93); }
-        .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: var(--esp-2); background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: 12.5px; font-weight: bold; text-decoration: none; transition: var(--mov-base); }
+        .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: var(--esp-2); background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: var(--txt-2); font-weight: bold; text-decoration: none; transition: var(--mov-base); }
         .btn-yt-rescue:hover { background: rgba(255,0,0,0.15); transform: translateY(-1px); }
         
         .bio-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
-        .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: 26px; margin-bottom: var(--esp-5); color: var(--text-main); position: relative;}
-        .bio-text { line-height: 1.8; text-align: center; font-size: 16px; color: var(--text-light); font-weight: 300; position: relative; padding: var(--esp-5) var(--esp-4); background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); font-style: italic; word-wrap: break-word;}
+        .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: var(--txt-6); margin-bottom: var(--esp-5); color: var(--text-main); position: relative;}
+        .bio-text { line-height: 1.8; text-align: center; font-size: var(--txt-4); color: var(--text-light); font-weight: 300; position: relative; padding: var(--esp-5) var(--esp-4); background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); font-style: italic; word-wrap: break-word;}
         .bio-text::before { content: "❝"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; top: -15px; left: 15px; font-family: serif; line-height: 1;}
         .bio-text::after { content: "❞"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; bottom: -45px; right: 15px; font-family: serif; line-height: 1;}
 
@@ -530,15 +558,15 @@
         .timeline-item { position: relative; margin-bottom: var(--esp-6); padding: var(--esp-4); background: var(--card-bg); border-radius: var(--radio); box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); padding-right: var(--esp-5); transition: var(--transition-smooth);}
         /* Sube Y se enciende: la sombra dice la altura, el brillo dice el foco. */
         .timeline-item:hover { transform: translateY(-5px); box-shadow: var(--sombra-2) var(--border-soft), var(--brillo); }
-        .timeline-icon { position: absolute; left: -43px; top: 15px; width: 32px; height: 32px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: var(--brillo); display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: 14px; transition: var(--mov-base); z-index: 2;}
+        .timeline-icon { position: absolute; left: -43px; top: 15px; width: 32px; height: 32px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: var(--brillo); display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: var(--ico-1); transition: var(--mov-base); z-index: 2;}
         .timeline-item:hover .timeline-icon { background: var(--accent); color: white; transform: scale(1.1); }
-        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-weight: 900; font-size: 14px; margin-bottom: var(--esp-2); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: var(--sombra-1) var(--border-soft);}
-        .timeline-event { font-size: 15px; color: var(--text-light); margin-top: var(--esp-1); line-height: 1.5; word-wrap: break-word;}
-        .timeline-event strong { color: var(--text-main); display: block; font-size: 16px; margin-bottom: var(--esp-1);}
+        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-weight: 900; font-size: var(--txt-3); margin-bottom: var(--esp-2); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: var(--sombra-1) var(--border-soft);}
+        .timeline-event { font-size: var(--txt-3); color: var(--text-light); margin-top: var(--esp-1); line-height: 1.5; word-wrap: break-word;}
+        .timeline-event strong { color: var(--text-main); display: block; font-size: var(--txt-4); margin-bottom: var(--esp-1);}
         .timeline-controls { position: absolute; right: 10px; top: 15px; display: flex; gap: 8px; opacity: 0; transition: var(--mov-base); z-index: 10;}
         .timeline-item:hover .timeline-controls { opacity: 1; }
         @media (max-width: 768px) { .timeline-controls { opacity: 0.8 !important; } }
-        .tl-ctrl-btn { color: var(--text-light); cursor: pointer; font-size: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radio-chico); padding: var(--esp-1); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);}
+        .tl-ctrl-btn { color: var(--text-light); cursor: pointer; font-size: var(--ico-1); background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radio-chico); padding: var(--esp-1); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);}
 
         .guestbook-section { padding:0 var(--esp-4) var(--esp-6); width: 100%; }
         .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: var(--esp-4); padding: var(--esp-1); }
@@ -550,30 +578,30 @@
         
         .collapsible-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, rgba(15,23,42,0) 0%, var(--primary-bg) 100%); pointer-events: none; z-index: 5; transition: opacity var(--mov-base); }
         .collapsible-wrapper.expanded .collapsible-fade, .expanded .collapsible-fade { opacity: 0; }
-        .btn-ver-mas { display: block; margin: var(--esp-2) auto var(--esp-4); background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--border-soft); }
+        .btn-ver-mas { display: block; margin: var(--esp-2) auto var(--esp-4); background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-size: var(--txt-3); font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--border-soft); }
         .btn-ver-mas:hover { background: var(--accent); color: white; transform: translateY(-2px); }
         .message-card { background: var(--card-bg); padding: var(--esp-4); border-radius: var(--radio); border-left: 4px solid var(--accent); box-shadow: var(--sombra-1) var(--border-soft); position: relative; }
-        .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: 14px; padding: var(--esp-1); opacity: 0.5;}
-        .message-text { font-style: italic; color: var(--text-light); font-size: 15px; line-height: 1.5; margin-bottom: var(--esp-3); padding-right: var(--esp-3); word-wrap: break-word;}
-        .message-author { display: block; font-weight: bold; font-size: 14px; color: var(--text-main); text-align: right; margin-bottom: var(--esp-1);}
-        .message-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-soft); padding-top: var(--esp-2); margin-top: var(--esp-1); font-size: 12px; color: var(--text-light);}
+        .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: var(--ico-1); padding: var(--esp-1); opacity: 0.5;}
+        .message-text { font-style: italic; color: var(--text-light); font-size: var(--txt-3); line-height: 1.5; margin-bottom: var(--esp-3); padding-right: var(--esp-3); word-wrap: break-word;}
+        .message-author { display: block; font-weight: bold; font-size: var(--txt-3); color: var(--text-main); text-align: right; margin-bottom: var(--esp-1);}
+        .message-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-soft); padding-top: var(--esp-2); margin-top: var(--esp-1); font-size: var(--txt-2); color: var(--text-light);}
         .like-btn { cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none;}
-        .like-btn i { font-size: 14px; transition: transform var(--mov-base), color var(--mov-base); color: var(--text-light);}
+        .like-btn i { font-size: var(--ico-1); transition: transform var(--mov-base), color var(--mov-base); color: var(--text-light);}
         .like-btn.liked i { color: #e74c3c; }
 
         .action-buttons-container { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: var(--esp-4);}
-        .btn-elegant { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: 14px; font-weight: bold; letter-spacing: 1px; box-shadow: var(--sombra-flotante); display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px;}
+        .btn-elegant { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: var(--txt-3); font-weight: bold; letter-spacing: 1px; box-shadow: var(--sombra-flotante); display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px;}
         .btn-share { background: linear-gradient(135deg, #d4af37, #b5952f); }
 
         .upload-zone { border: 2px dashed var(--border-soft); border-radius: var(--radio); padding: var(--esp-5) var(--esp-4); text-align: center; background: var(--card-bg); cursor: pointer; margin:0 var(--esp-5) var(--esp-5); }
-        .upload-zone i { font-size: 40px; color: var(--text-light); margin-bottom: var(--esp-2);}
-        .upload-zone p { color: var(--text-light); font-size: 14px; font-weight: bold; margin:0;}
-        .upload-zone small { color: var(--text-light); font-size: 12px; display: block; margin-top: var(--esp-1); opacity: 0.7;}
-        .desktop-delete-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; opacity: 0; z-index: 15; border: 1px solid rgba(255,255,255,0.3); font-size: 12px;}
+        .upload-zone i { font-size: var(--ico-4); color: var(--text-light); margin-bottom: var(--esp-2);}
+        .upload-zone p { color: var(--text-light); font-size: var(--txt-3); font-weight: bold; margin:0;}
+        .upload-zone small { color: var(--text-light); font-size: var(--txt-2); display: block; margin-top: var(--esp-1); opacity: 0.7;}
+        .desktop-delete-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; opacity: 0; z-index: 15; border: 1px solid rgba(255,255,255,0.3); font-size: var(--ico-1);}
         .gallery-item:hover .desktop-delete-btn { opacity: 1; }
         @media (max-width: 768px) { .desktop-delete-btn { display: none; } }
         .gallery-item.selected-for-delete { transform: scale(0.9); box-shadow: 0 0 0 4px #e74c3c; border-radius: var(--radio-chico); z-index: 100; filter: brightness(0.6);}
-        .gallery-item.selected-for-delete::after { content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 35px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+        .gallery-item.selected-for-delete::after { content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: var(--ico-4); text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
 
         .delete-top-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 65px; background: rgba(26, 37, 47, 0.95); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: white; display: flex; justify-content: space-between; align-items: center; padding:0 var(--esp-5); z-index: 11000; transition: top var(--mov-base); box-shadow: var(--sombra-flotante);}
         .delete-top-bar.active { top: 0; }
@@ -582,20 +610,20 @@
         .modal-body { background: var(--card-bg); padding: var(--esp-5); border-radius: var(--radio-grande); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; box-shadow: var(--sombra-flotante); transform: scale(0.9); transition: transform var(--mov-base); }
         .system-modal.show .modal-body { transform: scale(1); }
         .form-group { margin-bottom: var(--esp-3); width: 100%; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: var(--esp-1); color: var(--text-light);}
+        .form-group label { display: block; font-size: var(--txt-2); font-weight: bold; margin-bottom: var(--esp-1); color: var(--text-light);}
         /* --text-main y no --text-light: sobre las tarjetas claras de los temas
            ese gris se queda por debajo del mínimo accesible, y a 12px se nota. */
-        .form-hint { font-size: 12px; line-height: 1.45; color: var(--text-main); margin: var(--esp-1) 0 0; }
-        .form-group input, .form-group textarea, .input-pro { width: 100%; padding: var(--esp-2); border: 1px solid var(--border-soft); border-radius: var(--radio-chico); background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato'; font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */ }
-        .btn-save { background: var(--accent); color: white; border: none; padding: var(--esp-3); border-radius: var(--radio-chico); width: 100%; cursor: pointer; font-size: 16px; font-weight: bold;}
+        .form-hint { font-size: var(--txt-2); line-height: 1.45; color: var(--text-main); margin: var(--esp-1) 0 0; }
+        .form-group input, .form-group textarea, .input-pro { width: 100%; padding: var(--esp-2); border: 1px solid var(--border-soft); border-radius: var(--radio-chico); background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato'; font-size: var(--txt-4); /* 16px evita el zoom automático de iOS al enfocar */ }
+        .btn-save { background: var(--accent); color: white; border: none; padding: var(--esp-3); border-radius: var(--radio-chico); width: 100%; cursor: pointer; font-size: var(--txt-3); font-weight: bold;}
         .confirm-actions { display: flex; gap: 10px; margin-top: var(--esp-4);}
-        .confirm-actions button { flex: 1; padding: var(--esp-3); border-radius: var(--radio-chico); border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
+        .confirm-actions button { flex: 1; padding: var(--esp-3); border-radius: var(--radio-chico); border: none; font-weight: bold; font-size: var(--txt-3); cursor: pointer; }
         .btn-cancel-modal { background: var(--primary-bg); color: var(--text-main); border: 1px solid var(--border-soft); }
         .btn-delete-confirm { background: #e74c3c; color: white; }
-        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(212, 175, 55, 0.1); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; margin:0 auto var(--esp-3); }
-        .pin-input { width: 160px; font-size: 36px; letter-spacing: 12px; text-align: center; padding: var(--esp-2); border: 2px solid var(--border-soft); background: transparent; border-radius: var(--radio-chico); margin: var(--esp-4) auto var(--esp-5); display: block; color: var(--text-main); font-family: 'Lato', sans-serif; font-weight: bold; }
-        .error-msg { color: #e74c3c; font-size: 14px; margin-top: var(--esp-3); display: none; font-weight: bold;}
-        .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(212,175,55,0.2); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--mov-base); z-index: 10; font-size: 16px; display: flex; justify-content: center; align-items: center; }
+        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(212, 175, 55, 0.1); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: var(--ico-3); margin:0 auto var(--esp-3); }
+        .pin-input { width: 160px; font-size: var(--txt-7); letter-spacing: 12px; text-align: center; padding: var(--esp-2); border: 2px solid var(--border-soft); background: transparent; border-radius: var(--radio-chico); margin: var(--esp-4) auto var(--esp-5); display: block; color: var(--text-main); font-family: 'Lato', sans-serif; font-weight: bold; }
+        .error-msg { color: #e74c3c; font-size: var(--txt-3); margin-top: var(--esp-3); display: none; font-weight: bold;}
+        .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(212,175,55,0.2); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--mov-base); z-index: 10; font-size: var(--ico-1); display: flex; justify-content: center; align-items: center; }
         .btn-ia-magic:hover { background: var(--accent); color: white; transform: rotate(15deg) scale(1.1); box-shadow: var(--brillo); }
 
         /* ==========================================
@@ -638,9 +666,9 @@
         .tema-card:hover { border-color: var(--accent); }
         .tema-swatches { display: flex; gap: 4px; }
         .swatch { width: 18px; height: 18px; border-radius: 50%; }
-        .tema-card h4 { font-size: 13px; font-weight: bold; color: var(--text-main); margin:0; text-align: center; }
-        .tema-card p { font-size: 11px; color: var(--text-light); margin:0; text-align: center; line-height: 1.3; }
-        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
+        .tema-card h4 { font-size: var(--txt-2); font-weight: bold; color: var(--text-main); margin:0; text-align: center; }
+        .tema-card p { font-size: var(--txt-1); color: var(--text-light); margin:0; text-align: center; line-height: 1.3; }
+        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: var(--txt-2); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
         .btn-tema-toggle:hover { background: var(--accent); color: white; }
 
         /* ==========================================
@@ -650,17 +678,17 @@
         .velas-muro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: var(--esp-4); }
         @media (min-width: 400px) { .velas-muro-grid { grid-template-columns: repeat(4, 1fr); } }
         .vela-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-2); text-align: center; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .vela-flame { font-size: 28px; animation: flickerVela 2s infinite alternate ease-in-out; line-height: 1; }
+        .vela-flame { font-size: var(--ico-3); animation: flickerVela 2s infinite alternate ease-in-out; line-height: 1; }
         @keyframes flickerVela { 0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(255,180,0,0.7)); } 50% { transform: scale(1.08) rotate(2deg); filter: drop-shadow(0 0 14px rgba(255,120,0,0.8)); } }
-        .vela-nombre { font-size: 11px; font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
-        .vela-mensaje { font-size: 10px; color: var(--text-light); font-style: italic; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .vela-tiempo { font-size: 10px; color: var(--accent-text); font-weight: bold; margin-top: var(--esp-1); }
+        .vela-nombre { font-size: var(--txt-1); font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
+        .vela-mensaje { font-size: var(--txt-1); color: var(--text-light); font-style: italic; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .vela-tiempo { font-size: var(--txt-1); color: var(--accent-text); font-weight: bold; margin-top: var(--esp-1); }
         .velas-muro-header { text-align: center; margin-bottom: var(--esp-3); }
-        .velas-muro-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text-main); margin:0; }
-        .velas-muro-sub { font-size: 12.5px; color: var(--text-light); margin: var(--esp-1) 0 0; font-style: italic; }
-        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: var(--esp-3) auto var(--esp-1); background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); }
+        .velas-muro-title { font-family: 'Playfair Display', serif; font-size: var(--txt-5); color: var(--text-main); margin:0; }
+        .velas-muro-sub { font-size: var(--txt-2); color: var(--text-light); margin: var(--esp-1) 0 0; font-style: italic; }
+        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: var(--esp-3) auto var(--esp-1); background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: var(--txt-3); font-weight: bold; cursor: pointer; transition: var(--mov-base); }
         .btn-encender-muro:hover { background: linear-gradient(135deg,rgba(255,140,50,0.3),rgba(255,80,0,0.15)); transform: translateY(-2px); }
-        .velas-empty { text-align: center; padding: var(--esp-5) var(--esp-4); color: var(--text-light); font-style: italic; font-size: 14px; }
+        .velas-empty { text-align: center; padding: var(--esp-5) var(--esp-4); color: var(--text-light); font-style: italic; font-size: var(--txt-3); }
 
         /* ==========================================
            🗺️ MAPA DEL ÚLTIMO DESCANSO
@@ -669,9 +697,9 @@
         .mapa-container { border-radius: var(--radio-grande); overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); }
         #mapaLeaflet { height: 260px; width: 100%; z-index: 1; }
         .mapa-info { background: var(--card-bg); padding: var(--esp-3); border-top: 1px solid var(--border-soft); }
-        .mapa-direccion { font-size: 14px; font-weight: bold; color: var(--text-main); margin-bottom: var(--esp-1); display: flex; align-items: flex-start; gap: 8px; }
-        .mapa-descripcion-txt { font-size: 13px; color: var(--text-light); font-style: italic; line-height: 1.5; margin-bottom: var(--esp-2); }
-        .btn-ir-mapa { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: 13px; font-weight: bold; text-decoration: none; transition: var(--mov-base); border: none; cursor: pointer; }
+        .mapa-direccion { font-size: var(--txt-3); font-weight: bold; color: var(--text-main); margin-bottom: var(--esp-1); display: flex; align-items: flex-start; gap: 8px; }
+        .mapa-descripcion-txt { font-size: var(--txt-2); color: var(--text-light); font-style: italic; line-height: 1.5; margin-bottom: var(--esp-2); }
+        .btn-ir-mapa { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: var(--txt-2); font-weight: bold; text-decoration: none; transition: var(--mov-base); border: none; cursor: pointer; }
         .btn-ir-mapa:hover { filter: brightness(1.1); transform: translateY(-2px); }
         .mapa-edit-row { display: flex; justify-content: flex-end; margin-top: var(--esp-2); }
 
@@ -681,25 +709,25 @@
         .arbol-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .arbol-container { display: flex; flex-direction: column; gap: 15px; }
         .arbol-grupo { display: flex; flex-direction: column; gap: 6px; }
-        .arbol-grupo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: var(--esp-1); }
+        .arbol-grupo-label { font-size: var(--txt-1); text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: var(--esp-1); }
         .arbol-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
         .familiar-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-3); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: var(--mov-base); }
         .familiar-card:hover { transform: translateY(-3px); box-shadow: var(--brillo); }
         .familiar-foto { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
         .familiar-info { min-width: 0; }
-        .familiar-nombre { font-size: 13px; font-weight: bold; color: var(--text-main); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
-        .familiar-relacion { font-size: 11px; color: var(--accent-text); font-weight: bold; text-transform: capitalize; }
-        .familiar-link { font-size: 10px; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: var(--esp-1); }
-        .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: 12px; opacity: 0; transition: var(--mov-rapido); background: none; border: none; padding: var(--esp-1); }
+        .familiar-nombre { font-size: var(--txt-2); font-weight: bold; color: var(--text-main); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .familiar-relacion { font-size: var(--txt-1); color: var(--accent-text); font-weight: bold; text-transform: capitalize; }
+        .familiar-link { font-size: var(--txt-1); color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: var(--esp-1); }
+        .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: var(--ico-1); opacity: 0; transition: var(--mov-rapido); background: none; border: none; padding: var(--esp-1); }
         .familiar-card:hover .familiar-delete { opacity: 0.7; }
         .familiar-card-deceased { border-color: var(--accent); background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03)); }
-        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: var(--radio); padding: var(--esp-2); min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
+        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: var(--radio); padding: var(--esp-2); min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--txt-2); font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
         .arbol-add-btn:hover { background: rgba(212,175,55,0.15); }
         .arbol-connector { display: flex; justify-content: center; }
         .arbol-line { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), transparent); opacity: 0.4; }
 
         /* Botón flotante de acceso familiar */
-        #btnAccesoFamiliar { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); right: 24px; background: #2c3e50; color: white; width: 56px; height: 56px; border-radius: 50%; box-shadow: var(--sombra-flotante); display: flex; justify-content: center; align-items: center; z-index: 50; font-size: 20px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform var(--mov-base) var(--curva); }
+        #btnAccesoFamiliar { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); right: 24px; background: #2c3e50; color: white; width: 56px; height: 56px; border-radius: 50%; box-shadow: var(--sombra-flotante); display: flex; justify-content: center; align-items: center; z-index: 50; font-size: var(--ico-2); border: 2px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform var(--mov-base) var(--curva); }
         #btnAccesoFamiliar:hover { transform: scale(1.08); }
         /* En desktop lo anclamos a la esquina del "marco de teléfono" (contenedor de 600px) */
         @media (min-width: 768px) {
@@ -709,7 +737,7 @@
         /* ==========================================
            📄 PRINT / PDF - LIBRO DEL LEGADO
            ========================================== */
-        .btn-pdf { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-2) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: var(--mov-base); }
+        .btn-pdf { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-2) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: var(--txt-2); font-weight: bold; display: flex; align-items: center; gap: 8px; transition: var(--mov-base); }
         .btn-pdf:hover { filter: brightness(1.3); transform: translateY(-2px); }
 
         @media print {
@@ -797,9 +825,9 @@
     </div>
 
     <div id="deleteTopBar" class="delete-top-bar"><span class="cancel-btn" onclick="cancelarEliminar()">Cancelar</span><span class="delete-title">1 seleccionada</span><span class="trash-btn" onclick="abrirConfirmacionGlobal()"><i class="fas fa-trash"></i></span></div>
-    <div id="confirmModal" class="system-modal"><div class="modal-body" style="text-align: center;"><h2 style="color: #e74c3c;">Eliminar</h2><p id="confirmText" style="color: var(--text-light); font-size: 15px; margin-bottom: var(--esp-5);">¿Estás seguro de que deseas eliminar esto?</p><div class="confirm-actions"><button class="btn-cancel-modal" onclick="cerrarModal('confirmModal')">Cancelar</button><button class="btn-delete-confirm" id="btnDeleteGlobal" onclick="ejecutarEliminacionGlobal()">Eliminar</button></div></div></div>
+    <div id="confirmModal" class="system-modal"><div class="modal-body" style="text-align: center;"><h2 style="color: #e74c3c;">Eliminar</h2><p id="confirmText" style="color: var(--text-light); font-size: var(--txt-3); margin-bottom: var(--esp-5);">¿Estás seguro de que deseas eliminar esto?</p><div class="confirm-actions"><button class="btn-cancel-modal" onclick="cerrarModal('confirmModal')">Cancelar</button><button class="btn-delete-confirm" id="btnDeleteGlobal" onclick="ejecutarEliminacionGlobal()">Eliminar</button></div></div></div>
     <button id="btnAccesoFamiliar" onclick="abrirModal('modalLoginFamiliar')" aria-label="Acceso familiar" title="Acceso familiar"><i class="fas fa-lock"></i></button>
-    <div id="modalLoginFamiliar" class="system-modal"><div class="modal-body" style="text-align: center; padding: var(--esp-6) var(--esp-5); position: relative;"><span style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 28px; color: var(--text-light);" onclick="cerrarModal('modalLoginFamiliar')">&times;</span><div class="pin-icon-wrapper"><i class="fas fa-unlock-alt"></i></div><h2 style="font-family: 'Playfair Display', serif; color: var(--text-main); font-size: 26px;">Acceso Familiar</h2><p style="color: var(--text-light); font-size: 14px;">Ingresa el PIN de seguridad de 4 dígitos.</p><input type="password" id="f_pin" class="pin-input" placeholder="••••" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button onclick="verificarPinFamiliar()" id="btnVerificarPin" class="btn-elegant" style="width: 100%;">Desbloquear Funciones</button><p id="errorPin" class="error-msg"><i class="fas fa-exclamation-circle"></i> PIN incorrecto.</p></div></div>
+    <div id="modalLoginFamiliar" class="system-modal"><div class="modal-body" style="text-align: center; padding: var(--esp-6) var(--esp-5); position: relative;"><span style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: var(--ico-3); color: var(--text-light);" onclick="cerrarModal('modalLoginFamiliar')">&times;</span><div class="pin-icon-wrapper"><i class="fas fa-unlock-alt"></i></div><h2 style="font-family: 'Playfair Display', serif; color: var(--text-main); font-size: var(--txt-6);">Acceso Familiar</h2><p style="color: var(--text-light); font-size: var(--txt-3);">Ingresa el PIN de seguridad de 4 dígitos.</p><input type="password" id="f_pin" class="pin-input" placeholder="••••" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button onclick="verificarPinFamiliar()" id="btnVerificarPin" class="btn-elegant" style="width: 100%;">Desbloquear Funciones</button><p id="errorPin" class="error-msg"><i class="fas fa-exclamation-circle"></i> PIN incorrecto.</p></div></div>
     
     <div class="container">
         
@@ -892,7 +920,7 @@
                teniendo 18 encendidas se lee como que la página miente. Cuando ya
                hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
             <div id="velasEmpty" class="velas-empty" style="display:none;">
-                <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
+                <i class="fas fa-fire" style="font-size:var(--ico-3); color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
                 {% if velas > 0 %}
                 Las velas dedicadas brillan tres días y luego descansan.<br>
                 Dedicá la tuya y quedará con tu nombre.
@@ -949,7 +977,7 @@
             
             <div style="text-align: center; margin-bottom: var(--esp-4);" class="admin-only">
                 <input type="file" id="audioVozInput" accept="audio/*" style="display:none;" onchange="subirAudioVoz()">
-                <button class="btn-elegant" style="padding: var(--esp-2) var(--esp-4); font-size: 13px; min-width: auto; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
+                <button class="btn-elegant" style="padding: var(--esp-2) var(--esp-4); font-size: var(--txt-2); min-width: auto; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
                     <i class="fas fa-upload"></i> {% if audio_voz %}Cambiar{% else %}Subir{% endif %} Audio Real (MP3)
                 </button>
             </div>
@@ -990,8 +1018,8 @@
         <div class="mapa-section" id="mapaSectionInvitados" data-aos="fade-up">
             <h2 class="section-title">Lugar de Descanso</h2>
             <div id="mapaInvitadosPlaceholder" style="text-align:center; padding: var(--esp-5); background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
-                <i class="fas fa-lock" style="font-size:28px; color:var(--accent); opacity:0.5; display:block; margin-bottom: var(--esp-2);"></i>
-                <p style="color:var(--text-light); font-size:14px; margin:0;">Ubicación disponible solo para familiares</p>
+                <i class="fas fa-lock" style="font-size:var(--ico-3); color:var(--accent); opacity:0.5; display:block; margin-bottom: var(--esp-2);"></i>
+                <p style="color:var(--text-light); font-size:var(--txt-3); margin:0;">Ubicación disponible solo para familiares</p>
             </div>
             <div id="mapaInvitadosContainer" style="display:none;">
                 <div class="mapa-container">
@@ -1012,8 +1040,8 @@
         <div class="mapa-section admin-only" id="mapaSectionVacio" data-aos="fade-up">
             <h2 class="section-title">Lugar de Descanso</h2>
             <div style="text-align:center; padding: var(--esp-5); background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
-                <i class="fas fa-map-marked-alt" style="font-size:36px; color:var(--accent); opacity:0.5; margin-bottom: var(--esp-2); display:block;"></i>
-                <p style="color:var(--text-light); font-size:14px; margin:0 0 var(--esp-3);">Agrega la ubicación del lugar de descanso</p>
+                <i class="fas fa-map-marked-alt" style="font-size:var(--ico-4); color:var(--accent); opacity:0.5; margin-bottom: var(--esp-2); display:block;"></i>
+                <p style="color:var(--text-light); font-size:var(--txt-3); margin:0 0 var(--esp-3);">Agrega la ubicación del lugar de descanso</p>
                 <button class="btn-ir-mapa" onclick="abrirModal('mapaModal')"><i class="fas fa-plus"></i> Configurar Mapa</button>
             </div>
         </div>
@@ -1058,7 +1086,7 @@
                         <div class="timeline-event"><strong>{{ mom.titulo }}</strong>{{ mom.descripcion }}</div>
                     </div>
                     {% else %}
-                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Aún no hay momentos agregados.</p>
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Aún no hay momentos agregados.</p>
                     {% endfor %}
                 </div>
                 {% if momentos|length > 2 %}
@@ -1096,7 +1124,7 @@
                         <div class="message-footer"><span><i class="far fa-clock"></i> {{ msj.fecha }}</span><div class="like-btn {% if msj.likes > 0 %}liked{% endif %}" onclick="event.stopPropagation(); darLikeMensaje('{{ msj.id }}', this)"><i class="fas fa-heart"></i> <span class="like-count">{{ msj.likes }}</span></div></div>
                     </div>
                     {% else %}
-                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:14px;">Sé el primero en dejar un recuerdo.</p>
+                    <p style="text-align:center; color:var(--text-light); font-style:italic; font-size:var(--txt-3);">Sé el primero en dejar un recuerdo.</p>
                     {% endfor %}
                 </div>
                 {% if mensajes|length > 2 %}
@@ -1187,19 +1215,19 @@
         </div>
 
         <div style="text-align: center; padding: var(--esp-6) var(--esp-4) var(--esp-4); margin-top: var(--esp-4); border-top: 1px solid var(--border-soft);" data-aos="fade-up">
-            <p style="font-size: 12px; color: var(--text-light); margin:0; letter-spacing: 0.5px;">Desarrollado con ❤️ por <strong>J&R 06 Legados</strong> © 2026.<br>Todos los derechos reservados.</p>
+            <p style="font-size: var(--txt-2); color: var(--text-light); margin:0; letter-spacing: 0.5px;">Desarrollado con ❤️ por <strong>J&R 06 Legados</strong> © 2026.<br>Todos los derechos reservados.</p>
         </div>
 
     </div>
 
-    <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Fecha del momento</label><input type="text" id="t_anio" class="input-pro" placeholder="Ej: 15 de agosto de 1972"><p class="form-hint">Si sabes el día y el mes, escríbelos: así el memorial podrá recordar el aniversario cada año.</p></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
-    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: 12px; font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: 13px; padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: 13px; padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
-    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
+    <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Fecha del momento</label><input type="text" id="t_anio" class="input-pro" placeholder="Ej: 15 de agosto de 1972"><p class="form-hint">Si sabes el día y el mes, escríbelos: así el memorial podrá recordar el aniversario cada año.</p></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
+    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: var(--txt-2); font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: var(--txt-4); padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: var(--txt-2); padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
+    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
     <div id="modalPreviewUpload" class="system-modal">
         <div class="modal-body" style="text-align: center;">
-            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
+            <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
             <h2>Confirmar Subida</h2>
-            <p id="uploadCountText" style="color: var(--text-light); font-size: 15px; margin-bottom: var(--esp-3);"></p>
+            <p id="uploadCountText" style="color: var(--text-light); font-size: var(--txt-3); margin-bottom: var(--esp-3);"></p>
             
             <div id="previewGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: var(--esp-4); max-height: 200px; overflow-y: auto;"></div>
 
@@ -1214,9 +1242,9 @@
     <!-- MODAL: SELECTOR DE TEMA -->
     <div id="temaModal" class="system-modal">
         <div class="modal-body">
-            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('temaModal')">&times;</span>
+            <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('temaModal')">&times;</span>
             <h2 style="font-family:'Playfair Display',serif;">Estilo del Memorial</h2>
-            <p style="color:var(--text-light); font-size:13px;">Elige la paleta visual que mejor honre su memoria.</p>
+            <p style="color:var(--text-light); font-size:var(--txt-2);">Elige la paleta visual que mejor honre su memoria.</p>
             <div class="tema-grid">
                 <div class="tema-card" id="tc-noche" onclick="previewTema('noche')" style="background:linear-gradient(135deg,#080d1a,#0f1628);">
                     <div class="tema-swatches"><span class="swatch" style="background:#080d1a;"></span><span class="swatch" style="background:#8fafd8;"></span><span class="swatch" style="background:#e0e8f5;"></span></div>
@@ -1251,21 +1279,21 @@
     <!-- MODAL: ENCENDER VELA -->
     <div id="candleModal" class="system-modal">
         <div class="modal-body" style="text-align:center;">
-            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('candleModal')">&times;</span>
-            <div style="font-size:50px; margin-bottom: var(--esp-2);">🕯️</div>
+            <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('candleModal')">&times;</span>
+            <div style="font-size:var(--ico-4); margin-bottom: var(--esp-2);">🕯️</div>
             <h2 style="font-family:'Playfair Display',serif; color:var(--text-main);">Encender una Vela</h2>
-            <p style="color:var(--text-light); font-size:14px; margin-bottom: var(--esp-4);">Tu vela iluminará este memorial por el tiempo que elijas.</p>
+            <p style="color:var(--text-light); font-size:var(--txt-3); margin-bottom: var(--esp-4);">Tu vela iluminará este memorial por el tiempo que elijas.</p>
             <div class="form-group" style="text-align:left;">
                 <label>Tu nombre</label>
-                <input type="text" id="vela_nombre" class="input-pro" placeholder="Ej: María Rodríguez" maxlength="50" style="font-size:16px;">
+                <input type="text" id="vela_nombre" class="input-pro" placeholder="Ej: María Rodríguez" maxlength="50" style="font-size:var(--txt-4);">
             </div>
             <div class="form-group" style="text-align:left;">
                 <label>Mensaje (opcional)</label>
-                <textarea id="vela_mensaje" rows="3" class="input-pro" maxlength="150" placeholder="Un pensamiento, una oración, un recuerdo..." style="font-size:16px;"></textarea>
+                <textarea id="vela_mensaje" rows="3" class="input-pro" maxlength="150" placeholder="Un pensamiento, una oración, un recuerdo..." style="font-size:var(--txt-4);"></textarea>
             </div>
             <div class="form-group" style="text-align:left;">
                 <label>Duración de la vela</label>
-                <select id="vela_duracion" class="input-pro" style="font-size:16px;">
+                <select id="vela_duracion" class="input-pro" style="font-size:var(--txt-4);">
                     <option value="24">24 horas</option>
                     <option value="48">48 horas</option>
                     <option value="72">72 horas (3 días)</option>
@@ -1278,26 +1306,26 @@
     <!-- MODAL: MAPA -->
     <div id="mapaModal" class="system-modal">
         <div class="modal-body">
-            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mapaModal')">&times;</span>
+            <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('mapaModal')">&times;</span>
             <h2 style="font-family:'Playfair Display',serif;">Mapa del Último Descanso</h2>
-            <p style="color:var(--text-light); font-size:13px; margin-bottom: var(--esp-3);">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
+            <p style="color:var(--text-light); font-size:var(--txt-2); margin-bottom: var(--esp-3);">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
             <div id="mapaEditorLeaflet" style="height:220px; border-radius:var(--radio-chico); overflow:hidden; margin-bottom: var(--esp-3); border:1px solid var(--border-soft);"></div>
 
             <!-- Para quien está parado frente a la tumba y no sabe las coordenadas -->
             <button type="button" id="btnUsarMiUbicacion" class="btn-ir-mapa" style="width:100%; justify-content:center; margin-bottom: var(--esp-2);">
                 <i class="fas fa-location-crosshairs"></i> Usar mi ubicación actual
             </button>
-            <p id="estadoUbicacion" style="display:none; font-size:13px; margin:0 0 var(--esp-2); color:var(--text-light);"></p>
+            <p id="estadoUbicacion" style="display:none; font-size:var(--txt-2); margin:0 0 var(--esp-2); color:var(--text-light);"></p>
 
             <div style="display:flex; gap:10px; margin-bottom: var(--esp-2);">
-                <div class="form-group" style="flex:1; margin:0;"><label>Latitud</label><input type="text" id="m_lat" class="input-pro" placeholder="-7.0700" style="font-size:16px;"></div>
-                <div class="form-group" style="flex:1; margin:0;"><label>Longitud</label><input type="text" id="m_lng" class="input-pro" placeholder="-73.1086" style="font-size:16px;"></div>
+                <div class="form-group" style="flex:1; margin:0;"><label>Latitud</label><input type="text" id="m_lat" class="input-pro" placeholder="-7.0700" style="font-size:var(--txt-4);"></div>
+                <div class="form-group" style="flex:1; margin:0;"><label>Longitud</label><input type="text" id="m_lng" class="input-pro" placeholder="-73.1086" style="font-size:var(--txt-4);"></div>
             </div>
-            <div class="form-group"><label>Dirección</label><input type="text" id="m_dir" class="input-pro" placeholder="Cementerio Municipal de..." style="font-size:16px;"></div>
-            <div class="form-group"><label>Descripción del lugar</label><textarea id="m_desc" rows="2" class="input-pro" placeholder="Un texto breve sobre este lugar sagrado..." style="font-size:16px;"></textarea></div>
+            <div class="form-group"><label>Dirección</label><input type="text" id="m_dir" class="input-pro" placeholder="Cementerio Municipal de..." style="font-size:var(--txt-4);"></div>
+            <div class="form-group"><label>Descripción del lugar</label><textarea id="m_desc" rows="2" class="input-pro" placeholder="Un texto breve sobre este lugar sagrado..." style="font-size:var(--txt-4);"></textarea></div>
             <div class="form-group">
                 <label>Privacidad</label>
-                <select id="m_priv" class="input-pro" style="font-size:16px;">
+                <select id="m_priv" class="input-pro" style="font-size:var(--txt-4);">
                     <option value="publico">Público (todos pueden ver)</option>
                     <option value="invitados">Solo con PIN familiar</option>
                     <option value="privado">Privado (solo admin)</option>
@@ -1310,13 +1338,13 @@
     <!-- MODAL: FAMILIAR -->
     <div id="familiarModal" class="system-modal">
         <div class="modal-body">
-            <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('familiarModal')">&times;</span>
+            <span style="float:right; cursor:pointer; font-size:var(--ico-3); color:var(--text-light);" onclick="cerrarModal('familiarModal')">&times;</span>
             <h2 id="familiarModalTitulo" style="font-family:'Playfair Display',serif;">Agregar Familiar</h2>
             <input type="hidden" id="f_fam_id">
-            <div class="form-group"><label>Nombre completo</label><input type="text" id="f_nombre" class="input-pro" style="font-size:16px;"></div>
+            <div class="form-group"><label>Nombre completo</label><input type="text" id="f_nombre" class="input-pro" style="font-size:var(--txt-4);"></div>
             <div class="form-group">
                 <label>Relación con el fallecido</label>
-                <select id="f_relacion" class="input-pro" style="font-size:16px;">
+                <select id="f_relacion" class="input-pro" style="font-size:var(--txt-4);">
                     <option value="Padre">Padre</option>
                     <option value="Madre">Madre</option>
                     <option value="Abuelo">Abuelo</option>
@@ -1331,8 +1359,8 @@
                     <option value="Otro">Otro</option>
                 </select>
             </div>
-            <div class="form-group"><label>URL de foto (opcional)</label><input type="url" id="f_foto" class="input-pro" placeholder="https://..." style="font-size:16px;"></div>
-            <div class="form-group"><label>ID memorial propio (opcional)</label><input type="text" id="f_memorial" class="input-pro" placeholder="identificador en la plataforma" style="font-size:16px;"></div>
+            <div class="form-group"><label>URL de foto (opcional)</label><input type="url" id="f_foto" class="input-pro" placeholder="https://..." style="font-size:var(--txt-4);"></div>
+            <div class="form-group"><label>ID memorial propio (opcional)</label><input type="text" id="f_memorial" class="input-pro" placeholder="identificador en la plataforma" style="font-size:var(--txt-4);"></div>
             <button class="btn-save" onclick="guardarFamiliar()">Guardar</button>
         </div>
     </div>
@@ -1687,7 +1715,7 @@
                 } else {
                     contenedorCancion.innerHTML = '';
                     const span = document.createElement('span');
-                    span.style.cssText = 'font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;';
+                    span.style.cssText = 'font-size: var(--txt-3); font-weight: 700; color: var(--text-main); word-wrap: break-word;';
                     span.textContent = CANCION_RAW;
                     contenedorCancion.appendChild(span);
                 }
@@ -2356,7 +2384,7 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap', maxZoom: 19
             }).addTo(mapaLeaflet);
-            const icon = L.divIcon({ html: '<div style="font-size:28px;line-height:1;">🌹</div>', className: '', iconAnchor: [14, 28] });
+            const icon = L.divIcon({ html: '<div style="font-size:var(--ico-3);line-height:1;">🌹</div>', className: '', iconAnchor: [14, 28] });
             mapaMarker = L.marker([lat, lng], { icon }).addTo(mapaLeaflet);
             {% if mapa_direccion %}mapaMarker.bindPopup('<b>{{ mapa_direccion }}</b>').openPopup();{% endif %}
         }
@@ -2519,8 +2547,8 @@
             if (!container) return;
             if (familiaresData.length === 0) {
                 container.innerHTML = `<div style="text-align:center;padding: var(--esp-5) var(--esp-4);background:var(--card-bg);border-radius:var(--radio-grande);border:1.5px dashed var(--border-soft);">
-                    <i class="fas fa-tree" style="font-size:36px;color:var(--accent);opacity:0.4;display:block;margin-bottom: var(--esp-2);"></i>
-                    <p style="color:var(--text-light);font-size:14px;margin:0;">El árbol familiar aún no tiene integrantes.</p>
+                    <i class="fas fa-tree" style="font-size:var(--ico-4);color:var(--accent);opacity:0.4;display:block;margin-bottom: var(--esp-2);"></i>
+                    <p style="color:var(--text-light);font-size:var(--txt-3);margin:0;">El árbol familiar aún no tiene integrantes.</p>
                 </div>`;
                 return;
             }

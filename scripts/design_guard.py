@@ -43,7 +43,10 @@ METAS = {
 # Excepciones firmadas. Están escritas porque una excepción que hay que
 # escribir es una excepción que alguien decidió, no una que se coló.
 EXCEPCIONES = {
-    "tamaños de letra": {40.0, 72.0, 56.0},  # nombre en la intro · comillas · paloma
+    # Los 56 y 72 que había acá NO EXISTÍAN: hoy son 55 (paloma) y 80 (comillas).
+    # Una excepción que no coincide con la realidad es peor que ninguna: parece
+    # cobertura y no protege nada. La paloma pasó a la rampa de iconos.
+    "tamaños de letra": {40.0, 80.0},  # nombre en el intro · comillas de la biografía
     "espaciados": set(),                      # el 20px ya es --esp-4, parte de la escala
     "radios": {"50%"},                        # círculos: retrato, avatares
     "duraciones": set(),                      # ahora las cubre RAMPA_ATMOSFERA
@@ -141,6 +144,24 @@ def sombras(css: str) -> set:
     return vals - SOMBRAS_DECLARADAS
 
 
+def tipografia(css: str) -> set:
+    """La escala de LECTURA. Los iconos se miden aparte, a propósito.
+
+    Un glifo de Font Awesome —la llama, el corazón, la paloma— se dimensiona
+    por cuánto pesa en pantalla, no por si se lee cómodo. Obligarlo a entrar en
+    la escala de texto deja una de dos cosas rotas: o la escala de lectura, o
+    los iconos. Tienen su propia rampa, y un token --ico-… que se salga de ella
+    sí cuenta como deriva: la rampa está declarada, no abierta.
+    """
+    tokens = {float(v) for v in re.findall(r"--txt-[\w-]+\s*:\s*(\d+(?:\.\d+)?)px", css)}
+    iconos = {float(v) for v in re.findall(r"--ico-[\w-]+\s*:\s*(\d+(?:\.\d+)?)px", css)}
+    literales = {float(n)
+                 for m in re.finditer(r"font-size\s*:\s*([^;{}]+)", css)
+                 for n in re.findall(r"(\d+(?:\.\d+)?)px", m.group(1))}
+    fuera_de_rampa = iconos - RAMPA_ICONOS
+    return (tokens | literales | fuera_de_rampa) - EXCEPCIONES["tamaños de letra"]
+
+
 def espaciados(css: str) -> set:
     """Los aires del sistema, más cualquier literal que se haya colado.
 
@@ -181,7 +202,7 @@ def medir(css: str) -> dict:
         return vals
 
     return {
-        "tamaños de letra": px(r"font-size") - EXCEPCIONES["tamaños de letra"] - RAMPA_ICONOS,
+        "tamaños de letra": tipografia(css),
         "espaciados": espaciados(css),
         # Un radio en cero no es una elección de radio, es la ausencia de una
         # (el contenedor a sangre en móvil). Mismo criterio que el 'none' de las
