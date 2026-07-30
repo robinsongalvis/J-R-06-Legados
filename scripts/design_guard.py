@@ -71,11 +71,65 @@ RAMPA_ATMOSFERA = {
     1.0, 1.5, 1.8, 2.2,
 }
 
+# Una sola sombra declarada, y con motivo. El panel de comentarios del lightbox
+# sube desde el borde inferior de la pantalla: su sombra apunta hacia ARRIBA
+# (desplazamiento negativo) para separarlo de la foto que tapa. Cualquier token
+# de la escala apuntaría hacia abajo, o sea fuera de la pantalla, o sea a nada.
+SOMBRAS_DECLARADAS = {
+    "0 -10px 40px rgba(0,0,0,0.5)",
+}
+
 
 def css_principal(ruta: pathlib.Path) -> str:
-    """El <style> más largo: saltea el <noscript><style> anti-página-en-blanco."""
+    """El <style> más largo: saltea el <noscript><style> anti-página-en-blanco.
+
+    Se le quitan los comentarios. Sin eso, un comentario que explique una regla
+    —"box-shadow: var(--sombra-1)…"— se mide como si fuera la regla, y el
+    guardián termina contando prosa. Pasó al documentar este mismo archivo.
+    """
     bloques = re.findall(r"<style>(.*?)</style>", ruta.read_text(encoding="utf-8"), re.S)
-    return max(bloques, key=len) if bloques else ""
+    css = max(bloques, key=len) if bloques else ""
+    return re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+
+
+def _partes(valor: str) -> list:
+    """Parte 'a, b' en sus sombras, sin cortar dentro de rgba(...) ni var(...)."""
+    partes, actual, nivel = [], "", 0
+    for c in valor:
+        if c == "(":
+            nivel += 1
+        elif c == ")":
+            nivel -= 1
+        if c == "," and nivel == 0:
+            partes.append(actual.strip()); actual = ""
+        else:
+            actual += c
+    if actual.strip():
+        partes.append(actual.strip())
+    return partes
+
+
+def sombras(css: str) -> set:
+    """Cuenta sombras sueltas, no declaraciones.
+
+    Contar la declaración entera haría que 'var(--sombra-2), var(--anillo)'
+    figurara como un valor propio distinto de 'var(--sombra-2)', y entonces
+    combinar dos valores del sistema contaría como inventar un tercero. Se
+    cuentan las piezas.
+
+    Un ANILLO no es una sombra: '0 0 0 2px' no tiene desplazamiento ni
+    desenfoque: es un borde dibujado con box-shadow para no ocupar espacio.
+    No dice altura, así que no pertenece a la escala de elevación.
+    """
+    vals = set()
+    for m in re.finditer(r"box-shadow\s*:\s*([^;}]+)", css):
+        if "none" in m.group(1):
+            continue
+        for parte in _partes(m.group(1)):
+            if re.match(r"^0\s+0\s+0\s+\d", parte):      # anillo, no sombra
+                continue
+            vals.add(parte)
+    return vals - SOMBRAS_DECLARADAS
 
 
 def duraciones(css: str) -> set:
@@ -107,11 +161,14 @@ def medir(css: str) -> dict:
         # Un radio en cero no es una elección de radio, es la ausencia de una
         # (el contenedor a sangre en móvil). Mismo criterio que el 'none' de las
         # sombras: no cuenta como valor del sistema.
-        "radios": {v.strip() for v in re.findall(r"border-radius\s*:\s*([^;}]+)[;}]", css)
+        # También los formatos largos (border-top-left-radius y compañía): siete
+        # radios se habían colado por ahí, invisibles mientras solo se miraba
+        # la propiedad corta.
+        "radios": {v.strip().replace(" !important", "") for v in
+                   re.findall(r"border(?:-(?:top|bottom)-(?:left|right))?-radius\s*:\s*([^;}]+)[;}]", css)
                    if not re.match(r"^0(\s|;|$|\s*!important)", v.strip())}
                   - EXCEPCIONES["radios"],
-        "sombras": {v.strip() for v in re.findall(r"box-shadow\s*:\s*([^;}]+)[;}]", css)
-                    if "none" not in v},
+        "sombras": sombras(css),
         "duraciones": duraciones(css),
         "curvas": set(re.findall(
             r"(cubic-bezier\([^)]*\)|ease-in-out|ease-out|ease-in|linear|\bease\b)", css))
