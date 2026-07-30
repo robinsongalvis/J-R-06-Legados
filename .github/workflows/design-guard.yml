@@ -1,0 +1,31 @@
+name: Design Guard
+
+# Protege el sistema de diseño del memorial. Falla solo si ENTRAN valores nuevos
+# fuera del sistema: el número puede bajar, nunca subir. Cada fase del roadmap lo
+# baja, y ahí se actualiza la línea base con --guardar-base.
+
+on:
+  pull_request:
+    paths:
+      - "templates/**"
+      - "scripts/design_guard.py"
+      - "scripts/design_guard_base.json"
+  push:
+    branches: [main]
+    paths:
+      - "templates/**"
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Sin dependencias a propósito: solo la librería estándar, para que este
+      # chequeo no se caiga nunca por un problema de instalación.
+      - name: Verificar el sistema de diseño
+        run: python3 scripts/design_guard.py

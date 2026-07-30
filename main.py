@@ -371,7 +371,35 @@ def miniatura(url: str, ancho: int = 400) -> str:
     return url.replace("/upload/", f"/upload/f_auto,q_auto,w_{ancho},c_fill,g_auto/", 1)
 
 
+def liviano(url: str, ancho: int = 720) -> str:
+    """Sirve una portada o un retrato al tamaño en que se va a ver, no al que se subió.
+
+    Vale para imagen y para video, y en video es donde cambia todo: las portadas y
+    los retratos se suben desde el celular sin comprimir, y se estaban sirviendo
+    crudos. Medido en el memorial de referencia, con los dos videos que llevan
+    autoplay y por lo tanto se descargan solos al abrir:
+
+        portada  16.58 MB -> 1.06 MB   (f_auto,q_auto,w_720)
+        retrato   7.75 MB -> 0.60 MB   (f_auto,q_auto,w_320)
+
+    Son 23.5 MB que bajaban antes de que se viera nada. En 3G eso es más de ocho
+    minutos mirando una pantalla vacía, de pie frente a una lápida. No se cambia
+    el contenido que eligió la familia: el video sigue siendo video, transcodificado.
+
+    A diferencia de miniatura(), no recorta (sin c_fill): la portada y el retrato
+    tienen su propio encuadre y recortarlos les cambiaría la composición.
+    """
+    if not url or "/upload/" not in url or "res.cloudinary.com" not in url:
+        return url
+    liviana = url.replace("/upload/", f"/upload/f_auto,q_auto,w_{ancho}/", 1)
+    # A los .mov hay que pedirles un contenedor que el navegador sepa reproducir;
+    # f_auto entrega mp4 o webm según quien pida, pero la extensión debe cambiar.
+    if liviana.lower().endswith((".mov", ".m4v")):
+        liviana = liviana[:liviana.rfind(".")] + ".mp4"
+    return liviana
+
 templates.env.filters["miniatura"] = miniatura
+templates.env.filters["liviano"] = liviano
 
 
 # ==========================================
