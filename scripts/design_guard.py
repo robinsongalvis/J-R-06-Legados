@@ -46,16 +46,52 @@ EXCEPCIONES = {
     "tamaños de letra": {40.0, 72.0, 56.0},  # nombre en la intro · comillas · paloma
     "espaciados": {20.0},                     # canaleta lateral: medida de página
     "radios": {"50%"},                        # círculos: retrato, avatares
-    "duraciones": {1.2, 6.0},                 # crossfade de portada · zoom del hero
-    "curvas": {"linear"},                     # progreso y waveform: tasa real de bytes
+    "duraciones": set(),                      # ahora las cubre RAMPA_ATMOSFERA
+    "curvas": {"linear", "ease-in-out"},      # ver RAMPA_ATMOSFERA
 }
 RAMPA_ICONOS = {16.0, 20.0, 28.0, 44.0}       # vive aparte de la escala de texto
+
+# La atmósfera no es interfaz. Una llama de vela que late a 2s y un botón que
+# responde en 0.3s no pertenecen a la misma escala, y meterlos en la misma cuenta
+# empujaría a acelerar la llama para bajar un número. Estos valores están fuera
+# de la escala de respuesta, pero NO fuera de control: agregar uno nuevo exige
+# escribirlo acá, o sea decidirlo.
+#
+# Su curva es 'ease-in-out', simétrica a propósito: son respiraciones y bucles
+# 'alternate', y una curva asimétrica les daría un latido cojo.
+RAMPA_ATMOSFERA = {
+    0.85, 1.05,   # ondaLatido: el desfase del waveform, un ritmo y no una escala
+    0.9,          # latidoCorazon del doble toque (el JS lo espera a los 950ms)
+    1.2,          # crossfade de la portada
+    2.0,          # flicker de las velas
+    3.0,          # floatUp: íconos que respiran
+    5.0,          # deriva de las partículas de luz
+    6.0,          # zoom lento del hero
+    # La coreografía del intro: una sola composición, no cuatro decisiones sueltas
+    1.0, 1.5, 1.8, 2.2,
+}
 
 
 def css_principal(ruta: pathlib.Path) -> str:
     """El <style> más largo: saltea el <noscript><style> anti-página-en-blanco."""
     bloques = re.findall(r"<style>(.*?)</style>", ruta.read_text(encoding="utf-8"), re.S)
     return max(bloques, key=len) if bloques else ""
+
+
+def duraciones(css: str) -> set:
+    """Los tiempos del sistema, más cualquier literal que se haya colado.
+
+    Contar solo literales dejaría al guardián ciego apenas las reglas usan
+    var(--mov-…): vería cero y cantaría victoria. Así que mide las DOS cosas —
+    los tokens declarados y los números sueltos que sigan dentro de un
+    transition/animation— y las suma. Un valor nuevo no puede esconderse ni
+    escribiéndolo a mano ni inventando un token.
+    """
+    tokens = {float(v) for v in re.findall(r"--mov-[\w-]+\s*:\s*(\d+(?:\.\d+)?)s", css)}
+    literales = set()
+    for m in re.finditer(r"(?:transition|animation)\s*:\s*([^;{}]+)", css):
+        literales.update(float(n) for n in re.findall(r"(?<![\w-])(\d+(?:\.\d+)?)s\b", m.group(1)))
+    return (tokens | literales) - RAMPA_ATMOSFERA
 
 
 def medir(css: str) -> dict:
@@ -72,9 +108,7 @@ def medir(css: str) -> dict:
                   - EXCEPCIONES["radios"],
         "sombras": {v.strip() for v in re.findall(r"box-shadow\s*:\s*([^;}]+)[;}]", css)
                     if "none" not in v},
-        "duraciones": {float(v) for v in
-                       re.findall(r"(?:transition|animation)[^;}]*?(\d+(?:\.\d+)?)s", css)}
-                      - EXCEPCIONES["duraciones"],
+        "duraciones": duraciones(css),
         "curvas": set(re.findall(
             r"(cubic-bezier\([^)]*\)|ease-in-out|ease-out|ease-in|linear|\bease\b)", css))
                   - EXCEPCIONES["curvas"],
