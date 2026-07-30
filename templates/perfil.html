@@ -44,7 +44,7 @@
         :root {
             --primary-bg: #fdfdfd;
             --text-main: #2c3e50;
-            --text-light: #6b7a80;
+            --text-light: #657379;
             --accent: #d4af37;
             --accent-text: #8a6d10; /* dorado oscuro legible sobre fondos claros (AA) */
             --card-bg: #ffffff;
@@ -486,18 +486,26 @@
            el tema noche (el que viene por defecto) daba 3.95:1, por debajo del
            mínimo accesible de 4.5. Afecta al epitafio, al año de cada momento,
            al tiempo de las velas y al parentesco del árbol familiar. */
-        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#9e7060; --accent:#c97a4a; --accent-text:#a85c2e; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
+        /* --text-light es el gris de los textos secundarios (fechas, subtítulos,
+           pistas de formulario). En los cuatro temas CLAROS estaba entre 3.95 y
+           4.35 de contraste, por debajo del mínimo accesible de 4.5, tanto sobre
+           el fondo de página como sobre el de las tarjetas. Se oscurecieron
+           moviendo solo la luminosidad, conservando el tono de cada tema, hasta
+           pasar 4.75 contra el fondo más difícil de los dos. Las variantes
+           oscuras no se tocan: ya venían entre 5.3 y 7.1.
+           Esto lo lee mucha gente mayor; es la diferencia entre leer y adivinar. */
+        body.tema-atardecer { --primary-bg:#fdf6f0; --text-main:#5c3d2e; --text-light:#8d6455; --accent:#c97a4a; --accent-text:#a85c2e; --card-bg:#fff9f5; --border-soft:rgba(201,122,74,0.15); --input-bg:#fdeee6; }
         body.tema-atardecer.dark-mode { --primary-bg:#1a0f0a; --text-main:#f0ddd3; --text-light:#b08070; --accent-text:#e0a070; --card-bg:#2a1810; --border-soft:rgba(201,122,74,0.2); --input-bg:#1f1208; }
 
         body.tema-noche { --primary-bg:#080d1a; --text-main:#e0e8f5; --text-light:#7890b5; --accent:#8fafd8; --accent-text:#a8c4e8; --card-bg:#0f1628; --border-soft:rgba(143,175,216,0.12); --input-bg:#0b1020; }
 
-        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#6b7a5e; --accent:#4a7a3a; --accent-text:#3d6630; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
+        body.tema-bosque { --primary-bg:#f2ede6; --text-main:#2d3a2a; --text-light:#5e6c53; --accent:#4a7a3a; --accent-text:#3d6630; --card-bg:#f8f4ee; --border-soft:rgba(74,122,58,0.15); --input-bg:#e8e2d8; }
         body.tema-bosque.dark-mode { --primary-bg:#0e1610; --text-main:#d8e8d0; --text-light:#8aaa7a; --accent-text:#8cc078; --card-bg:#162018; --border-soft:rgba(74,122,58,0.2); --input-bg:#101a12; }
 
-        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#7a7a7a; --accent:#b8962e; --accent-text:#7d6416; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
+        body.tema-marmol { --primary-bg:#f8f7f5; --text-main:#1a1a1a; --text-light:#6d6d6d; --accent:#b8962e; --accent-text:#7d6416; --card-bg:#ffffff; --border-soft:rgba(184,150,46,0.12); --input-bg:#f2f0ec; }
         body.tema-marmol.dark-mode { --primary-bg:#12100e; --text-main:#f0ece8; --text-light:#9a9088; --accent-text:#d8b850; --card-bg:#1e1c18; --border-soft:rgba(184,150,46,0.15); --input-bg:#171510; }
 
-        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#7a6a9e; --accent:#9b7fca; --accent-text:#6f55a8; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
+        body.tema-jardin { --primary-bg:#f6f2ff; --text-main:#2d2545; --text-light:#736398; --accent:#9b7fca; --accent-text:#6f55a8; --card-bg:#ffffff; --border-soft:rgba(155,127,202,0.15); --input-bg:#ede8ff; }
         body.tema-jardin.dark-mode { --primary-bg:#0d0a1a; --text-main:#e0d8f8; --text-light:#9080c0; --accent-text:#b9a0e0; --card-bg:#160e2a; --border-soft:rgba(155,127,202,0.2); --input-bg:#100818; }
 
         /* ==========================================
@@ -1049,22 +1057,22 @@
                 <div class="tema-card" id="tc-atardecer" onclick="previewTema('atardecer')" style="background:linear-gradient(135deg,#fdf6f0,#fdeee6);">
                     <div class="tema-swatches"><span class="swatch" style="background:#fdf6f0;"></span><span class="swatch" style="background:#c97a4a;"></span><span class="swatch" style="background:#5c3d2e;"></span></div>
                     <h4 style="color:#5c3d2e;">Atardecer Sereno</h4>
-                    <p style="color:#9e7060;">Cálido, nostálgico y gentil</p>
+                    <p style="color:#8d6455;">Cálido, nostálgico y gentil</p>
                 </div>
                 <div class="tema-card" id="tc-bosque" onclick="previewTema('bosque')" style="background:linear-gradient(135deg,#f2ede6,#e8e2d8);">
                     <div class="tema-swatches"><span class="swatch" style="background:#f2ede6;"></span><span class="swatch" style="background:#4a7a3a;"></span><span class="swatch" style="background:#2d3a2a;"></span></div>
                     <h4 style="color:#2d3a2a;">Bosque en Calma</h4>
-                    <p style="color:#6b7a5e;">Natural, espiritual y vivo</p>
+                    <p style="color:#5a674f;">Natural, espiritual y vivo</p>
                 </div>
                 <div class="tema-card" id="tc-marmol" onclick="previewTema('marmol')" style="background:linear-gradient(135deg,#f8f7f5,#f2f0ec);">
                     <div class="tema-swatches"><span class="swatch" style="background:#f8f7f5;"></span><span class="swatch" style="background:#b8962e;"></span><span class="swatch" style="background:#1a1a1a;"></span></div>
                     <h4 style="color:#1a1a1a;">Mármol y Oro</h4>
-                    <p style="color:#7a7a7a;">Elegante, clásico y atemporal</p>
+                    <p style="color:#6d6d6d;">Elegante, clásico y atemporal</p>
                 </div>
                 <div class="tema-card" id="tc-jardin" onclick="previewTema('jardin')" style="background:linear-gradient(135deg,#f6f2ff,#ede8ff);">
                     <div class="tema-swatches"><span class="swatch" style="background:#f6f2ff;"></span><span class="swatch" style="background:#9b7fca;"></span><span class="swatch" style="background:#2d2545;"></span></div>
                     <h4 style="color:#2d2545;">Jardín de Luz</h4>
-                    <p style="color:#7a6a9e;">Esperanza, amor y celebración</p>
+                    <p style="color:#706194;">Esperanza, amor y celebración</p>
                 </div>
             </div>
             <button class="btn-save" style="margin-top:20px;" onclick="guardarTema()">Guardar Estilo</button>
