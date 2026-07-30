@@ -1413,6 +1413,24 @@ def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Reques
     db.refresh(nuevo)
     return {"id": nuevo.id, "mensaje": "Familiar agregado"}
 
+@app.put("/api/familiar/{familiar_id}")
+def editar_familiar(familiar_id: int, datos: FamiliarRequest, request: Request, db: Session = Depends(get_db)):
+    """Corregir un familiar ya agregado, en vez de borrarlo y volver a escribirlo.
+
+    Faltaba: solo se podía listar, agregar y eliminar. Arreglar una foto o un
+    nombre mal escrito obligaba a borrar a la persona del árbol y volver a
+    crearla, lo cual además le cambia el orden."""
+    familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()
+    if not familiar: raise HTTPException(status_code=404)
+    exigir_pin_o_admin(request, familiar.perfil)
+    familiar.nombre = datos.nombre[:80]
+    familiar.relacion = datos.relacion
+    familiar.foto_url = datos.foto_url[:500] if datos.foto_url else ""
+    familiar.memorial_id = datos.memorial_id[:100] if datos.memorial_id else ""
+    familiar.orden = datos.orden
+    db.commit()
+    return {"mensaje": "Familiar actualizado"}
+
 @app.delete("/api/familiar/{familiar_id}")
 def eliminar_familiar(familiar_id: int, request: Request, db: Session = Depends(get_db)):
     familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()

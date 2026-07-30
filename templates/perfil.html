@@ -629,6 +629,21 @@
 
         .delete-top-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 65px; background: rgba(26, 37, 47, 0.95); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: white; display: flex; justify-content: space-between; align-items: center; padding:0 var(--esp-5); z-index: 11000; transition: top var(--mov-base); box-shadow: var(--sombra-flotante);}
         .delete-top-bar.active { top: 0; }
+        /* Mientras hay un formulario abierto, el fondo no se mueve. El scroll de
+           esta página vive en <html>, así que el candado va acá. Y overscroll-behavior
+           en el cuerpo del modal evita que al llegar al final de un formulario largo
+           el gesto se contagie a la página de atrás. */
+        html.modal-abierto { overflow: hidden; }
+        .modal-body { overscroll-behavior: contain; }
+        /* Selector de foto del árbol: la galería que la familia ya subió,
+           en miniaturas tocables. El 44px del alto mínimo no es estético, es el
+           objetivo táctil de iOS — igual que --ico-4. */
+        .selector-fotos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 156px; overflow-y: auto; overscroll-behavior: contain; }
+        .selector-fotos img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: var(--radio-chico); cursor: pointer; border: 2px solid transparent; transition: var(--mov-base) var(--curva); }
+        .selector-fotos img.elegida { border-color: var(--accent); }
+        .foto-elegida { display: flex; align-items: center; gap: var(--esp-2); margin-bottom: var(--esp-2); min-height: 44px; }
+        .foto-elegida img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .foto-elegida span { font-size: var(--txt-2); color: var(--text-light); }
         .system-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.75); z-index: 12000; justify-content: center; align-items: center; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity var(--mov-base); }
         .system-modal.show { display: flex; opacity: 1; }
         .modal-body { background: var(--card-bg); padding: var(--esp-5); border-radius: var(--radio-grande); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; box-shadow: var(--sombra-flotante); transform: scale(0.9); transition: transform var(--mov-base); }
@@ -1432,7 +1447,18 @@
                     <option value="Otro">Otro</option>
                 </select>
             </div>
-            <div class="form-group"><label>URL de foto (opcional)</label><input type="url" id="f_foto" class="input-pro" placeholder="https://..." style="font-size:var(--txt-4);"></div>
+            {# Antes el único modo de poner foto era pegar una URL. Una familia no
+               tiene una URL: tiene las fotos que ya subió a la galería. #}
+            <div class="form-group">
+                <label>Foto</label>
+                <div id="f_foto_elegida" class="foto-elegida"></div>
+                <div id="f_galeria" class="selector-fotos"></div>
+                <p id="f_galeria_vacia" class="form-hint" style="display:none;">
+                    Todavía no hay fotos en la galería. Súbelas y podrás elegir una desde acá.
+                </p>
+                <input type="url" id="f_foto" class="input-pro" placeholder="…o pega el enlace de una foto"
+                       style="font-size:var(--txt-4); margin-top: var(--esp-2);" oninput="pintarFotoElegida()">
+            </div>
             <div class="form-group"><label>ID memorial propio (opcional)</label><input type="text" id="f_memorial" class="input-pro" placeholder="identificador en la plataforma" style="font-size:var(--txt-4);"></div>
             <button class="btn-save" onclick="guardarFamiliar()">Guardar</button>
         </div>
@@ -1838,11 +1864,13 @@
             resetZoom();
             actualizarUI_Lightbox();
             document.getElementById('lightbox').classList.add('show');
+            sincronizarBloqueoDeFondo();
             lockBodyScroll(); 
         }
 
         function cerrarLightbox() {
             document.getElementById('lightbox').classList.remove('show');
+            sincronizarBloqueoDeFondo();
             document.getElementById('lb-input-group').style.display = 'none';
             unlockBodyScroll(); 
             resetZoom();
@@ -2030,16 +2058,35 @@
         function prepararEliminarMomento(id) { itemAEliminarId = id; tipoEliminacion = 'momento'; document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar este momento de la línea de tiempo?"; abrirModal('confirmModal'); }
         function abrirConfirmacionGlobal() { document.getElementById('confirmText').innerText = "¿Estás seguro de que deseas eliminar esta imagen para siempre?"; abrirModal('confirmModal'); } 
         function ejecutarEliminacionGlobal() { if(!itemAEliminarId) return; let btn = document.getElementById('btnDeleteGlobal'); btn.innerHTML = 'Borrando...'; btn.style.opacity = '0.7'; let url = tipoEliminacion === 'foto' ? `/eliminar_foto/${itemAEliminarId}` : (tipoEliminacion === 'mensaje' ? `/eliminar_mensaje/${itemAEliminarId}` : `/eliminar_momento/${itemAEliminarId}`); fetch(url, { method: 'DELETE', headers: {'X-Family-Pin': sessionStorage.getItem('family_pin_' + ID_PERFIL) || ''} }).then(() => window.location.reload()); }
-        function cerrarModal(id) { document.getElementById(id).classList.remove('show'); }
+        // Con un formulario abierto, el fondo seguía desplazándose: se podía
+        // recorrer el memorial entero con el formulario encima, y al cerrarlo uno
+        // aparecía en otra parte de la página.
+        //
+        // No se lleva una cuenta de modales abiertos —esas cuentas se
+        // desincronizan y dejan la página trabada para siempre—: se pregunta si
+        // hay ALGUNO abierto y se decide desde ahí. Da igual por dónde se haya
+        // cerrado (la ✕, el fondo, Escape o el botón de guardar).
+        function sincronizarBloqueoDeFondo() {
+            const hayAlguno = !!document.querySelector('.system-modal.show, #lightbox.show');
+            document.documentElement.classList.toggle('modal-abierto', hayAlguno);
+        }
+
+        function cerrarModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.classList.remove('show');
+            sincronizarBloqueoDeFondo();
+        }
         // Cerrar cualquier modal al tocar el fondo oscuro (fuera del contenido) o con Escape
         document.addEventListener('click', function(e) {
             if (e.target.classList && e.target.classList.contains('system-modal')) {
                 e.target.classList.remove('show');
+                sincronizarBloqueoDeFondo();
             }
         });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.system-modal.show').forEach(function(m){ m.classList.remove('show'); });
+                sincronizarBloqueoDeFondo();
             }
         });
         function prepararMomento(id, anio = "", titulo = "", desc = "") { document.getElementById('t_id').value = id || ""; document.getElementById('t_anio').value = anio; document.getElementById('t_titulo').value = titulo; document.getElementById('t_desc').value = desc; document.getElementById('modalMomentoTitulo').innerText = id ? "Editar Momento" : "Agregar Momento"; abrirModal('momentoModal'); }
@@ -2573,6 +2620,7 @@
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.add('show');
+            sincronizarBloqueoDeFondo();
             if (id === 'mapaModal') {
                 // El botón de ubicación se conecta aparte del mapa a propósito: si
                 // Leaflet no carga, el GPS igual llena las coordenadas y se puede
@@ -2678,7 +2726,11 @@
             const enlace = memId ? `<a class="familiar-link" href="/perfil/${memId}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Ver memorial</a>` : '';
             const famId = parseInt(f.id) || 0;
             const delBtn = isFamilyAdmin ? `<button class="familiar-delete admin-only" onclick="event.stopPropagation();eliminarFamiliar(${famId})"><i class="fas fa-times"></i></button>` : '';
-            return `<div class="familiar-card">
+            // Tocar la tarjeta la abre para corregirla. Antes solo se podía borrar:
+            // una tilde mal puesta obligaba a sacar a la persona del árbol.
+            const editable = isFamilyAdmin
+                ? ` onclick="abrirModalFamiliar(${famId})" style="cursor:pointer" title="Editar"` : '';
+            return `<div class="familiar-card"${editable}>
                 <img class="familiar-foto" src="${fotoSafe}" alt="${nombreSafe}" onerror="this.src='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'">
                 <div class="familiar-info">
                     <div class="familiar-nombre">${nombreSafe}</div>
@@ -2689,12 +2741,54 @@
             </div>`;
         }
 
-        function abrirModalFamiliar() {
-            document.getElementById('f_fam_id').value = '';
-            document.getElementById('f_nombre').value = '';
-            document.getElementById('f_foto').value = '';
-            document.getElementById('f_memorial').value = '';
-            document.getElementById('familiarModalTitulo').innerText = 'Agregar Familiar';
+        // Pinta las fotos que la familia ya subió, para elegir una con el dedo en
+        // vez de conseguir un enlace. La galería vive en galeriaDB, la misma que
+        // usa el lightbox: no hay una segunda fuente que se pueda desincronizar.
+        function pintarSelectorDeFotos() {
+            const caja = document.getElementById('f_galeria');
+            const vacio = document.getElementById('f_galeria_vacia');
+            const fotos = (typeof galeriaDB !== 'undefined' ? galeriaDB : []).filter(f => f && f.url);
+            caja.innerHTML = fotos.map(f =>
+                `<img src="${escapeHTML(f.url)}" alt="" loading="lazy" onclick="elegirFoto(this.src)">`
+            ).join('');
+            caja.style.display = fotos.length ? 'grid' : 'none';
+            vacio.style.display = fotos.length ? 'none' : 'block';
+        }
+
+        function elegirFoto(url) {
+            document.getElementById('f_foto').value = url;
+            pintarFotoElegida();
+        }
+
+        // El estado elegido se lee del campo, no de una variable aparte: así da
+        // igual si la foto vino de un toque en la galería, de un enlace pegado a
+        // mano o de abrir a un familiar que ya la tenía.
+        function pintarFotoElegida() {
+            const url = document.getElementById('f_foto').value.trim();
+            const caja = document.getElementById('f_foto_elegida');
+            caja.innerHTML = url
+                ? `<img src="${escapeHTML(url)}" alt=""><span>Foto elegida</span>`
+                : `<span>Sin foto: se usará una silueta</span>`;
+            document.querySelectorAll('#f_galeria img').forEach(img => {
+                img.classList.toggle('elegida', img.src === url);
+            });
+        }
+
+        // Un solo formulario para agregar y para corregir. Sin esto, arreglar una
+        // foto obligaba a borrar a la persona del árbol y volver a crearla —lo que
+        // además le cambiaba el orden—, y borrar a alguien de un memorial para
+        // corregirle una tilde no es una operación que deba pedirse.
+        function abrirModalFamiliar(id) {
+            const f = id ? familiaresData.find(x => String(x.id) === String(id)) : null;
+            document.getElementById('f_fam_id').value = f ? f.id : '';
+            document.getElementById('f_nombre').value = f ? (f.nombre || '') : '';
+            document.getElementById('f_foto').value = f ? (f.foto_url || '') : '';
+            document.getElementById('f_memorial').value = f ? (f.memorial_id || '') : '';
+            const rel = document.getElementById('f_relacion');
+            rel.value = f && [...rel.options].some(o => o.value === f.relacion) ? f.relacion : 'Otro';
+            document.getElementById('familiarModalTitulo').innerText = f ? 'Editar Familiar' : 'Agregar Familiar';
+            pintarSelectorDeFotos();
+            pintarFotoElegida();
             abrirModal('familiarModal');
         }
 
@@ -2711,8 +2805,11 @@
                 memorial_id: document.getElementById('f_memorial').value.trim(),
                 orden: ORDEN_RELACIONES[document.getElementById('f_relacion').value] ?? 5
             };
-            fetch(`/api/familiar/${ID_PERFIL}`, {
-                method: 'POST',
+            // Editar apunta al familiar; agregar apunta al memorial. El id oculto
+            // decide cuál de los dos, para que el mismo botón sirva a los dos casos.
+            const editando = document.getElementById('f_fam_id').value;
+            fetch(editando ? `/api/familiar/${editando}` : `/api/familiar/${ID_PERFIL}`, {
+                method: editando ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Family-Pin': pin },
                 body: JSON.stringify(datos)
             }).then(r => {
@@ -2724,7 +2821,12 @@
                 }
                 return r.json();
             }).then(data => {
-                familiaresData.push({ ...datos, id: data.id });
+                if (editando) {
+                    const i = familiaresData.findIndex(x => String(x.id) === String(editando));
+                    if (i >= 0) familiaresData[i] = { ...familiaresData[i], ...datos };
+                } else {
+                    familiaresData.push({ ...datos, id: data.id });
+                }
                 cerrarModal('familiarModal');
                 renderArbol();
             }).catch(err => alert(err.message || 'Error al guardar el familiar.'))
