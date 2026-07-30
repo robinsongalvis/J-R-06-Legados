@@ -136,9 +136,18 @@
         /* ==========================================
            PANTALLA DE BIENVENIDA 
            ========================================== */
-        #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; animation: fadeOutWelcome 1.5s ease-in-out 4.5s forwards; background: #0a0f18; }
-        body > *:not(#welcome-screen) { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
-        #welcome-screen.oculto ~ * { opacity: 1 !important; pointer-events: auto; }
+        /* Sin animation de cierre a propósito: el desvanecido lo hace .oculto desde
+           el JS. Antes había DOS líneas de tiempo peleando por el mismo momento —una
+           animación CSS a los 4,5 s y un temporizador de JS— y cuando ganaba la CSS,
+           el velo desaparecía sin que el contenido se revelara: pantalla en blanco. */
+        #welcome-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 9999; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #0a0f18; }
+        /* El contenido se revela con una clase en el BODY, no con el hermano
+           #welcome-screen.oculto ~ *. Ese selector tenía dos fragilidades: dependía
+           de que el overlay siguiera en el DOM (si se quita, la página entera vuelve
+           a opacity 0) y de que fuera el PRIMER hijo del body, porque el combinador ~
+           solo alcanza hermanos posteriores. Cualquier elemento insertado antes
+           quedaba invisible para siempre. Con .intro-finished no depende de nada. */
+        body:not(.intro-finished) > *:not(#welcome-screen) { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
         .welcome-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; animation: cinematicZoom 6s linear forwards; z-index: 0; object-fit: cover; }
         .welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%); z-index: 1; }
         .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
@@ -1369,32 +1378,72 @@
             if (!ws || ws.classList.contains('oculto')) return;
             ws.style.animation = 'none';
             ws.classList.add('oculto');
+
+            // El video de fondo tiene loop: si no se apaga, sigue decodificando y
+            // pidiendo segmentos para nadie. Medido en producción, seguía haciendo
+            // peticiones a los 17 segundos, invisible. Eso le come al hilo principal
+            // justo cuando el visitante intenta desplazarse por primera vez.
+            const fondo = ws.querySelector('video.welcome-bg');
+            if (fondo) {
+                try { fondo.pause(); } catch (e) {}
+                fondo.removeAttribute('autoplay');
+                fondo.removeAttribute('loop');
+                fondo.removeAttribute('src');
+                try { fondo.load(); } catch (e) {}   // suelta el decodificador
+            }
+            // Y el overlay sale del árbol cuando termina de desvanecerse, para que
+            // no quede un fixed a pantalla completa recibiendo gestos.
+            setTimeout(() => { if (ws.parentNode) ws.remove(); }, 700);
             document.body.style.backgroundColor = "";
             document.body.classList.add('intro-finished');
             try { localStorage.setItem('intro_seen_' + ID_PERFIL, '1'); } catch(e){}
             if (typeof actualizarIconoYBarra === 'function') actualizarIconoYBarra();
         }
 
-        // El cierre de la intro SIEMPRE pasa por saltarIntro(), en las dos ramas.
+        // El cierre de la intro SIEMPRE pasa por saltarIntro(), en las dos ramas, y
+        // esa función es la única que agrega 'intro-finished' al body, que es la
+        // clase que revela el contenido.
         //
         // Antes la primera visita tenía su propio bloque que repetía casi todo el
-        // cuerpo de saltarIntro() pero se olvidaba de la clase 'oculto'. Y esa
-        // clase es lo único que devuelve el contenido: el CSS lo esconde con
-        // "body > *:not(#welcome-screen) { opacity: 0 }" y solo lo revela el
-        // selector "#welcome-screen.oculto ~ *".
+        // cuerpo de saltarIntro() pero se olvidaba de esa clase, así que el velo se
+        // desvanecía por animación CSS y el contenido se quedaba en opacity 0: quien
+        // escaneaba el QR y se quedaba quieto -de pie frente a la lápida, que es lo
+        // respetuoso- terminaba mirando una pantalla en blanco. Solo funcionaba si
+        // tocaba. Verificado en producción antes de arreglarlo.
         //
-        // Resultado: quien escaneaba el QR y se quedaba quieto -de pie frente a
-        // la lápida, que es lo respetuoso- veía el velo desvanecerse a los 4,5 s
-        // y quedaba mirando una pantalla en blanco. Solo funcionaba si tocaba.
-        // Verificado en producción: intro_seen quedaba en "1", 'oculto' en false
-        // y la opacidad del contenido en 0.
-        //
-        // Ahora hay una sola forma de terminar la intro, y es idempotente, así
-        // que el toque y el reloj pueden llegar en cualquier orden.
+        // Ahora hay una sola forma de terminar la intro, es idempotente, y el toque
+        // y el reloj pueden llegar en cualquier orden.
         if (localStorage.getItem('intro_seen_' + ID_PERFIL) === '1') {
             document.addEventListener('DOMContentLoaded', saltarIntro);
         } else {
-            setTimeout(saltarIntro, 4000);
+            // La intro TAPA el arranque: se levanta cuando la página está lista, no
+            // cuando se cumple un temporizador ciego.
+            //
+            // Medido en producción, en escritorio con wifi: load terminaba a los
+            // 3733 ms y la intro se iba a los 4000. Doscientos sesenta y siete
+            // milisegundos de margen. En un celular con datos móviles la carga tarda
+            // más de cuatro segundos, así que la intro se levantaba EN MEDIO del
+            // arranque: el visitante intentaba deslizar, el hilo principal estaba
+            // ocupado terminando de montar el iframe de YouTube, el mapa y la
+            // galería, y el gesto no respondía. iOS hacía el rebote y volvía al
+            // mismo sitio. Uno o dos segundos después, todo normal.
+            //
+            // Con esto la intro cumple su función: cubre el arranque en vez de
+            // destaparlo a mitad de camino.
+            const INTRO_MINIMA = 2800;   // alcanza para leer un nombre, no para impacientarse
+            const INTRO_TECHO  = 6200;   // una conexión mala no puede dejar a nadie encerrado
+            const introDesde = performance.now();
+            let paginaLista = document.readyState === 'complete';
+            window.addEventListener('load', () => { paginaLista = true; }, { once: true });
+
+            (function esperarParaCerrar() {
+                const transcurrido = performance.now() - introDesde;
+                if (transcurrido >= INTRO_TECHO || (paginaLista && transcurrido >= INTRO_MINIMA)) {
+                    saltarIntro();
+                    return;
+                }
+                setTimeout(esperarParaCerrar, 120);
+            })();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
