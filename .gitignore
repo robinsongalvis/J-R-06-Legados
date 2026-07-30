@@ -1,6 +1,7 @@
 .env
 __pycache__/
 venv/
+.venv/
 *.db
 static/fotos/*
 !static/fotos/portada-compartir.jpg
