@@ -104,7 +104,11 @@ def medir(css: str) -> dict:
     return {
         "tamaños de letra": px(r"font-size") - EXCEPCIONES["tamaños de letra"] - RAMPA_ICONOS,
         "espaciados": px(r"(?:padding|margin)(?:-\w+)?") - EXCEPCIONES["espaciados"],
-        "radios": {v.strip() for v in re.findall(r"border-radius\s*:\s*([^;}]+)[;}]", css)}
+        # Un radio en cero no es una elección de radio, es la ausencia de una
+        # (el contenedor a sangre en móvil). Mismo criterio que el 'none' de las
+        # sombras: no cuenta como valor del sistema.
+        "radios": {v.strip() for v in re.findall(r"border-radius\s*:\s*([^;}]+)[;}]", css)
+                   if not re.match(r"^0(\s|;|$|\s*!important)", v.strip())}
                   - EXCEPCIONES["radios"],
         "sombras": {v.strip() for v in re.findall(r"box-shadow\s*:\s*([^;}]+)[;}]", css)
                     if "none" not in v},
