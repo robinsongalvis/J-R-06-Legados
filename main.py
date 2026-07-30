@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import datetime
 import os
 import socket
-from typing import List
+from typing import List, Optional
 import re
 import hashlib
 import hmac
@@ -609,6 +609,8 @@ class FamiliarRequest(BaseModel):
     foto_url: str = ""
     memorial_id: str = ""
     orden: int = 0
+    padre_id: Optional[int] = None    # de quién desciende. None = del homenajeado
+    pareja_id: Optional[int] = None   # con quién se dibuja en pareja
 
 def get_db():
     db = database.SessionLocal()
@@ -1136,7 +1138,8 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         **_mapa_context(perfil, request),
         "familiares": [
             {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
-             "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or ''}
+             "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '',
+             "orden": f.orden, "padre_id": f.padre_id, "pareja_id": f.pareja_id}
             for f in sorted(getattr(perfil, 'familiares_arbol', []), key=lambda x: x.orden)
         ],
     }
@@ -1256,8 +1259,12 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
                 {"anio": mo.anio, "titulo": mo.titulo, "descripcion": mo.descripcion}
                 for mo in p.momentos
             ],
+            # Con id y vínculos: sin ellos el respaldo guardaría los nombres pero
+            # perdería la forma del árbol, que es justo lo que la familia construyó.
             "familiares": [
-                {"nombre": fa.nombre, "relacion": fa.relacion, "foto_url": fa.foto_url, "orden": fa.orden}
+                {"id": fa.id, "nombre": fa.nombre, "relacion": fa.relacion,
+                 "foto_url": fa.foto_url, "orden": fa.orden,
+                 "padre_id": fa.padre_id, "pareja_id": fa.pareja_id}
                 for fa in p.familiares_arbol
             ],
             # Las dedicadas (con nombre y mensaje) van enteras. Las anónimas, que
@@ -1393,7 +1400,8 @@ def listar_familiares(identificador: str, db: Session = Depends(get_db)):
     if not perfil: raise HTTPException(status_code=404)
     return {"familiares": [
         {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
-         "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '', "orden": f.orden}
+         "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '', "orden": f.orden,
+         "padre_id": f.padre_id, "pareja_id": f.pareja_id}
         for f in sorted(perfil.familiares_arbol, key=lambda x: x.orden)
     ]}
 
@@ -1406,12 +1414,59 @@ def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Reques
         nombre=datos.nombre[:80], relacion=datos.relacion,
         foto_url=datos.foto_url[:500] if datos.foto_url else "",
         memorial_id=datos.memorial_id[:100] if datos.memorial_id else "",
-        orden=datos.orden, perfil_id=perfil.id
+        orden=datos.orden, perfil_id=perfil.id,
+        padre_id=_vinculo_valido(db, perfil.id, datos.padre_id),
+        pareja_id=_vinculo_valido(db, perfil.id, datos.pareja_id),
     )
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
     return {"id": nuevo.id, "mensaje": "Familiar agregado"}
+
+def _vinculo_valido(db: Session, perfil_id: int, vinculo_id, propio_id=None) -> int | None:
+    """Comprueba que un padre_id o pareja_id se pueda usar, o revienta con 400.
+
+    Tres cosas que hay que impedir, y ninguna es hipotética:
+
+    OTRO MEMORIAL. Sin esta comprobación, alguien con el PIN de su memorial podría
+    colgar a una persona del árbol de otra familia — y como el árbol es público,
+    ese nombre y esa foto aparecerían en una página ajena.
+
+    A SÍ MISMO. Nadie desciende de sí mismo.
+
+    UN CICLO. Si A desciende de B y luego B se cuelga de A, el árbol deja de tener
+    raíz: cualquier recorrido da vueltas para siempre y la página se congela. Se
+    sube por la cadena de ancestros antes de aceptar el cambio.
+    """
+    if vinculo_id in (None, "", 0):
+        return None
+    try:
+        vinculo_id = int(vinculo_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Vínculo familiar inválido.")
+
+    otro = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == vinculo_id).first()
+    if not otro or otro.perfil_id != perfil_id:
+        raise HTTPException(status_code=400, detail="Esa persona no está en este árbol.")
+    if propio_id is not None and vinculo_id == propio_id:
+        raise HTTPException(status_code=400, detail="Nadie desciende de sí mismo.")
+
+    # Subir por los ancestros del futuro padre: si aparece uno mismo, es un ciclo.
+    # El tope no es paranoia sobre familias muy largas: es la red que evita un
+    # bucle infinito si los datos ya venían corruptos.
+    visto, actual, saltos = set(), otro, 0
+    while actual is not None and saltos < 200:
+        if propio_id is not None and actual.id == propio_id:
+            raise HTTPException(status_code=400, detail="Eso crearía un círculo en el árbol.")
+        if actual.id in visto:
+            break
+        visto.add(actual.id)
+        actual = (db.query(database.FamiliarArbol)
+                    .filter(database.FamiliarArbol.id == actual.padre_id).first()
+                  if actual.padre_id else None)
+        saltos += 1
+    return vinculo_id
+
 
 @app.post("/api/familiar/foto/{identificador}")
 async def subir_foto_familiar(identificador: str, request: Request, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -1454,6 +1509,8 @@ def editar_familiar(familiar_id: int, datos: FamiliarRequest, request: Request, 
     familiar.foto_url = datos.foto_url[:500] if datos.foto_url else ""
     familiar.memorial_id = datos.memorial_id[:100] if datos.memorial_id else ""
     familiar.orden = datos.orden
+    familiar.padre_id = _vinculo_valido(db, familiar.perfil_id, datos.padre_id, familiar.id)
+    familiar.pareja_id = _vinculo_valido(db, familiar.perfil_id, datos.pareja_id, familiar.id)
     db.commit()
     return {"mensaje": "Familiar actualizado"}
 
@@ -1462,6 +1519,18 @@ def eliminar_familiar(familiar_id: int, request: Request, db: Session = Depends(
     familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()
     if not familiar: raise HTTPException(status_code=404)
     exigir_pin_o_admin(request, familiar.perfil)
+
+    # Quien tenía descendencia no se la lleva consigo. Sus hijos suben a colgar de
+    # su abuelo —o del homenajeado, si no había—, en vez de quedar apuntando a un
+    # id que ya no existe: eso los borraría de la pantalla sin avisar, porque el
+    # árbol se dibuja bajando desde la raíz y a ellos ya no los alcanzaría nadie.
+    hijos = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.padre_id == familiar.id).all()
+    for h in hijos:
+        h.padre_id = familiar.padre_id
+    # Y quien lo tenía como pareja deja de tenerla, en vez de apuntar a un fantasma.
+    for otro in db.query(database.FamiliarArbol).filter(database.FamiliarArbol.pareja_id == familiar.id).all():
+        otro.pareja_id = None
+
     db.delete(familiar)
     db.commit()
-    return {"mensaje": "Familiar eliminado"}
+    return {"mensaje": "Familiar eliminado", "hijos_reubicados": len(hijos)}
