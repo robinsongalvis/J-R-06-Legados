@@ -111,6 +111,25 @@
             --sombra-2: 0 10px 30px;                        /* levantado: hover, paneles */
             --sombra-flotante: 0 12px 32px rgba(0,0,0,0.3); /* despegado: modal, contenedor */
             --brillo: 0 0 20px rgba(212,175,55,0.35);       /* encendido, no elevado */
+
+            /* ── Espaciados ────────────────────────────────────────────────
+               Una rejilla de 5, porque es la que la página ya tenía: sus
+               valores más usados eran 10, 20, 25 y 15. Imponerle una rejilla
+               de 4 habría movido 29 usos de 10px a 12px para satisfacer una
+               teoría, y esta fase es de contar, no de rediseñar el ritmo.
+
+               Lo que NO está acá son las medidas estructurales: el retrato se
+               superpone a la portada con -85px, que es media altura suya, y el
+               botón fijo se alinea con el borde del contenedor con 218px. Esos
+               números salen de otra dimensión de la página, no de una decisión
+               de aire, y cambiarlos rompe la composición en vez de ajustarla.
+               Viven declarados en el guardián. */
+            --esp-1: 5px;    /* pegado: un dato bajo su etiqueta */
+            --esp-2: 10px;   /* el interior de un control */
+            --esp-3: 15px;   /* el interior de una tarjeta */
+            --esp-4: 20px;   /* la canaleta lateral de la página */
+            --esp-5: 25px;   /* entre bloques */
+            --esp-6: 40px;   /* entre secciones */
         }
 
         body.dark-mode {
@@ -170,8 +189,8 @@
         
         body { 
             font-family: 'Lato', sans-serif; 
-            margin: 0; 
-            padding: 0;
+            margin:0; 
+            padding:0;
             background-color: #0f172a; 
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased; 
@@ -183,7 +202,7 @@
         .container { 
             max-width: 600px; 
             width: 100%; 
-            margin: 0 auto; 
+            margin:0 auto; 
             background: var(--primary-bg); 
             min-height: 100dvh; 
             position: relative; 
@@ -193,9 +212,9 @@
         }
 
         @media (min-width: 768px) {
-            body.intro-finished { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); display: flex; align-items: center; justify-content: center; padding: 40px 0; }
+            body.intro-finished { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); display: flex; align-items: center; justify-content: center; padding: var(--esp-6) 0; }
             body.intro-finished.dark-mode { background: linear-gradient(135deg, #05080f 0%, #0f172a 100%); }
-            .container { margin: 0; border-radius: var(--radio-grande); box-shadow: var(--sombra-flotante); border: 8px solid rgba(255,255,255,0.05); height: auto; min-height: auto; overflow: hidden; }
+            .container { margin:0; border-radius: var(--radio-grande); box-shadow: var(--sombra-flotante); border: 8px solid rgba(255,255,255,0.05); height: auto; min-height: auto; overflow: hidden; }
             .cover-header { border-top-left-radius: var(--radio-grande) !important; border-top-right-radius: var(--radio-grande) !important; }
         }
 
@@ -224,16 +243,16 @@
         .light-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0) 70%); z-index: 2; animation: floatParticle 5s infinite ease-in-out alternate; }
         .p1 { width: 250px; height: 250px; top: 15%; left: -10%; animation-delay: 0s; }
         .p2 { width: 350px; height: 350px; bottom: 5%; right: -15%; animation-delay: 1.5s; }
-        .welcome-content-wrapper { position: relative; z-index: 10; text-align: center; padding: 0 30px; }
+        .welcome-content-wrapper { position: relative; z-index: 10; text-align: center; padding:0 var(--esp-5); }
         /* El 0.5s final es el RETRASO de la coreografía del intro, no una duración
            de interfaz: no se tokeniza, o el ritmo de la apertura quedaría atado a
            la velocidad de los botones. */
         .welcome-content { opacity: 0; animation: fadeInUp 1.5s var(--curva-llegada) 0.5s forwards; }
-        .welcome-content i { font-size: 55px; color: var(--accent); margin-bottom: 25px; animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4)); }
-        .welcome-content p { font-size: 14px; font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin: 0; }
-        .welcome-content h1 { font-family: 'Playfair Display', serif; font-size: 40px; margin: 10px 0; color: #ffffff; font-weight: 400; letter-spacing: 1px; text-shadow: 0 5px 20px rgba(0,0,0,0.6); line-height: 1.2; }
-        .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: 50px; font-size: 15px; color: #94a3b8; font-style: italic; font-weight: 300; }
-        #btnSaltarIntro { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); opacity: 0; animation: fadeIn 1s ease-in-out 2.2s forwards; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 24px; border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background var(--mov-base), transform var(--mov-base); z-index: 2; }
+        .welcome-content i { font-size: 55px; color: var(--accent); margin-bottom: var(--esp-5); animation: floatUp 3s infinite ease-in-out; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4)); }
+        .welcome-content p { font-size: 14px; font-style: italic; color: #cbd5e1; letter-spacing: 3px; text-transform: uppercase; margin:0; }
+        .welcome-content h1 { font-family: 'Playfair Display', serif; font-size: 40px; margin: var(--esp-2) 0; color: #ffffff; font-weight: 400; letter-spacing: 1px; text-shadow: 0 5px 20px rgba(0,0,0,0.6); line-height: 1.2; }
+        .welcome-delay { animation: fadeIn 2s ease-in-out 1.8s forwards; opacity: 0; margin-top: var(--esp-6); font-size: 15px; color: #94a3b8; font-style: italic; font-weight: 300; }
+        #btnSaltarIntro { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); opacity: 0; animation: fadeIn 1s ease-in-out 2.2s forwards; background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background var(--mov-base), transform var(--mov-base); z-index: 2; }
         #btnSaltarIntro:hover { background: rgba(255,255,255,0.25); transform: translateX(-50%) translateY(-2px); }
         #welcome-screen.oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--mov-suave) var(--curva), visibility var(--mov-suave) var(--curva); }
 
@@ -261,7 +280,7 @@
         .slider-dots { position: absolute; top: calc(20px + env(safe-area-inset-top)); left: 0; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 6; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: var(--mov-base); }
         .dot.active { background: white; transform: scale(1.5); }
-        .slider-arrows { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; transform: translateY(-50%); z-index: 5; padding: 0 15px; pointer-events: none;}
+        .slider-arrows { position: absolute; top: 40%; width: 100%; display: flex; justify-content: space-between; transform: translateY(-50%); z-index: 5; padding:0 var(--esp-3); pointer-events: none;}
         .slider-arrow { pointer-events: auto; width: 35px; height: 35px; background: rgba(0,0,0,0.3); color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); opacity: 0.7; transition: var(--mov-base);}
         .slider-arrow:hover { opacity: 1; background: rgba(0,0,0,0.6); }
         @media (max-width: 768px) { .slider-arrows { display: none; } }
@@ -272,18 +291,18 @@
         .profile-wrapper { position: relative; width: 170px; height: 170px; margin: -85px auto 0px; z-index: 10; }
         .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid var(--primary-bg); background: var(--card-bg); box-shadow: var(--sombra-2) var(--border-soft), 0 0 0 1px rgba(212, 175, 55, 0.3); transition: border-color var(--mov-suave) var(--curva);}
         .profile-pic:hover { transform: scale(1.05); box-shadow: var(--sombra-flotante), 0 0 0 2px rgba(212,175,55,0.6); }
-        .main-info { text-align: center; padding: 0 20px; width: 100%; padding-top: 15px; }
-        .name { font-family: 'Playfair Display', serif; font-size: 32px; margin: 10px 0 5px; font-weight: 600; color: var(--text-main); word-wrap: break-word;}
+        .main-info { text-align: center; padding:0 var(--esp-4); width: 100%; padding-top: var(--esp-3); }
+        .name { font-family: 'Playfair Display', serif; font-size: 32px; margin: var(--esp-2) 0 var(--esp-1); font-weight: 600; color: var(--text-main); word-wrap: break-word;}
         .dates { font-size: 15px; color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; font-weight: bold;}
-        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: 10px; font-size: 18px; word-wrap: break-word;}
+        .memory-of { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent-text); margin-top: var(--esp-2); font-size: 18px; word-wrap: break-word;}
 
-        .candle-container { margin: 25px auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: 12px 25px; border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--border-soft); transition: all var(--mov-base) var(--curva); }
+        .candle-container { margin: var(--esp-5) auto var(--esp-2); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-candle { background: var(--card-bg); border: 1px solid var(--border-soft); color: var(--text-main); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-family: 'Lato', sans-serif; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: var(--sombra-1) var(--border-soft); transition: all var(--mov-base) var(--curva); }
         .btn-candle:hover { transform: translateY(-3px); box-shadow: var(--brillo); border-color: rgba(212, 175, 55, 0.3); }
         .btn-candle.lit { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); cursor: default; transform: none; box-shadow: var(--brillo); }
         .candle-icon { font-size: 18px; color: var(--text-light); transition: var(--mov-base); }
         .btn-candle.lit .candle-icon { color: #f39c12; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e67e22; animation: flicker 2s infinite alternate; }
-        .candle-count-text { margin-top: 8px; font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
+        .candle-count-text { margin-top: var(--esp-2); font-size: 13px; color: var(--text-light); font-weight: bold; letter-spacing: 0.5px; }
         @keyframes flicker { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
 
         /* Pantallas pequeñas: hero más compacto para acercar el contenido */
@@ -291,21 +310,21 @@
             .cover-header { height: 240px; }
             .name { font-size: 27px; }
             .dates { font-size: 14px; letter-spacing: 2px; }
-            .memory-of { font-size: 16px; margin-top: 8px; }
-            .candle-container { margin: 18px auto 8px; }
-            .main-info { padding-top: 12px; }
+            .memory-of { font-size: 16px; margin-top: var(--esp-2); }
+            .candle-container { margin: var(--esp-4) auto var(--esp-2); }
+            .main-info { padding-top: var(--esp-2); }
         }
 
         /* ==========================================
            MÉTRICAS: MEMORIA VIVA Y DESTACADOS
            ========================================== */
         .memoria-viva-banner { 
-            margin: 20px 25px; padding: 15px; border-radius: var(--radio); 
+            margin: var(--esp-4) var(--esp-5); padding: var(--esp-3); border-radius: var(--radio); 
             background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.02)); 
             border: 1px solid rgba(212,175,55,0.2); text-align: center; color: var(--text-main); 
         }
-        .memoria-viva-banner i { color: var(--accent); font-size: 24px; margin-bottom: 8px; animation: floatUp 3s infinite ease-in-out; }
-        .memoria-viva-banner p { margin: 0 0 5px; font-family: 'Playfair Display', serif; font-size: 18px; }
+        .memoria-viva-banner i { color: var(--accent); font-size: 24px; margin-bottom: var(--esp-2); animation: floatUp 3s infinite ease-in-out; }
+        .memoria-viva-banner p { margin:0 0 var(--esp-1); font-family: 'Playfair Display', serif; font-size: 18px; }
         .memoria-viva-banner span { font-size: 13px; color: var(--text-light); }
 
         /* Efeméride: "un día como hoy, hace X años". Cumple el mismo papel que
@@ -316,45 +335,45 @@
            color sale de las variables del tema, así que se adapta a los cinco.
            La barra superior es lo que lo distingue de una tarjeta cualquiera. */
         .efemeride-card {
-            margin: 0 20px 25px; padding: 20px; border-radius: var(--radio-grande);
+            margin:0 var(--esp-4) var(--esp-5); padding: var(--esp-4); border-radius: var(--radio-grande);
             background: var(--card-bg); color: var(--text-main); text-align: center;
             border: 1px solid var(--border-soft); border-top: 3px solid var(--accent);
             box-shadow: var(--sombra-2) var(--border-soft);
         }
-        .efemeride-etiqueta { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: 10px; }
-        .efemeride-icono { width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: 19px; }
-        .efemeride-anios { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; margin: 0 0 6px; color: var(--text-main); }
-        .efemeride-titulo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; margin: 0 0 8px; color: var(--accent-text); word-wrap: break-word; }
+        .efemeride-etiqueta { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent-text); font-weight: bold; display: block; margin-bottom: var(--esp-2); }
+        .efemeride-icono { width: 46px; height: 46px; margin:0 auto var(--esp-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--accent); color: var(--accent-text); font-size: 19px; }
+        .efemeride-anios { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; margin:0 0 var(--esp-1); color: var(--text-main); }
+        .efemeride-titulo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; margin:0 0 var(--esp-2); color: var(--accent-text); word-wrap: break-word; }
         /* --text-main y no --text-light: sobre las tarjetas claras de los temas
            atardecer, bosque y mármol, el gris secundario se queda en 4.1-4.3:1,
            por debajo del mínimo accesible. Y esto lo lee mucha gente mayor.
            break-word porque este es el campo de texto libre del momento y puede
            traer una frase larga, no solo "1972". */
-        .efemeride-cuando { font-size: 12px; color: var(--text-main); margin-top: 12px; display: block; word-wrap: break-word; }
+        .efemeride-cuando { font-size: 12px; color: var(--text-main); margin-top: var(--esp-2); display: block; word-wrap: break-word; }
 
-        .highlights-row { display: flex; gap: 15px; padding: 0 25px; margin-bottom: 25px; }
+        .highlights-row { display: flex; gap: 15px; padding:0 var(--esp-5); margin-bottom: var(--esp-5); }
         .highlight-card { 
-            flex: 1; background: var(--card-bg); border-radius: var(--radio); padding: 10px; 
+            flex: 1; background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2); 
             box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); text-align: center; 
         }
-        .highlight-card h4 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
+        .highlight-card h4 { margin:0 0 var(--esp-2); font-size: 12px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
         .hl-img-wrap { width: 100%; aspect-ratio: 1; border-radius: var(--radio-chico); overflow: hidden; position: relative; cursor: pointer; }
         .hl-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--mov-suave); }
         .hl-img-wrap:hover img { transform: scale(1.05); filter: brightness(1.1); }
-        .hl-likes-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: var(--radio-pastilla); font-size: 11px; font-weight: bold; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+        .hl-likes-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-size: 11px; font-weight: bold; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 
         /* ==========================================
            GALERÍA INTERACTIVA (GRID)
            ========================================== */
-        .gallery-header { padding: 0 25px 10px; text-align: center; }
-        .gallery-header .section-title { margin-bottom: 5px; }
-        .total-likes-text { font-size: 13px; color: var(--text-light); font-weight: bold; margin: 0; }
+        .gallery-header { padding:0 var(--esp-5) var(--esp-2); text-align: center; }
+        .gallery-header .section-title { margin-bottom: var(--esp-1); }
+        .total-likes-text { font-size: 13px; color: var(--text-light); font-weight: bold; margin:0; }
 
-        .gallery-container { padding: 0 2px; width: 100%;}
+        .gallery-container { padding:0 var(--esp-1); width: 100%;}
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
-        .gallery-empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
-        .gallery-empty i { font-size: 34px; color: var(--accent); opacity: 0.4; display: block; margin-bottom: 10px; }
-        .gallery-empty p { font-size: 14px; font-style: italic; margin: 0; }
+        .gallery-empty { text-align: center; padding: var(--esp-6) var(--esp-4); color: var(--text-light); }
+        .gallery-empty i { font-size: 34px; color: var(--accent); opacity: 0.4; display: block; margin-bottom: var(--esp-2); }
+        .gallery-empty p { font-size: 14px; font-style: italic; margin:0; }
         .gallery-item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; position: relative; background: rgba(128,128,128,0.12); }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--mov-suave) var(--curva), opacity var(--mov-suave) var(--curva); pointer-events: none; opacity: 0; }
         .gallery-item img.cargada { opacity: 1; }
@@ -363,8 +382,8 @@
         /* Fotos ocultas hasta que el scroll las pide (carga progresiva tipo Instagram) */
         .gallery-item.pendiente { display: none; }
         #galeriaSentinel { height: 1px; }
-        .galeria-cargando { text-align: center; padding: 18px; color: var(--text-light); font-size: 13px; }
-        .galeria-cargando i { color: var(--accent); margin-right: 6px; }
+        .galeria-cargando { text-align: center; padding: var(--esp-4); color: var(--text-light); font-size: 13px; }
+        .galeria-cargando i { color: var(--accent); margin-right: var(--esp-1); }
         /* Corazón al dar doble toque */
         .doble-tap-corazon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); color: #fff; font-size: 46px; text-shadow: 0 3px 14px rgba(0,0,0,0.45); pointer-events: none; z-index: 12; }
         .doble-tap-corazon.animar { animation: latidoCorazon 0.9s var(--curva-llegada) forwards; }
@@ -378,28 +397,28 @@
         /* ==========================================
            NOTA DE VOZ — reproductor propio
            ========================================== */
-        .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(212,175,55,0.28); border-radius: var(--radio-grande); padding: 20px; margin-bottom: 26px; position: relative; overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); }
+        .voz-card { background: var(--card-bg, rgba(255,255,255,0.06)); border: 1px solid rgba(212,175,55,0.28); border-radius: var(--radio-grande); padding: var(--esp-4); margin-bottom: var(--esp-5); position: relative; overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); }
         .voz-card::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,0.16) 0%, rgba(212,175,55,0) 70%); pointer-events: none; }
-        .voz-header { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; position: relative; z-index: 1; }
+        .voz-header { display: flex; align-items: center; gap: 11px; margin-bottom: var(--esp-4); position: relative; z-index: 1; }
         .voz-icono { width: 38px; height: 38px; border-radius: 50%; background: rgba(212,175,55,0.14); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
         .voz-titulo { font-weight: 700; font-size: 15px; line-height: 1.25; }
-        .voz-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+        .voz-sub { font-size: 12px; color: var(--text-light); margin-top: var(--esp-1); }
         .voz-player { display: flex; align-items: center; gap: 15px; position: relative; z-index: 1; }
         .voz-play { width: 54px; height: 54px; min-width: 54px; border-radius: 50%; border: none; cursor: pointer; background: linear-gradient(135deg, #e3c15a, #b8952c); color: #1a1408; font-size: 19px; display: flex; align-items: center; justify-content: center; box-shadow: var(--brillo); transition: transform var(--mov-rapido) var(--curva); padding-left: 3px; }
         .voz-play:active { transform: scale(0.93); }
-        .voz-play.sonando { padding-left: 0; }
+        .voz-play.sonando { padding-left:0; }
         .voz-onda { flex: 1; display: flex; align-items: center; gap: 2px; height: 46px; cursor: pointer; touch-action: manipulation; }
         .voz-barra { flex: 1; min-width: 2px; border-radius: var(--radio-pastilla); background: currentColor; opacity: 0.2; transform-origin: center; transition: opacity var(--mov-rapido) var(--curva), background var(--mov-rapido) var(--curva); }
         .voz-barra.reproducida { opacity: 1; background: var(--accent); }
         .voz-card.sonando .voz-barra.reproducida:nth-child(3n) { animation: ondaLatido 0.85s ease-in-out infinite alternate; }
         .voz-card.sonando .voz-barra.reproducida:nth-child(3n+1) { animation: ondaLatido 1.05s ease-in-out infinite alternate; }
         @keyframes ondaLatido { from { transform: scaleY(0.82); } to { transform: scaleY(1.12); } }
-        .voz-tiempo { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); margin-top: 10px; font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
+        .voz-tiempo { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); margin-top: var(--esp-2); font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
         @media (prefers-reduced-motion: reduce) { .voz-card.sonando .voz-barra { animation: none !important; } }
         
         .item-likes-overlay { 
             position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.5); 
-            color: white; padding: 3px 6px; border-radius: var(--radio-pastilla); font-size: 10px; font-weight: bold; 
+            color: white; padding: var(--esp-1) var(--esp-1); border-radius: var(--radio-pastilla); font-size: 10px; font-weight: bold; 
             display: flex; align-items: center; gap: 4px; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); pointer-events: none;
         }
         .item-likes-overlay i { color: #fff; }
@@ -428,7 +447,7 @@
         }
         #lightbox.show { display: flex; opacity: 1; }
         
-        .lb-header-bar { width: 100%; padding: 15px 25px; display: flex; justify-content: flex-end; z-index: 10002; }
+        .lb-header-bar { width: 100%; padding: var(--esp-3) var(--esp-5); display: flex; justify-content: flex-end; z-index: 10002; }
         .lb-close { color: white; font-size: 35px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         
         .lb-content-area { 
@@ -443,35 +462,35 @@
 
         .lb-footer-panel { 
             background: var(--card-bg); border-top-left-radius: var(--radio-grande); border-top-right-radius: var(--radio-grande); 
-            padding: 20px; width: 100%; max-height: 40vh; display: flex; flex-direction: column; 
+            padding: var(--esp-4); width: 100%; max-height: 40vh; display: flex; flex-direction: column; 
             box-shadow: 0 -10px 40px rgba(0,0,0,0.5); transform: translateY(100%); transition: transform var(--mov-base) var(--curva);
         }
         #lightbox.show .lb-footer-panel { transform: translateY(0); }
         
-        .lb-actions { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid var(--border-soft); padding-bottom: 15px;}
+        .lb-actions { display: flex; justify-content: space-between; margin-bottom: var(--esp-3); border-bottom: 1px solid var(--border-soft); padding-bottom: var(--esp-3);}
         .lb-action-btn { background: none; border: none; color: var(--text-main); font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Lato';}
         .lb-action-btn i { font-size: 22px; color: var(--text-light); transition: var(--mov-base);}
         .lb-action-btn.liked i { color: #e74c3c; animation: pulse var(--mov-suave); }
         
-        .lb-comments-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-        .lb-comment-item { background: var(--input-bg); padding: 10px 15px; border-radius: var(--radio-chico); font-size: 13px; color: var(--text-main); font-style: italic; border-left: 3px solid var(--accent);}
-        .lb-no-comments { text-align: center; color: var(--text-light); font-size: 13px; font-style: italic; margin: auto 0; }
+        .lb-comments-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--esp-2); }
+        .lb-comment-item { background: var(--input-bg); padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-chico); font-size: 13px; color: var(--text-main); font-style: italic; border-left: 3px solid var(--accent);}
+        .lb-no-comments { text-align: center; color: var(--text-light); font-size: 13px; font-style: italic; margin:auto 0; }
         
         .lb-input-group { display: flex; gap: 10px; display: none; animation: fadeIn var(--mov-base) forwards;}
-        .lb-input-group input { flex: 1; padding: 12px; border-radius: var(--radio-pastilla); border: 1px solid var(--border-soft); background: var(--input-bg); color: var(--text-main); outline: none; font-family: 'Lato'; font-size: 16px;}
+        .lb-input-group input { flex: 1; padding: var(--esp-2); border-radius: var(--radio-pastilla); border: 1px solid var(--border-soft); background: var(--input-bg); color: var(--text-main); outline: none; font-family: 'Lato'; font-size: 16px;}
         .lb-input-group button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
-        .lightbox-prev, .lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 30px; cursor: pointer; padding: 20px; z-index: 10001; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;}
+        .lightbox-prev, .lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 30px; cursor: pointer; padding: var(--esp-4); z-index: 10001; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px;}
         .lightbox-prev { left: 20px; } .lightbox-next { right: 20px; }
         @media (max-width: 768px) { .lightbox-prev, .lightbox-next { display: none; } }
 
         /* ==========================================
            RESTO DEL DISEÑO Y MODALES
            ========================================== */
-        .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 25px 15px; width: 100%;}
-        .info-card { background: var(--card-bg); padding: 18px 10px; border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
-        .info-card i { font-size: 26px; color: var(--accent); margin-bottom: 12px;}
-        .info-card strong { font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: 8px;}
+        .cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: var(--esp-5) var(--esp-3); width: 100%;}
+        .info-card { background: var(--card-bg); padding: var(--esp-4) var(--esp-2); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid var(--border-soft); width: 100%; overflow: hidden; }
+        .info-card i { font-size: 26px; color: var(--accent); margin-bottom: var(--esp-2);}
+        .info-card strong { font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; margin-bottom: var(--esp-2);}
         .info-card span { font-size: 14px; font-weight: 700; color: var(--text-main); word-wrap: break-word;}
         /* La canción ocupa ancho completo para que el reproductor no se recorte */
         #card-cancion { grid-column: 1 / -1; }
@@ -486,43 +505,43 @@
             width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radio); border: 1px solid var(--border-soft);
             background: var(--input-bg); box-shadow: var(--sombra-1) var(--border-soft);
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-            cursor: pointer; color: var(--text-light); font-size: 14px; padding: 12px; text-align: center;
+            cursor: pointer; color: var(--text-light); font-size: 14px; padding: var(--esp-2); text-align: center;
         }
         .yt-fachada-play {
             width: 54px; height: 54px; border-radius: 50%; border: none;
             background: linear-gradient(135deg, var(--accent), var(--accent));
             color: #1a1408; font-size: 20px; display: flex; align-items: center; justify-content: center;
-            padding-left: 4px;
+            padding-left: var(--esp-1);
         }
         .yt-fachada:active .yt-fachada-play { transform: scale(0.93); }
-        .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: var(--radio-pastilla); padding: 7px 16px; font-size: 12.5px; font-weight: bold; text-decoration: none; transition: var(--mov-base); }
+        .btn-yt-rescue { display: inline-flex; align-items: center; gap: 7px; margin-top: var(--esp-2); background: rgba(255,0,0,0.08); color: #e53935; border: 1px solid rgba(229,57,53,0.35); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: 12.5px; font-weight: bold; text-decoration: none; transition: var(--mov-base); }
         .btn-yt-rescue:hover { background: rgba(255,0,0,0.15); transform: translateY(-1px); }
         
-        .bio-section { padding: 10px 20px 40px; width: 100%; }
-        .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: 26px; margin-bottom: 25px; color: var(--text-main); position: relative;}
-        .bio-text { line-height: 1.8; text-align: center; font-size: 16px; color: var(--text-light); font-weight: 300; position: relative; padding: 25px 20px; background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); font-style: italic; word-wrap: break-word;}
+        .bio-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
+        .section-title { font-family: 'Playfair Display', serif; text-align: center; font-size: 26px; margin-bottom: var(--esp-5); color: var(--text-main); position: relative;}
+        .bio-text { line-height: 1.8; text-align: center; font-size: 16px; color: var(--text-light); font-weight: 300; position: relative; padding: var(--esp-5) var(--esp-4); background: var(--card-bg); border-radius: var(--radio-grande); box-shadow: var(--sombra-2) var(--border-soft); font-style: italic; word-wrap: break-word;}
         .bio-text::before { content: "❝"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; top: -15px; left: 15px; font-family: serif; line-height: 1;}
         .bio-text::after { content: "❞"; font-size: 80px; color: rgba(212, 175, 55, 0.15); position: absolute; bottom: -45px; right: 15px; font-family: serif; line-height: 1;}
 
-        .timeline-section { padding: 10px 20px 40px; width: 100%; }
-        .title-with-btn { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px;}
+        .timeline-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
+        .title-with-btn { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: var(--esp-5);}
         .add-timeline-btn { background: rgba(212, 175, 55, 0.1); color: var(--accent); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; cursor: pointer;}
-        .timeline { border-left: 3px solid var(--accent); margin-left: 15px; padding-left: 25px; position: relative;}
-        .timeline-item { position: relative; margin-bottom: 35px; padding: 20px; background: var(--card-bg); border-radius: var(--radio); box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); padding-right: 30px; transition: var(--transition-smooth);}
+        .timeline { border-left: 3px solid var(--accent); margin-left: var(--esp-3); padding-left: var(--esp-5); position: relative;}
+        .timeline-item { position: relative; margin-bottom: var(--esp-6); padding: var(--esp-4); background: var(--card-bg); border-radius: var(--radio); box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); padding-right: var(--esp-5); transition: var(--transition-smooth);}
         /* Sube Y se enciende: la sombra dice la altura, el brillo dice el foco. */
         .timeline-item:hover { transform: translateY(-5px); box-shadow: var(--sombra-2) var(--border-soft), var(--brillo); }
         .timeline-icon { position: absolute; left: -43px; top: 15px; width: 32px; height: 32px; background: var(--card-bg); border: 3px solid var(--accent); border-radius: 50%; box-shadow: var(--brillo); display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: 14px; transition: var(--mov-base); z-index: 2;}
         .timeline-item:hover .timeline-icon { background: var(--accent); color: white; transform: scale(1.1); }
-        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: 4px 12px; border-radius: var(--radio-pastilla); font-weight: 900; font-size: 14px; margin-bottom: 10px; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: var(--sombra-1) var(--border-soft);}
-        .timeline-event { font-size: 15px; color: var(--text-light); margin-top: 5px; line-height: 1.5; word-wrap: break-word;}
-        .timeline-event strong { color: var(--text-main); display: block; font-size: 16px; margin-bottom: 2px;}
+        .timeline-year { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-text); padding: var(--esp-1) var(--esp-2); border-radius: var(--radio-pastilla); font-weight: 900; font-size: 14px; margin-bottom: var(--esp-2); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: var(--sombra-1) var(--border-soft);}
+        .timeline-event { font-size: 15px; color: var(--text-light); margin-top: var(--esp-1); line-height: 1.5; word-wrap: break-word;}
+        .timeline-event strong { color: var(--text-main); display: block; font-size: 16px; margin-bottom: var(--esp-1);}
         .timeline-controls { position: absolute; right: 10px; top: 15px; display: flex; gap: 8px; opacity: 0; transition: var(--mov-base); z-index: 10;}
         .timeline-item:hover .timeline-controls { opacity: 1; }
         @media (max-width: 768px) { .timeline-controls { opacity: 0.8 !important; } }
-        .tl-ctrl-btn { color: var(--text-light); cursor: pointer; font-size: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radio-chico); padding: 6px; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);}
+        .tl-ctrl-btn { color: var(--text-light); cursor: pointer; font-size: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radio-chico); padding: var(--esp-1); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);}
 
-        .guestbook-section { padding: 0 20px 40px; width: 100%; }
-        .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding: 5px; }
+        .guestbook-section { padding:0 var(--esp-4) var(--esp-6); width: 100%; }
+        .messages-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: var(--esp-4); padding: var(--esp-1); }
         
         #timelineWrapper, #recuerdosWrapper { overflow: hidden; position: relative; transition: max-height var(--mov-suave) var(--curva); cursor: default; }
         #timelineWrapper { max-height: 240px; }
@@ -531,51 +550,51 @@
         
         .collapsible-fade { position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, rgba(15,23,42,0) 0%, var(--primary-bg) 100%); pointer-events: none; z-index: 5; transition: opacity var(--mov-base); }
         .collapsible-wrapper.expanded .collapsible-fade, .expanded .collapsible-fade { opacity: 0; }
-        .btn-ver-mas { display: block; margin: 10px auto 20px; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: 10px 25px; border-radius: var(--radio-pastilla); font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--border-soft); }
+        .btn-ver-mas { display: block; margin: var(--esp-2) auto var(--esp-4); background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent); padding: var(--esp-2) var(--esp-5); border-radius: var(--radio-pastilla); font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); box-shadow: var(--sombra-1) var(--border-soft); }
         .btn-ver-mas:hover { background: var(--accent); color: white; transform: translateY(-2px); }
-        .message-card { background: var(--card-bg); padding: 20px; border-radius: var(--radio); border-left: 4px solid var(--accent); box-shadow: var(--sombra-1) var(--border-soft); position: relative; }
-        .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: 14px; padding: 5px; opacity: 0.5;}
-        .message-text { font-style: italic; color: var(--text-light); font-size: 15px; line-height: 1.5; margin-bottom: 15px; padding-right: 15px; word-wrap: break-word;}
-        .message-author { display: block; font-weight: bold; font-size: 14px; color: var(--text-main); text-align: right; margin-bottom: 5px;}
-        .message-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 5px; font-size: 12px; color: var(--text-light);}
+        .message-card { background: var(--card-bg); padding: var(--esp-4); border-radius: var(--radio); border-left: 4px solid var(--accent); box-shadow: var(--sombra-1) var(--border-soft); position: relative; }
+        .msg-delete-btn { position: absolute; top: 10px; right: 10px; color: var(--text-light); cursor: pointer; font-size: 14px; padding: var(--esp-1); opacity: 0.5;}
+        .message-text { font-style: italic; color: var(--text-light); font-size: 15px; line-height: 1.5; margin-bottom: var(--esp-3); padding-right: var(--esp-3); word-wrap: break-word;}
+        .message-author { display: block; font-weight: bold; font-size: 14px; color: var(--text-main); text-align: right; margin-bottom: var(--esp-1);}
+        .message-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-soft); padding-top: var(--esp-2); margin-top: var(--esp-1); font-size: 12px; color: var(--text-light);}
         .like-btn { cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none;}
         .like-btn i { font-size: 14px; transition: transform var(--mov-base), color var(--mov-base); color: var(--text-light);}
         .like-btn.liked i { color: #e74c3c; }
 
-        .action-buttons-container { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;}
-        .btn-elegant { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: 15px 20px; border-radius: var(--radio-pastilla); cursor: pointer; font-size: 14px; font-weight: bold; letter-spacing: 1px; box-shadow: var(--sombra-flotante); display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px;}
+        .action-buttons-container { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: var(--esp-4);}
+        .btn-elegant { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: 14px; font-weight: bold; letter-spacing: 1px; box-shadow: var(--sombra-flotante); display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; max-width: 300px;}
         .btn-share { background: linear-gradient(135deg, #d4af37, #b5952f); }
 
-        .upload-zone { border: 2px dashed var(--border-soft); border-radius: var(--radio); padding: 30px 20px; text-align: center; background: var(--card-bg); cursor: pointer; margin: 0 25px 25px; }
-        .upload-zone i { font-size: 40px; color: var(--text-light); margin-bottom: 10px;}
-        .upload-zone p { color: var(--text-light); font-size: 14px; font-weight: bold; margin: 0;}
-        .upload-zone small { color: var(--text-light); font-size: 12px; display: block; margin-top: 5px; opacity: 0.7;}
+        .upload-zone { border: 2px dashed var(--border-soft); border-radius: var(--radio); padding: var(--esp-5) var(--esp-4); text-align: center; background: var(--card-bg); cursor: pointer; margin:0 var(--esp-5) var(--esp-5); }
+        .upload-zone i { font-size: 40px; color: var(--text-light); margin-bottom: var(--esp-2);}
+        .upload-zone p { color: var(--text-light); font-size: 14px; font-weight: bold; margin:0;}
+        .upload-zone small { color: var(--text-light); font-size: 12px; display: block; margin-top: var(--esp-1); opacity: 0.7;}
         .desktop-delete-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; opacity: 0; z-index: 15; border: 1px solid rgba(255,255,255,0.3); font-size: 12px;}
         .gallery-item:hover .desktop-delete-btn { opacity: 1; }
         @media (max-width: 768px) { .desktop-delete-btn { display: none; } }
         .gallery-item.selected-for-delete { transform: scale(0.9); box-shadow: 0 0 0 4px #e74c3c; border-radius: var(--radio-chico); z-index: 100; filter: brightness(0.6);}
         .gallery-item.selected-for-delete::after { content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 35px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
 
-        .delete-top-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 65px; background: rgba(26, 37, 47, 0.95); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 11000; transition: top var(--mov-base); box-shadow: var(--sombra-flotante);}
+        .delete-top-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 65px; background: rgba(26, 37, 47, 0.95); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: white; display: flex; justify-content: space-between; align-items: center; padding:0 var(--esp-5); z-index: 11000; transition: top var(--mov-base); box-shadow: var(--sombra-flotante);}
         .delete-top-bar.active { top: 0; }
         .system-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.75); z-index: 12000; justify-content: center; align-items: center; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity var(--mov-base); }
         .system-modal.show { display: flex; opacity: 1; }
-        .modal-body { background: var(--card-bg); padding: 25px; border-radius: var(--radio-grande); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; box-shadow: var(--sombra-flotante); transform: scale(0.9); transition: transform var(--mov-base); }
+        .modal-body { background: var(--card-bg); padding: var(--esp-5); border-radius: var(--radio-grande); width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; box-shadow: var(--sombra-flotante); transform: scale(0.9); transition: transform var(--mov-base); }
         .system-modal.show .modal-body { transform: scale(1); }
-        .form-group { margin-bottom: 15px; width: 100%; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: var(--text-light);}
+        .form-group { margin-bottom: var(--esp-3); width: 100%; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: var(--esp-1); color: var(--text-light);}
         /* --text-main y no --text-light: sobre las tarjetas claras de los temas
            ese gris se queda por debajo del mínimo accesible, y a 12px se nota. */
-        .form-hint { font-size: 12px; line-height: 1.45; color: var(--text-main); margin: 6px 0 0; }
-        .form-group input, .form-group textarea, .input-pro { width: 100%; padding: 12px; border: 1px solid var(--border-soft); border-radius: var(--radio-chico); background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato'; font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */ }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 14px; border-radius: var(--radio-chico); width: 100%; cursor: pointer; font-size: 16px; font-weight: bold;}
-        .confirm-actions { display: flex; gap: 10px; margin-top: 20px;}
-        .confirm-actions button { flex: 1; padding: 14px; border-radius: var(--radio-chico); border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
+        .form-hint { font-size: 12px; line-height: 1.45; color: var(--text-main); margin: var(--esp-1) 0 0; }
+        .form-group input, .form-group textarea, .input-pro { width: 100%; padding: var(--esp-2); border: 1px solid var(--border-soft); border-radius: var(--radio-chico); background: var(--input-bg); color: var(--text-main); box-sizing: border-box; font-family: 'Lato'; font-size: 16px; /* 16px evita el zoom automático de iOS al enfocar */ }
+        .btn-save { background: var(--accent); color: white; border: none; padding: var(--esp-3); border-radius: var(--radio-chico); width: 100%; cursor: pointer; font-size: 16px; font-weight: bold;}
+        .confirm-actions { display: flex; gap: 10px; margin-top: var(--esp-4);}
+        .confirm-actions button { flex: 1; padding: var(--esp-3); border-radius: var(--radio-chico); border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
         .btn-cancel-modal { background: var(--primary-bg); color: var(--text-main); border: 1px solid var(--border-soft); }
         .btn-delete-confirm { background: #e74c3c; color: white; }
-        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(212, 175, 55, 0.1); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; margin: 0 auto 15px; }
-        .pin-input { width: 160px; font-size: 36px; letter-spacing: 12px; text-align: center; padding: 10px; border: 2px solid var(--border-soft); background: transparent; border-radius: var(--radio-chico); margin: 20px auto 25px; display: block; color: var(--text-main); font-family: 'Lato', sans-serif; font-weight: bold; }
-        .error-msg { color: #e74c3c; font-size: 14px; margin-top: 15px; display: none; font-weight: bold;}
+        .pin-icon-wrapper { width: 65px; height: 65px; background: rgba(212, 175, 55, 0.1); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26px; margin:0 auto var(--esp-3); }
+        .pin-input { width: 160px; font-size: 36px; letter-spacing: 12px; text-align: center; padding: var(--esp-2); border: 2px solid var(--border-soft); background: transparent; border-radius: var(--radio-chico); margin: var(--esp-4) auto var(--esp-5); display: block; color: var(--text-main); font-family: 'Lato', sans-serif; font-weight: bold; }
+        .error-msg { color: #e74c3c; font-size: 14px; margin-top: var(--esp-3); display: none; font-weight: bold;}
         .btn-ia-magic { position: absolute; right: 8px; bottom: 8px; background: rgba(212,175,55,0.2); color: var(--accent); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--mov-base); z-index: 10; font-size: 16px; display: flex; justify-content: center; align-items: center; }
         .btn-ia-magic:hover { background: var(--accent); color: white; transform: rotate(15deg) scale(1.1); box-shadow: var(--brillo); }
 
@@ -613,68 +632,68 @@
         /* ==========================================
            🎨 SELECTOR DE TEMA
            ========================================== */
-        .tema-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
-        .tema-card { border-radius: var(--radio); padding: 14px; cursor: pointer; border: 2px solid transparent; transition: var(--mov-base); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .tema-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: var(--esp-3); }
+        .tema-card { border-radius: var(--radio); padding: var(--esp-3); cursor: pointer; border: 2px solid transparent; transition: var(--mov-base); display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .tema-card.selected { border-color: var(--accent); transform: scale(1.03); box-shadow: var(--brillo); }
         .tema-card:hover { border-color: var(--accent); }
         .tema-swatches { display: flex; gap: 4px; }
         .swatch { width: 18px; height: 18px; border-radius: 50%; }
-        .tema-card h4 { font-size: 13px; font-weight: bold; color: var(--text-main); margin: 0; text-align: center; }
-        .tema-card p { font-size: 11px; color: var(--text-light); margin: 0; text-align: center; line-height: 1.3; }
-        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: var(--radio-pastilla); padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
+        .tema-card h4 { font-size: 13px; font-weight: bold; color: var(--text-main); margin:0; text-align: center; }
+        .tema-card p { font-size: 11px; color: var(--text-light); margin:0; text-align: center; line-height: 1.3; }
+        .btn-tema-toggle { background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); color: var(--accent); border-radius: var(--radio-pastilla); padding: var(--esp-1) var(--esp-3); font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--mov-base); }
         .btn-tema-toggle:hover { background: var(--accent); color: white; }
 
         /* ==========================================
            🕯️ MURO DE VELAS
            ========================================== */
-        .velas-muro-section { padding: 10px 20px 35px; width: 100%; }
-        .velas-muro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+        .velas-muro-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
+        .velas-muro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: var(--esp-4); }
         @media (min-width: 400px) { .velas-muro-grid { grid-template-columns: repeat(4, 1fr); } }
-        .vela-card { background: var(--card-bg); border-radius: var(--radio); padding: 12px 8px; text-align: center; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .vela-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-2); text-align: center; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .vela-flame { font-size: 28px; animation: flickerVela 2s infinite alternate ease-in-out; line-height: 1; }
         @keyframes flickerVela { 0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 8px rgba(255,180,0,0.7)); } 50% { transform: scale(1.08) rotate(2deg); filter: drop-shadow(0 0 14px rgba(255,120,0,0.8)); } }
         .vela-nombre { font-size: 11px; font-weight: bold; color: var(--text-main); word-break: break-word; line-height: 1.2; }
         .vela-mensaje { font-size: 10px; color: var(--text-light); font-style: italic; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .vela-tiempo { font-size: 10px; color: var(--accent-text); font-weight: bold; margin-top: 2px; }
-        .velas-muro-header { text-align: center; margin-bottom: 14px; }
-        .velas-muro-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text-main); margin: 0; }
-        .velas-muro-sub { font-size: 12.5px; color: var(--text-light); margin: 4px 0 0; font-style: italic; }
-        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 16px auto 5px; background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: var(--radio-pastilla); padding: 11px 22px; font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); }
+        .vela-tiempo { font-size: 10px; color: var(--accent-text); font-weight: bold; margin-top: var(--esp-1); }
+        .velas-muro-header { text-align: center; margin-bottom: var(--esp-3); }
+        .velas-muro-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text-main); margin:0; }
+        .velas-muro-sub { font-size: 12.5px; color: var(--text-light); margin: var(--esp-1) 0 0; font-style: italic; }
+        .btn-encender-muro { display: flex; align-items: center; justify-content: center; gap: 8px; margin: var(--esp-3) auto var(--esp-1); background: linear-gradient(135deg, rgba(255,160,50,0.15), rgba(255,100,0,0.08)); border: 1px solid rgba(255,140,50,0.35); color: var(--text-main); border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: 14px; font-weight: bold; cursor: pointer; transition: var(--mov-base); }
         .btn-encender-muro:hover { background: linear-gradient(135deg,rgba(255,140,50,0.3),rgba(255,80,0,0.15)); transform: translateY(-2px); }
-        .velas-empty { text-align: center; padding: 30px 20px; color: var(--text-light); font-style: italic; font-size: 14px; }
+        .velas-empty { text-align: center; padding: var(--esp-5) var(--esp-4); color: var(--text-light); font-style: italic; font-size: 14px; }
 
         /* ==========================================
            🗺️ MAPA DEL ÚLTIMO DESCANSO
            ========================================== */
-        .mapa-section { padding: 10px 20px 35px; width: 100%; }
+        .mapa-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .mapa-container { border-radius: var(--radio-grande); overflow: hidden; box-shadow: var(--sombra-2) var(--border-soft); border: 1px solid var(--border-soft); }
         #mapaLeaflet { height: 260px; width: 100%; z-index: 1; }
-        .mapa-info { background: var(--card-bg); padding: 16px; border-top: 1px solid var(--border-soft); }
-        .mapa-direccion { font-size: 14px; font-weight: bold; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: flex-start; gap: 8px; }
-        .mapa-descripcion-txt { font-size: 13px; color: var(--text-light); font-style: italic; line-height: 1.5; margin-bottom: 10px; }
-        .btn-ir-mapa { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border-radius: var(--radio-pastilla); padding: 8px 18px; font-size: 13px; font-weight: bold; text-decoration: none; transition: var(--mov-base); border: none; cursor: pointer; }
+        .mapa-info { background: var(--card-bg); padding: var(--esp-3); border-top: 1px solid var(--border-soft); }
+        .mapa-direccion { font-size: 14px; font-weight: bold; color: var(--text-main); margin-bottom: var(--esp-1); display: flex; align-items: flex-start; gap: 8px; }
+        .mapa-descripcion-txt { font-size: 13px; color: var(--text-light); font-style: italic; line-height: 1.5; margin-bottom: var(--esp-2); }
+        .btn-ir-mapa { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: white; border-radius: var(--radio-pastilla); padding: var(--esp-2) var(--esp-4); font-size: 13px; font-weight: bold; text-decoration: none; transition: var(--mov-base); border: none; cursor: pointer; }
         .btn-ir-mapa:hover { filter: brightness(1.1); transform: translateY(-2px); }
-        .mapa-edit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .mapa-edit-row { display: flex; justify-content: flex-end; margin-top: var(--esp-2); }
 
         /* ==========================================
            🌳 ÁRBOL FAMILIAR
            ========================================== */
-        .arbol-section { padding: 10px 20px 35px; width: 100%; }
+        .arbol-section { padding: var(--esp-2) var(--esp-4) var(--esp-6); width: 100%; }
         .arbol-container { display: flex; flex-direction: column; gap: 15px; }
         .arbol-grupo { display: flex; flex-direction: column; gap: 6px; }
-        .arbol-grupo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: 4px; }
+        .arbol-grupo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); font-weight: bold; padding-left: var(--esp-1); }
         .arbol-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; }
-        .familiar-card { background: var(--card-bg); border-radius: var(--radio); padding: 12px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: var(--mov-base); }
+        .familiar-card { background: var(--card-bg); border-radius: var(--radio); padding: var(--esp-2) var(--esp-3); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-soft); box-shadow: var(--sombra-1) var(--border-soft); min-width: 150px; min-height: 68px; flex: 1 1 150px; max-width: 200px; position: relative; transition: var(--mov-base); }
         .familiar-card:hover { transform: translateY(-3px); box-shadow: var(--brillo); }
         .familiar-foto { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); flex-shrink: 0; background: var(--input-bg); }
         .familiar-info { min-width: 0; }
         .familiar-nombre { font-size: 13px; font-weight: bold; color: var(--text-main); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
         .familiar-relacion { font-size: 11px; color: var(--accent-text); font-weight: bold; text-transform: capitalize; }
-        .familiar-link { font-size: 10px; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
-        .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: 12px; opacity: 0; transition: var(--mov-rapido); background: none; border: none; padding: 4px; }
+        .familiar-link { font-size: 10px; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 3px; margin-top: var(--esp-1); }
+        .familiar-delete { position: absolute; top: 5px; right: 5px; color: var(--text-light); cursor: pointer; font-size: 12px; opacity: 0; transition: var(--mov-rapido); background: none; border: none; padding: var(--esp-1); }
         .familiar-card:hover .familiar-delete { opacity: 0.7; }
         .familiar-card-deceased { border-color: var(--accent); background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.03)); }
-        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: var(--radio); padding: 12px; min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
+        .arbol-add-btn { background: rgba(212,175,55,0.08); border: 1.5px dashed rgba(212,175,55,0.4); color: var(--accent); border-radius: var(--radio); padding: var(--esp-2); min-width: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: bold; transition: var(--mov-base); flex: 0 0 auto; }
         .arbol-add-btn:hover { background: rgba(212,175,55,0.15); }
         .arbol-connector { display: flex; justify-content: center; }
         .arbol-line { width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), transparent); opacity: 0.4; }
@@ -690,7 +709,7 @@
         /* ==========================================
            📄 PRINT / PDF - LIBRO DEL LEGADO
            ========================================== */
-        .btn-pdf { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: 13px 20px; border-radius: var(--radio-pastilla); cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: var(--mov-base); }
+        .btn-pdf { background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; border: none; padding: var(--esp-2) var(--esp-4); border-radius: var(--radio-pastilla); cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: var(--mov-base); }
         .btn-pdf:hover { filter: brightness(1.3); transform: translateY(-2px); }
 
         @media print {
@@ -700,7 +719,7 @@
             .slider-arrows, .add-timeline-btn, .timeline-controls, .msg-delete-btn,
             .btn-encender-muro, .mapa-edit-row, .arbol-add-btn, .familiar-delete,
             .lb-actions, .audio-player-container button, script, .admin-only { display: none !important; }
-            html, body { margin: 0; padding: 0; background: white !important; color: #1a1a1a !important; }
+            html, body { margin:0; padding:0; background: white !important; color: #1a1a1a !important; }
             body { font-size: 11pt; line-height: 1.6; }
             .container { max-width: 100% !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
             .cover-header { height: 200px; border-radius: 0 !important; page-break-after: avoid; }
@@ -713,9 +732,9 @@
             .gallery-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 5px; }
             .gallery-item { break-inside: avoid; }
             .velas-muro-grid { grid-template-columns: repeat(5, 1fr) !important; }
-            #qr-print { display: block !important; text-align: center; padding: 30px 20px; page-break-before: always; }
-            #qr-print canvas { margin: 0 auto; display: block; }
-            #qr-print p { font-size: 12pt; margin-top: 10px; color: #333; }
+            #qr-print { display: block !important; text-align: center; padding: var(--esp-5) var(--esp-4); page-break-before: always; }
+            #qr-print canvas { margin:0 auto; display: block; }
+            #qr-print p { font-size: 12pt; margin-top: var(--esp-2); color: #333; }
             .mapa-section { page-break-inside: avoid; }
             #mapaLeaflet { display: none !important; }
             .mapa-static-print { display: block !important; }
@@ -778,9 +797,9 @@
     </div>
 
     <div id="deleteTopBar" class="delete-top-bar"><span class="cancel-btn" onclick="cancelarEliminar()">Cancelar</span><span class="delete-title">1 seleccionada</span><span class="trash-btn" onclick="abrirConfirmacionGlobal()"><i class="fas fa-trash"></i></span></div>
-    <div id="confirmModal" class="system-modal"><div class="modal-body" style="text-align: center;"><h2 style="color: #e74c3c;">Eliminar</h2><p id="confirmText" style="color: var(--text-light); font-size: 15px; margin-bottom: 25px;">¿Estás seguro de que deseas eliminar esto?</p><div class="confirm-actions"><button class="btn-cancel-modal" onclick="cerrarModal('confirmModal')">Cancelar</button><button class="btn-delete-confirm" id="btnDeleteGlobal" onclick="ejecutarEliminacionGlobal()">Eliminar</button></div></div></div>
+    <div id="confirmModal" class="system-modal"><div class="modal-body" style="text-align: center;"><h2 style="color: #e74c3c;">Eliminar</h2><p id="confirmText" style="color: var(--text-light); font-size: 15px; margin-bottom: var(--esp-5);">¿Estás seguro de que deseas eliminar esto?</p><div class="confirm-actions"><button class="btn-cancel-modal" onclick="cerrarModal('confirmModal')">Cancelar</button><button class="btn-delete-confirm" id="btnDeleteGlobal" onclick="ejecutarEliminacionGlobal()">Eliminar</button></div></div></div>
     <button id="btnAccesoFamiliar" onclick="abrirModal('modalLoginFamiliar')" aria-label="Acceso familiar" title="Acceso familiar"><i class="fas fa-lock"></i></button>
-    <div id="modalLoginFamiliar" class="system-modal"><div class="modal-body" style="text-align: center; padding: 40px 25px; position: relative;"><span style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 28px; color: var(--text-light);" onclick="cerrarModal('modalLoginFamiliar')">&times;</span><div class="pin-icon-wrapper"><i class="fas fa-unlock-alt"></i></div><h2 style="font-family: 'Playfair Display', serif; color: var(--text-main); font-size: 26px;">Acceso Familiar</h2><p style="color: var(--text-light); font-size: 14px;">Ingresa el PIN de seguridad de 4 dígitos.</p><input type="password" id="f_pin" class="pin-input" placeholder="••••" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button onclick="verificarPinFamiliar()" id="btnVerificarPin" class="btn-elegant" style="width: 100%;">Desbloquear Funciones</button><p id="errorPin" class="error-msg"><i class="fas fa-exclamation-circle"></i> PIN incorrecto.</p></div></div>
+    <div id="modalLoginFamiliar" class="system-modal"><div class="modal-body" style="text-align: center; padding: var(--esp-6) var(--esp-5); position: relative;"><span style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 28px; color: var(--text-light);" onclick="cerrarModal('modalLoginFamiliar')">&times;</span><div class="pin-icon-wrapper"><i class="fas fa-unlock-alt"></i></div><h2 style="font-family: 'Playfair Display', serif; color: var(--text-main); font-size: 26px;">Acceso Familiar</h2><p style="color: var(--text-light); font-size: 14px;">Ingresa el PIN de seguridad de 4 dígitos.</p><input type="password" id="f_pin" class="pin-input" placeholder="••••" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><button onclick="verificarPinFamiliar()" id="btnVerificarPin" class="btn-elegant" style="width: 100%;">Desbloquear Funciones</button><p id="errorPin" class="error-msg"><i class="fas fa-exclamation-circle"></i> PIN incorrecto.</p></div></div>
     
     <div class="container">
         
@@ -855,7 +874,7 @@
                 <span id="textoVela">Encender una vela</span>
             </button>
             <p class="candle-count-text">
-                <i class="fas fa-fire" style="color:#f39c12; margin-right:4px;"></i>
+                <i class="fas fa-fire" style="color:#f39c12; margin-right: var(--esp-1);"></i>
                 <span id="contadorVelas">{{ velas }}</span> {% if velas == 1 %}vela ilumina{% else %}velas iluminan{% endif %} este memorial
             </p>
         </div>
@@ -873,7 +892,7 @@
                teniendo 18 encendidas se lee como que la página miente. Cuando ya
                hubo velas, el vacío explica la caducidad en vez de contradecirla. #}
             <div id="velasEmpty" class="velas-empty" style="display:none;">
-                <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom:8px;"></i>
+                <i class="fas fa-fire" style="font-size:30px; color:var(--accent); opacity:0.4; display:block; margin-bottom: var(--esp-2);"></i>
                 {% if velas > 0 %}
                 Las velas dedicadas brillan tres días y luego descansan.<br>
                 Dedicá la tuya y quedará con tu nombre.
@@ -897,7 +916,7 @@
         <div class="cards-container">
             {% if esposa %}<div class="info-card" data-aos="fade-up"><i class="fas fa-heart"></i><strong>Compañera de vida</strong><span>{{ esposa }}</span></div>{% endif %}
             {% if hijos %}<div class="info-card" data-aos="fade-up"><i class="fas fa-seedling"></i><strong>Legado</strong><span>{{ hijos }}</span></div>{% endif %}
-            {% if cancion_favorita %}<div class="info-card" data-aos="fade-up" id="card-cancion"><i class="fas fa-music"></i><strong>Su Melodía</strong><div id="contenedor-cancion" style="width: 100%; margin-top: 5px;"></div></div>{% endif %}
+            {% if cancion_favorita %}<div class="info-card" data-aos="fade-up" id="card-cancion"><i class="fas fa-music"></i><strong>Su Melodía</strong><div id="contenedor-cancion" style="width: 100%; margin-top: var(--esp-1);"></div></div>{% endif %}
             {% if juego_favorito %}<div class="info-card" data-aos="fade-up"><i class="fas fa-star"></i><strong>Pasatiempo</strong><span>{{ juego_favorito }}</span></div>{% endif %}
         </div>
 
@@ -928,9 +947,9 @@
             </div>
             {% endif %}
             
-            <div style="text-align: center; margin-bottom: 20px;" class="admin-only">
+            <div style="text-align: center; margin-bottom: var(--esp-4);" class="admin-only">
                 <input type="file" id="audioVozInput" accept="audio/*" style="display:none;" onchange="subirAudioVoz()">
-                <button class="btn-elegant" style="padding: 10px 20px; font-size: 13px; min-width: auto; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
+                <button class="btn-elegant" style="padding: var(--esp-2) var(--esp-4); font-size: 13px; min-width: auto; background: rgba(212,175,55,0.1); border: 1px solid var(--accent); color: var(--accent);" onclick="document.getElementById('audioVozInput').click()" title="Sube un recuerdo de voz">
                     <i class="fas fa-upload"></i> {% if audio_voz %}Cambiar{% else %}Subir{% endif %} Audio Real (MP3)
                 </button>
             </div>
@@ -946,7 +965,7 @@
                 <div id="mapaLeaflet"></div>
                 <div class="mapa-info">
                     {% if mapa_direccion %}
-                    <div class="mapa-direccion"><i class="fas fa-map-marker-alt" style="color:var(--accent); margin-top:2px;"></i> {{ mapa_direccion }}</div>
+                    <div class="mapa-direccion"><i class="fas fa-map-marker-alt" style="color:var(--accent); margin-top: var(--esp-1);"></i> {{ mapa_direccion }}</div>
                     {% endif %}
                     {% if mapa_descripcion %}
                     <p class="mapa-descripcion-txt">{{ mapa_descripcion }}</p>
@@ -970,8 +989,8 @@
         <!-- Mapa con acceso restringido: visible solo para familia con PIN -->
         <div class="mapa-section" id="mapaSectionInvitados" data-aos="fade-up">
             <h2 class="section-title">Lugar de Descanso</h2>
-            <div id="mapaInvitadosPlaceholder" style="text-align:center; padding:25px; background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
-                <i class="fas fa-lock" style="font-size:28px; color:var(--accent); opacity:0.5; display:block; margin-bottom:10px;"></i>
+            <div id="mapaInvitadosPlaceholder" style="text-align:center; padding: var(--esp-5); background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
+                <i class="fas fa-lock" style="font-size:28px; color:var(--accent); opacity:0.5; display:block; margin-bottom: var(--esp-2);"></i>
                 <p style="color:var(--text-light); font-size:14px; margin:0;">Ubicación disponible solo para familiares</p>
             </div>
             <div id="mapaInvitadosContainer" style="display:none;">
@@ -992,9 +1011,9 @@
         {% else %}
         <div class="mapa-section admin-only" id="mapaSectionVacio" data-aos="fade-up">
             <h2 class="section-title">Lugar de Descanso</h2>
-            <div style="text-align:center; padding:25px; background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
-                <i class="fas fa-map-marked-alt" style="font-size:36px; color:var(--accent); opacity:0.5; margin-bottom:10px; display:block;"></i>
-                <p style="color:var(--text-light); font-size:14px; margin:0 0 15px;">Agrega la ubicación del lugar de descanso</p>
+            <div style="text-align:center; padding: var(--esp-5); background:var(--card-bg); border-radius:var(--radio-grande); border:1.5px dashed var(--border-soft);">
+                <i class="fas fa-map-marked-alt" style="font-size:36px; color:var(--accent); opacity:0.5; margin-bottom: var(--esp-2); display:block;"></i>
+                <p style="color:var(--text-light); font-size:14px; margin:0 0 var(--esp-3);">Agrega la ubicación del lugar de descanso</p>
                 <button class="btn-ir-mapa" onclick="abrirModal('mapaModal')"><i class="fas fa-plus"></i> Configurar Mapa</button>
             </div>
         </div>
@@ -1044,8 +1063,8 @@
                 </div>
                 {% if momentos|length > 2 %}
                 <div class="collapsible-fade" onclick="toggleTimeline()"></div>
-                <div style="text-align:center; padding-top: 5px; padding-bottom: 15px;">
-                    <button class="btn-ver-mas" id="btnTimelineMenos" onclick="toggleTimeline(event)" style="display:none; margin: 0 auto;">Ocultar momentos <i class="fas fa-chevron-up"></i></button>
+                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
+                    <button class="btn-ver-mas" id="btnTimelineMenos" onclick="toggleTimeline(event)" style="display:none; margin:0 auto;">Ocultar momentos <i class="fas fa-chevron-up"></i></button>
                 </div>
                 {% endif %}
             </div>
@@ -1082,8 +1101,8 @@
                 </div>
                 {% if mensajes|length > 2 %}
                 <div class="collapsible-fade" onclick="toggleRecuerdos()"></div>
-                <div style="text-align:center; padding-top: 5px; padding-bottom: 15px;">
-                    <button class="btn-ver-mas" id="btnRecuerdosMenos" onclick="toggleRecuerdos(event)" style="display:none; margin: 0 auto;">Ocultar recuerdos <i class="fas fa-chevron-up"></i></button>
+                <div style="text-align:center; padding-top: var(--esp-1); padding-bottom: var(--esp-3);">
+                    <button class="btn-ver-mas" id="btnRecuerdosMenos" onclick="toggleRecuerdos(event)" style="display:none; margin:0 auto;">Ocultar recuerdos <i class="fas fa-chevron-up"></i></button>
                 </div>
                 {% endif %}
             </div>
@@ -1091,7 +1110,7 @@
             <button class="btn-ver-mas" id="btnRecuerdosMas" onclick="toggleRecuerdos()">Ver todos los recuerdos ({{ mensajes|length }})</button>
             {% endif %}
             
-            <div class="action-buttons-container" style="margin-top: 15px;">
+            <div class="action-buttons-container" style="margin-top: var(--esp-3);">
                 <button class="btn-elegant" onclick="abrirModal('mensajeModal')"><i class="fas fa-pen-fancy"></i> Escribir un Mensaje</button>
                 <button class="btn-elegant btn-share" onclick="compartirHomenaje()"><i class="fas fa-share-alt"></i> Compartir Homenaje</button>
                 <button class="btn-pdf" onclick="imprimirLibroLegado()"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>
@@ -1167,24 +1186,24 @@
             <small style="color:#666;">{{ request.base_url }}perfil/{{ identificador }}</small>
         </div>
 
-        <div style="text-align: center; padding: 40px 20px 20px; margin-top: 20px; border-top: 1px solid var(--border-soft);" data-aos="fade-up">
-            <p style="font-size: 12px; color: var(--text-light); margin: 0; letter-spacing: 0.5px;">Desarrollado con ❤️ por <strong>J&R 06 Legados</strong> © 2026.<br>Todos los derechos reservados.</p>
+        <div style="text-align: center; padding: var(--esp-6) var(--esp-4) var(--esp-4); margin-top: var(--esp-4); border-top: 1px solid var(--border-soft);" data-aos="fade-up">
+            <p style="font-size: 12px; color: var(--text-light); margin:0; letter-spacing: 0.5px;">Desarrollado con ❤️ por <strong>J&R 06 Legados</strong> © 2026.<br>Todos los derechos reservados.</p>
         </div>
 
     </div>
 
     <div id="momentoModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('momentoModal')">&times;</span><h2 id="modalMomentoTitulo">Agregar Momento</h2><input type="hidden" id="t_id" value=""><div class="form-group"><label>Fecha del momento</label><input type="text" id="t_anio" class="input-pro" placeholder="Ej: 15 de agosto de 1972"><p class="form-hint">Si sabes el día y el mes, escríbelos: así el memorial podrá recordar el aniversario cada año.</p></div><div class="form-group"><label>Título</label><input type="text" id="t_titulo" class="input-pro"></div><div class="form-group"><label>Descripción</label><textarea id="t_desc" rows="3" class="input-pro"></textarea></div><button class="btn-save" onclick="guardarMomento()">Guardar</button></div></div>
-    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: 40px;"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: 15px; margin-top: 15px;"><label style="font-size: 12px; font-weight: bold; color: var(--accent); display:block; margin-bottom:5px;"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: 13px; padding: 10px; width:100%;"><button class="btn-save" style="margin-top: 10px; font-size: 13px; padding: 10px; background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
-    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: 40px;">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
+    <div id="mensajeModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mensajeModal')">&times;</span><h2>Dejar un Recuerdo</h2><div class="form-group"><label>Nombre</label><input type="text" id="m_autor" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Mensaje</label><textarea id="m_texto" rows="4" class="input-pro" maxlength="150" style="padding-bottom: var(--esp-6);"></textarea><button class="btn-ia-magic" onclick="abrirAyudaIA()" title="Ayúdame a Inspirarme"><i class="fas fa-magic"></i></button></div><button class="btn-save" id="btnEnviarMsj" onclick="enviarMensaje()">Publicar</button><div id="iaHelpBox" style="display:none; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: var(--radio-chico); padding: var(--esp-3); margin-top: var(--esp-3);"><label style="font-size: 12px; font-weight: bold; color: var(--accent); display:block; margin-bottom: var(--esp-1);"><i class="fas fa-robot"></i> Asistente de Condolencias</label><input type="text" id="m_anecdota" placeholder="Ej: Era mi tío y me enseñó a pescar..." class="input-pro" style="font-size: 13px; padding: var(--esp-2); width:100%;"><button class="btn-save" style="margin-top: var(--esp-2); font-size: 13px; padding: var(--esp-2); background: #2c3e50;" onclick="generarHomenajeIA()" id="btnGenerarIA">Redactar con IA</button></div></div></div>
+    <div id="editModal" class="system-modal"><div class="modal-body"><span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('editModal')">&times;</span><h2>Editar Homenaje</h2><div class="form-group"><label>Nombre</label><input type="text" id="e_nombre" value="{{ nombre }}" class="input-pro"></div><div class="form-group"><label>Fechas</label><input type="text" id="e_fechas" value="{{ fechas }}" class="input-pro"></div><div class="form-group"><label>En Memoria de</label><input type="text" id="e_memoria" value="{{ en_memoria_de }}" class="input-pro"></div><div class="form-group"><label>Esposa/o</label><input type="text" id="e_esposa" value="{{ esposa }}" class="input-pro"></div><div class="form-group"><label>Hijos</label><input type="text" id="e_hijos" value="{{ hijos }}" class="input-pro"></div><div class="form-group"><label>Canción</label><input type="text" id="e_cancion" value="{{ cancion_favorita }}" class="input-pro"></div><div class="form-group"><label>Pasatiempo</label><input type="text" id="e_juego" value="{{ juego_favorito }}" class="input-pro"></div><div class="form-group" style="position: relative;"><label>Historia</label><textarea id="e_bio" rows="4" class="input-pro" style="padding-bottom: var(--esp-6);">{{ biografia }}</textarea><button class="btn-ia-magic" onclick="reescribirBiografiaIA(event)" title="Mejorar texto con IA"><i class="fas fa-magic"></i></button></div><button class="btn-save" onclick="guardarEdicion()">Guardar</button></div></div>
     <div id="modalPreviewUpload" class="system-modal">
         <div class="modal-body" style="text-align: center;">
             <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('modalPreviewUpload')">&times;</span>
             <h2>Confirmar Subida</h2>
-            <p id="uploadCountText" style="color: var(--text-light); font-size: 15px; margin-bottom: 15px;"></p>
+            <p id="uploadCountText" style="color: var(--text-light); font-size: 15px; margin-bottom: var(--esp-3);"></p>
             
-            <div id="previewGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
+            <div id="previewGrid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: var(--esp-4); max-height: 200px; overflow-y: auto;"></div>
 
-            <div id="uploadProgressContainer" style="display: none; width: 100%; background: var(--border-soft); border-radius: var(--radio-pastilla); height: 10px; margin-bottom: 20px; overflow: hidden;">
+            <div id="uploadProgressContainer" style="display: none; width: 100%; background: var(--border-soft); border-radius: var(--radio-pastilla); height: 10px; margin-bottom: var(--esp-4); overflow: hidden;">
                 <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width var(--mov-base);"></div>
             </div>
 
@@ -1225,7 +1244,7 @@
                     <p style="color:#706194;">Esperanza, amor y celebración</p>
                 </div>
             </div>
-            <button class="btn-save" style="margin-top:20px;" onclick="guardarTema()">Guardar Estilo</button>
+            <button class="btn-save" style="margin-top: var(--esp-4);" onclick="guardarTema()">Guardar Estilo</button>
         </div>
     </div>
 
@@ -1233,9 +1252,9 @@
     <div id="candleModal" class="system-modal">
         <div class="modal-body" style="text-align:center;">
             <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('candleModal')">&times;</span>
-            <div style="font-size:50px; margin-bottom:10px;">🕯️</div>
+            <div style="font-size:50px; margin-bottom: var(--esp-2);">🕯️</div>
             <h2 style="font-family:'Playfair Display',serif; color:var(--text-main);">Encender una Vela</h2>
-            <p style="color:var(--text-light); font-size:14px; margin-bottom:20px;">Tu vela iluminará este memorial por el tiempo que elijas.</p>
+            <p style="color:var(--text-light); font-size:14px; margin-bottom: var(--esp-4);">Tu vela iluminará este memorial por el tiempo que elijas.</p>
             <div class="form-group" style="text-align:left;">
                 <label>Tu nombre</label>
                 <input type="text" id="vela_nombre" class="input-pro" placeholder="Ej: María Rodríguez" maxlength="50" style="font-size:16px;">
@@ -1261,16 +1280,16 @@
         <div class="modal-body">
             <span style="float:right; cursor:pointer; font-size:28px; color:var(--text-light);" onclick="cerrarModal('mapaModal')">&times;</span>
             <h2 style="font-family:'Playfair Display',serif;">Mapa del Último Descanso</h2>
-            <p style="color:var(--text-light); font-size:13px; margin-bottom:15px;">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
-            <div id="mapaEditorLeaflet" style="height:220px; border-radius:var(--radio-chico); overflow:hidden; margin-bottom:15px; border:1px solid var(--border-soft);"></div>
+            <p style="color:var(--text-light); font-size:13px; margin-bottom: var(--esp-3);">Ingresa las coordenadas o haz clic en el mapa para marcar el lugar.</p>
+            <div id="mapaEditorLeaflet" style="height:220px; border-radius:var(--radio-chico); overflow:hidden; margin-bottom: var(--esp-3); border:1px solid var(--border-soft);"></div>
 
             <!-- Para quien está parado frente a la tumba y no sabe las coordenadas -->
-            <button type="button" id="btnUsarMiUbicacion" class="btn-ir-mapa" style="width:100%; justify-content:center; margin-bottom:10px;">
+            <button type="button" id="btnUsarMiUbicacion" class="btn-ir-mapa" style="width:100%; justify-content:center; margin-bottom: var(--esp-2);">
                 <i class="fas fa-location-crosshairs"></i> Usar mi ubicación actual
             </button>
-            <p id="estadoUbicacion" style="display:none; font-size:13px; margin:0 0 10px; color:var(--text-light);"></p>
+            <p id="estadoUbicacion" style="display:none; font-size:13px; margin:0 0 var(--esp-2); color:var(--text-light);"></p>
 
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <div style="display:flex; gap:10px; margin-bottom: var(--esp-2);">
                 <div class="form-group" style="flex:1; margin:0;"><label>Latitud</label><input type="text" id="m_lat" class="input-pro" placeholder="-7.0700" style="font-size:16px;"></div>
                 <div class="form-group" style="flex:1; margin:0;"><label>Longitud</label><input type="text" id="m_lng" class="input-pro" placeholder="-73.1086" style="font-size:16px;"></div>
             </div>
@@ -2499,8 +2518,8 @@
             const container = document.getElementById('arbolContainer');
             if (!container) return;
             if (familiaresData.length === 0) {
-                container.innerHTML = `<div style="text-align:center;padding:30px 20px;background:var(--card-bg);border-radius:var(--radio-grande);border:1.5px dashed var(--border-soft);">
-                    <i class="fas fa-tree" style="font-size:36px;color:var(--accent);opacity:0.4;display:block;margin-bottom:10px;"></i>
+                container.innerHTML = `<div style="text-align:center;padding: var(--esp-5) var(--esp-4);background:var(--card-bg);border-radius:var(--radio-grande);border:1.5px dashed var(--border-soft);">
+                    <i class="fas fa-tree" style="font-size:36px;color:var(--accent);opacity:0.4;display:block;margin-bottom: var(--esp-2);"></i>
                     <p style="color:var(--text-light);font-size:14px;margin:0;">El árbol familiar aún no tiene integrantes.</p>
                 </div>`;
                 return;
@@ -2544,7 +2563,7 @@
                     </div>`;
             });
             if (isFamilyAdmin) {
-                html += `<div class="arbol-row" style="margin-top:10px;"><button class="arbol-add-btn" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i> Agregar familiar</button></div>`;
+                html += `<div class="arbol-row" style="margin-top: var(--esp-2);"><button class="arbol-add-btn" onclick="abrirModalFamiliar()"><i class="fas fa-plus"></i> Agregar familiar</button></div>`;
             }
             container.innerHTML = html;
         }
@@ -2659,7 +2678,7 @@
             if (typeof QRCode !== 'undefined') {
                 const canvas = document.getElementById('qrCanvas');
                 if (canvas && !canvas.getAttribute('data-qr-done')) {
-                    QRCode.toCanvas(canvas, window.location.href, { width: 150, margin: 2 }, () => {
+                    QRCode.toCanvas(canvas, window.location.href, { width: 150, margin:2 }, () => {
                         canvas.setAttribute('data-qr-done', '1');
                         window.print();
                     });
@@ -2724,7 +2743,7 @@
                             el.style.display = '';
                             const icon = document.createElement('i');
                             icon.className = 'fas fa-map-marker-alt';
-                            icon.style.cssText = 'color:var(--accent); margin-right:6px;';
+                            icon.style.cssText = 'color:var(--accent); margin-right: var(--esp-1);';
                             el.innerHTML = '';
                             el.appendChild(icon);
                             el.appendChild(document.createTextNode(' ' + data.direccion));
