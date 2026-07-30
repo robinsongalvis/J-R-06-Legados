@@ -132,8 +132,15 @@ def efemeride_del_dia(momentos, hoy):
     Tres niveles de precisión, y se prefiere siempre el más exacto:
       dia  -> el texto trae día y mes, y coinciden con hoy
       mes  -> trae el mes, y es el mes en curso
-      anio -> solo trae el año; entonces rota uno por día para que el bloque no
-              repita lo mismo 365 días seguidos
+      anio -> todo lo demás: se cumplen años este año, aunque el día ya pasó o
+              está por venir. Rota uno por día para no repetir lo mismo siempre.
+
+    El último nivel es un cajón de sastre A PROPÓSITO. Antes solo recibía los
+    momentos SIN mes, y eso dejaba fuera a los que tenían fecha completa de otro
+    mes: en un memorial con tres momentos bien fechados el bloque salía 91 días
+    al año y los otros 274 no aparecía nada, cuando bien podía decir "este año se
+    cumplen 61 años de su nacimiento". Un aniversario no deja de serlo porque
+    hoy no sea el día.
 
     `momentos` son los diccionarios que ya arma la vista, con 'anio' como texto.
     """
@@ -151,7 +158,7 @@ def efemeride_del_dia(momentos, hoy):
             exactos.append(candidato)
         elif mes and mes == hoy.month:
             del_mes.append(candidato)
-        elif not mes:
+        else:
             del_anio.append(candidato)
 
     if exactos:
