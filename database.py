@@ -112,6 +112,11 @@ class PerfilDifunto(Base):
     estado_pago = Column(String, default="pendiente")  # pendiente | pagado | cortesia
     notas_internas = Column(Text, default="")
 
+    # Cuándo se le avisó por última vez a la familia de un recuerdo nuevo.
+    # Sirve para no mandarles veinte correos la tarde del funeral: ver
+    # ESPERA_ENTRE_AVISOS en notificaciones.py.
+    ultimo_aviso = Column(DateTime, nullable=True)
+
     # Relaciones con otras tablas
     #
     # order_by explícito: sin ORDER BY, Postgres puede devolver las filas en el
@@ -177,6 +182,24 @@ class VelaEncendida(Base):
     perfil = relationship("PerfilDifunto", back_populates="velas_list")
 
 class FamiliarArbol(Base):
+    """Una persona del árbol. Con jerarquía: puede descender de otra y tener pareja.
+
+    'relacion' es relativa a AQUEL DE QUIEN DESCIENDE, no al difunto. El hijo de
+    una hija es "Hijo" —hijo de ella—, y que sea nieto del homenajeado se deduce
+    de su posición en el árbol. Decirlo al revés obligaría a cada persona a saber
+    a qué distancia está del difunto, y esa distancia cambia cuando el árbol
+    crece por arriba.
+
+    padre_id nulo significa "cuelga del homenajeado": es el caso de sus padres,
+    sus hermanos y sus hijos, y es lo que tenían todas las filas antes de que
+    existiera la jerarquía. Por eso los datos viejos siguen siendo correctos.
+
+    LOS HIJOS CUELGAN DE UNA SOLA PERSONA, no de la pareja. Genealógicamente lo
+    correcto sería una entidad "unión", pero eso son dos tablas y tres consultas
+    más para agregar a alguien. Acá el vínculo de pareja es aparte (pareja_id) y
+    quien dibuja junta a los dos y les pone los hijos debajo es la interfaz: el
+    árbol se ve correcto sin que agregar a un nieto cueste tres pasos.
+    """
     __tablename__ = "familiares_arbol"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String)
@@ -186,6 +209,9 @@ class FamiliarArbol(Base):
     orden = Column(Integer, default=0)
     perfil_id = Column(Integer, ForeignKey("perfiles.id"))
     perfil = relationship("PerfilDifunto", back_populates="familiares_arbol")
+
+    padre_id = Column(Integer, ForeignKey("familiares_arbol.id"), nullable=True, index=True)
+    pareja_id = Column(Integer, ForeignKey("familiares_arbol.id"), nullable=True)
 
 # Esto crea las tablas automáticamente en Neon.tech si no existen
 Base.metadata.create_all(bind=engine)
@@ -272,6 +298,7 @@ _COLUMNAS_GESTION = [
     "contacto_email VARCHAR DEFAULT ''",
     "estado_pago VARCHAR DEFAULT 'pendiente'",
     "notas_internas TEXT DEFAULT ''",
+    "ultimo_aviso TIMESTAMP",
 ]
 
 for _columna in _COLUMNAS_GESTION:
@@ -280,6 +307,25 @@ for _columna in _COLUMNAS_GESTION:
             conn.execute(text(f"ALTER TABLE perfiles ADD COLUMN {_columna}"))
     except Exception:
         pass
+
+# El árbol pasa de lista a jerarquía. Las columnas se agregan con el patrón
+# tolerante de siempre: si ya existen, la excepción se traga y sigue.
+_COLUMNAS_ARBOL = [
+    "padre_id INTEGER",    # de quién desciende. NULL = cuelga del homenajeado
+    "pareja_id INTEGER",   # con quién forma pareja, para dibujarlos juntos
+]
+for _columna in _COLUMNAS_ARBOL:
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(f"ALTER TABLE familiares_arbol ADD COLUMN {_columna}"))
+    except Exception:
+        pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_familiares_arbol_padre_id ON familiares_arbol (padre_id)"))
+except Exception:
+    pass
 
 # create_all no añade índices a tablas que ya existen, así que el de velas hay
 # que crearlo aparte para las bases que ya estaban en producción.

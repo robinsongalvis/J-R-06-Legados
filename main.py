@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, Response
+from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, Response, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import datetime
 import os
 import socket
-from typing import List
+from typing import List, Optional
 import re
 import hashlib
 import hmac
@@ -199,6 +199,7 @@ cloudinary.config(
 )
 
 import database
+import notificaciones
 
 app = FastAPI(title="Memorial Digital QR")
 
@@ -609,6 +610,8 @@ class FamiliarRequest(BaseModel):
     foto_url: str = ""
     memorial_id: str = ""
     orden: int = 0
+    padre_id: Optional[int] = None    # de quién desciende. None = del homenajeado
+    pareja_id: Optional[int] = None   # con quién se dibuja en pareja
 
 def get_db():
     db = database.SessionLocal()
@@ -878,13 +881,16 @@ def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db))
 
 # --- RUTAS DE RECUERDOS Y MOMENTOS ---
 @app.post("/dejar_mensaje/{identificador}")
-def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, request: Request, db: Session = Depends(get_db)):
+def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "dejar_mensaje", max_calls=10, window=60)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     nuevo_msj = database.MensajeRecuerdo(autor=mensaje.autor, texto=mensaje.texto[:150], perfil_id=perfil.id)
     db.add(nuevo_msj)
     registrar_interaccion(perfil, db)
+    # El aviso sale despues de responder: si el correo tarda o falla, el visitante
+    # ya vio su recuerdo guardado.
+    tareas.add_task(notificaciones.avisar_nuevo_recuerdo, perfil.id, "mensaje", mensaje.autor, mensaje.texto)
     return {"mensaje": "Recuerdo guardado"}
 
 @app.post("/likear_mensaje/{mensaje_id}")
@@ -970,14 +976,16 @@ def likear_foto(foto_id: int, request: Request, db: Session = Depends(get_db)):
     return {"likes": foto.likes}
 
 @app.post("/api/comentar_foto/{foto_id}")
-def comentar_foto(foto_id: int, comentario: ComentarioNuevo, request: Request, db: Session = Depends(get_db)):
+def comentar_foto(foto_id: int, comentario: ComentarioNuevo, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "comentar", max_calls=10, window=60)
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     nuevo_comentario = database.ComentarioFoto(texto=comentario.texto[:120], foto_id=foto.id)
     db.add(nuevo_comentario)
     db.commit()
-    if foto.perfil: registrar_interaccion(foto.perfil, db)
+    if foto.perfil:
+        registrar_interaccion(foto.perfil, db)
+        tareas.add_task(notificaciones.avisar_nuevo_recuerdo, foto.perfil.id, "comentario", "Alguien", comentario.texto)
     return {"mensaje": "Comentario agregado"}
 
 # --- ADMIN: GESTIÓN DE PERFILES (PROTEGIDO) ---
@@ -1136,7 +1144,8 @@ def ver_perfil(request: Request, identificador: str, db: Session = Depends(get_d
         **_mapa_context(perfil, request),
         "familiares": [
             {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
-             "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or ''}
+             "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '',
+             "orden": f.orden, "padre_id": f.padre_id, "pareja_id": f.pareja_id}
             for f in sorted(getattr(perfil, 'familiares_arbol', []), key=lambda x: x.orden)
         ],
     }
@@ -1188,6 +1197,65 @@ def actualizar_gestion(identificador: str, datos: GestionUpdate, request: Reques
     perfil.notas_internas = datos.notas_internas.strip()
     db.commit()
     return {"mensaje": "Datos de gestión actualizados", "estado_pago": perfil.estado_pago}
+
+@app.get("/api/admin/estado_avisos")
+def estado_avisos(request: Request, admin: bool = Depends(verificar_admin)):
+    """Dice qué canales de aviso están configurados, sin revelar credenciales."""
+    return {
+        "correo": notificaciones.correo_configurado(),
+        "whatsapp": notificaciones.whatsapp_configurado(),
+        "remitente": notificaciones.SMTP_REMITENTE if notificaciones.correo_configurado() else "",
+        "espera_minutos": notificaciones.ESPERA_ENTRE_AVISOS,
+    }
+
+
+@app.post("/api/admin/probar_aviso/{identificador}")
+def probar_aviso(identificador: str, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Manda un aviso de prueba al contacto de ese memorial.
+
+    Sin esto habría que configurar las credenciales a ciegas y esperar a que un
+    visitante real deje un recuerdo para saber si funcionan. Va en primer plano
+    (no en segundo) justamente para poder devolver el error si algo falla.
+    """
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404, detail="Memorial no encontrado.")
+
+    if not (notificaciones.correo_configurado() or notificaciones.whatsapp_configurado()):
+        raise HTTPException(status_code=400, detail="No hay ningún canal de avisos configurado en el servidor.")
+
+    destino_correo = (perfil.contacto_email or "").strip()
+    destino_wa = (perfil.contacto_telefono or "").strip()
+    if not destino_correo and not destino_wa:
+        raise HTTPException(status_code=400, detail=f"{perfil.nombre} no tiene datos de contacto guardados.")
+
+    enlace = f"{notificaciones.URL_BASE}/perfil/{perfil.identificador}"
+    texto = "Este es un aviso de prueba. Si lo recibiste, los avisos ya funcionan."
+    resultados = []
+
+    if destino_correo:
+        ok = notificaciones.enviar_correo(
+            destino_correo,
+            f"Prueba de avisos · {perfil.nombre}",
+            notificaciones._cuerpo_correo(perfil.nombre, "un recuerdo", "Legados Angels", texto, enlace),
+            f"{texto}\n\nVer el memorial: {enlace}",
+        )
+        resultados.append(("correo", destino_correo, ok))
+
+    if destino_wa:
+        ok = notificaciones.enviar_whatsapp(destino_wa, ["Legados Angels", perfil.nombre, texto, enlace])
+        resultados.append(("WhatsApp", destino_wa, ok))
+
+    enviados = [f"{canal} a {destino}" for canal, destino, ok in resultados if ok]
+    fallidos = [canal for canal, _, ok in resultados if not ok]
+
+    if not enviados:
+        raise HTTPException(status_code=502, detail=f"No se pudo enviar por {' ni '.join(fallidos)}. Revisa las credenciales en Render.")
+
+    aviso = "Enviado por " + " y ".join(enviados)
+    if fallidos:
+        aviso += f". Falló por {' y '.join(fallidos)}."
+    return {"mensaje": aviso}
+
 
 @app.get("/api/admin/respaldo")
 def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
@@ -1256,8 +1324,12 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
                 {"anio": mo.anio, "titulo": mo.titulo, "descripcion": mo.descripcion}
                 for mo in p.momentos
             ],
+            # Con id y vínculos: sin ellos el respaldo guardaría los nombres pero
+            # perdería la forma del árbol, que es justo lo que la familia construyó.
             "familiares": [
-                {"nombre": fa.nombre, "relacion": fa.relacion, "foto_url": fa.foto_url, "orden": fa.orden}
+                {"id": fa.id, "nombre": fa.nombre, "relacion": fa.relacion,
+                 "foto_url": fa.foto_url, "orden": fa.orden,
+                 "padre_id": fa.padre_id, "pareja_id": fa.pareja_id}
                 for fa in p.familiares_arbol
             ],
             # Las dedicadas (con nombre y mensaje) van enteras. Las anónimas, que
@@ -1348,7 +1420,7 @@ def listar_velas_muro(identificador: str, db: Session = Depends(get_db)):
     return {"velas": velas_activas, "total": len(velas_activas)}
 
 @app.post("/api/velas_muro/{identificador}")
-def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request, db: Session = Depends(get_db)):
+def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "vela_muro", max_calls=3, window=300)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
@@ -1362,6 +1434,10 @@ def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request,
     db.add(nueva_vela)
     perfil.velas = (perfil.velas or 0) + 1
     registrar_interaccion(perfil, db)
+    tareas.add_task(
+        notificaciones.avisar_nuevo_recuerdo, perfil.id, "vela",
+        nueva_vela.nombre, nueva_vela.mensaje or "Encendió una vela en su memoria"
+    )
     return {"mensaje": "Vela encendida", "velas_total": perfil.velas}
 
 # ==========================================
@@ -1393,7 +1469,8 @@ def listar_familiares(identificador: str, db: Session = Depends(get_db)):
     if not perfil: raise HTTPException(status_code=404)
     return {"familiares": [
         {"id": f.id, "nombre": f.nombre, "relacion": f.relacion,
-         "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '', "orden": f.orden}
+         "foto_url": f.foto_url or '', "memorial_id": f.memorial_id or '', "orden": f.orden,
+         "padre_id": f.padre_id, "pareja_id": f.pareja_id}
         for f in sorted(perfil.familiares_arbol, key=lambda x: x.orden)
     ]}
 
@@ -1406,12 +1483,59 @@ def agregar_familiar(identificador: str, datos: FamiliarRequest, request: Reques
         nombre=datos.nombre[:80], relacion=datos.relacion,
         foto_url=datos.foto_url[:500] if datos.foto_url else "",
         memorial_id=datos.memorial_id[:100] if datos.memorial_id else "",
-        orden=datos.orden, perfil_id=perfil.id
+        orden=datos.orden, perfil_id=perfil.id,
+        padre_id=_vinculo_valido(db, perfil.id, datos.padre_id),
+        pareja_id=_vinculo_valido(db, perfil.id, datos.pareja_id),
     )
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
     return {"id": nuevo.id, "mensaje": "Familiar agregado"}
+
+def _vinculo_valido(db: Session, perfil_id: int, vinculo_id, propio_id=None) -> int | None:
+    """Comprueba que un padre_id o pareja_id se pueda usar, o revienta con 400.
+
+    Tres cosas que hay que impedir, y ninguna es hipotética:
+
+    OTRO MEMORIAL. Sin esta comprobación, alguien con el PIN de su memorial podría
+    colgar a una persona del árbol de otra familia — y como el árbol es público,
+    ese nombre y esa foto aparecerían en una página ajena.
+
+    A SÍ MISMO. Nadie desciende de sí mismo.
+
+    UN CICLO. Si A desciende de B y luego B se cuelga de A, el árbol deja de tener
+    raíz: cualquier recorrido da vueltas para siempre y la página se congela. Se
+    sube por la cadena de ancestros antes de aceptar el cambio.
+    """
+    if vinculo_id in (None, "", 0):
+        return None
+    try:
+        vinculo_id = int(vinculo_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Vínculo familiar inválido.")
+
+    otro = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == vinculo_id).first()
+    if not otro or otro.perfil_id != perfil_id:
+        raise HTTPException(status_code=400, detail="Esa persona no está en este árbol.")
+    if propio_id is not None and vinculo_id == propio_id:
+        raise HTTPException(status_code=400, detail="Nadie desciende de sí mismo.")
+
+    # Subir por los ancestros del futuro padre: si aparece uno mismo, es un ciclo.
+    # El tope no es paranoia sobre familias muy largas: es la red que evita un
+    # bucle infinito si los datos ya venían corruptos.
+    visto, actual, saltos = set(), otro, 0
+    while actual is not None and saltos < 200:
+        if propio_id is not None and actual.id == propio_id:
+            raise HTTPException(status_code=400, detail="Eso crearía un círculo en el árbol.")
+        if actual.id in visto:
+            break
+        visto.add(actual.id)
+        actual = (db.query(database.FamiliarArbol)
+                    .filter(database.FamiliarArbol.id == actual.padre_id).first()
+                  if actual.padre_id else None)
+        saltos += 1
+    return vinculo_id
+
 
 @app.post("/api/familiar/foto/{identificador}")
 async def subir_foto_familiar(identificador: str, request: Request, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -1454,6 +1578,8 @@ def editar_familiar(familiar_id: int, datos: FamiliarRequest, request: Request, 
     familiar.foto_url = datos.foto_url[:500] if datos.foto_url else ""
     familiar.memorial_id = datos.memorial_id[:100] if datos.memorial_id else ""
     familiar.orden = datos.orden
+    familiar.padre_id = _vinculo_valido(db, familiar.perfil_id, datos.padre_id, familiar.id)
+    familiar.pareja_id = _vinculo_valido(db, familiar.perfil_id, datos.pareja_id, familiar.id)
     db.commit()
     return {"mensaje": "Familiar actualizado"}
 
@@ -1462,6 +1588,18 @@ def eliminar_familiar(familiar_id: int, request: Request, db: Session = Depends(
     familiar = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.id == familiar_id).first()
     if not familiar: raise HTTPException(status_code=404)
     exigir_pin_o_admin(request, familiar.perfil)
+
+    # Quien tenía descendencia no se la lleva consigo. Sus hijos suben a colgar de
+    # su abuelo —o del homenajeado, si no había—, en vez de quedar apuntando a un
+    # id que ya no existe: eso los borraría de la pantalla sin avisar, porque el
+    # árbol se dibuja bajando desde la raíz y a ellos ya no los alcanzaría nadie.
+    hijos = db.query(database.FamiliarArbol).filter(database.FamiliarArbol.padre_id == familiar.id).all()
+    for h in hijos:
+        h.padre_id = familiar.padre_id
+    # Y quien lo tenía como pareja deja de tenerla, en vez de apuntar a un fantasma.
+    for otro in db.query(database.FamiliarArbol).filter(database.FamiliarArbol.pareja_id == familiar.id).all():
+        otro.pareja_id = None
+
     db.delete(familiar)
     db.commit()
-    return {"mensaje": "Familiar eliminado"}
+    return {"mensaje": "Familiar eliminado", "hijos_reubicados": len(hijos)}

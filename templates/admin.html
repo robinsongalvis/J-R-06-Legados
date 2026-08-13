@@ -288,6 +288,20 @@
                         <div><label class="input-label"><i class="fas fa-envelope mr-1"></i> Correo</label><input type="email" id="g_contacto_email" placeholder="familia@correo.com" class="input-pro"></div>
                     </div>
                     <div><label class="input-label">Notas Internas</label><textarea id="g_notas" rows="3" placeholder="Ej: entregado en placa dorada, pendiente segunda cuota..." class="input-pro text-sm"></textarea></div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <p class="input-label mb-1"><i class="fas fa-bell mr-1"></i> Avisos a la familia</p>
+                                <p class="text-[11px] text-slate-400" id="estado-canales">Comprobando canales…</p>
+                            </div>
+                            <button type="button" onclick="probarAviso(this)" id="btnProbarAviso"
+                                    class="shrink-0 text-xs font-semibold px-3 py-2 rounded-xl border transition-colors flex items-center gap-2"
+                                    style="color: var(--gold-bright); border-color: rgba(212,175,55,0.35); background: rgba(212,175,55,0.10);">
+                                <i class="fas fa-paper-plane"></i> Enviar prueba
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <p class="text-[11px] text-slate-400 mb-5" id="gestion-fecha-alta"></p>
@@ -974,6 +988,53 @@
                 ? `<i class="fas fa-calendar-plus mr-1"></i> Memorial creado el ${escapeHtml(perfil.fecha_creacion)}.`
                 : `<i class="fas fa-calendar-plus mr-1"></i> Memorial anterior al registro de fechas.`;
             document.getElementById('modalGestion').classList.add('active');
+            mostrarEstadoCanales();
+        }
+
+        // Qué canales de aviso están vivos en el servidor. Se consulta al abrir
+        // porque depende de variables de entorno, no de nada guardado aquí.
+        let canalesAvisos = null;
+        function mostrarEstadoCanales() {
+            const destino = document.getElementById('estado-canales');
+            const boton = document.getElementById('btnProbarAviso');
+
+            const pintar = () => {
+                const activos = [];
+                if (canalesAvisos.correo) activos.push('correo');
+                if (canalesAvisos.whatsapp) activos.push('WhatsApp');
+                if (activos.length) {
+                    destino.textContent = `Activos: ${activos.join(' y ')}. Máximo un aviso cada ${Math.round(canalesAvisos.espera_minutos / 60)} h.`;
+                    boton.disabled = false;
+                    boton.style.opacity = '';
+                } else {
+                    destino.textContent = 'Ningún canal configurado en el servidor. Los recuerdos se guardan igual, pero nadie recibe aviso.';
+                    boton.disabled = true;
+                    boton.style.opacity = '0.45';
+                }
+            };
+
+            if (canalesAvisos) { pintar(); return; }
+            fetch('/api/admin/estado_avisos')
+                .then(r => r.ok ? r.json() : null)
+                .then(d => { if (!d) throw new Error(); canalesAvisos = d; pintar(); })
+                .catch(() => { destino.textContent = 'No se pudo comprobar el estado de los avisos.'; });
+        }
+
+        function probarAviso(btn) {
+            if (!perfilEnGestion) return;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Enviando...';
+            btn.disabled = true;
+
+            fetch(`/api/admin/probar_aviso/${perfilEnGestion}`, { method: 'POST' })
+                .then(async res => {
+                    const d = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(d.detail || 'No se pudo enviar la prueba.');
+                    return d;
+                })
+                .then(d => mostrarToast(d.mensaje, 'exito', 7000))
+                .catch(e => mostrarToast(e.message, 'error', 8000))
+                .finally(() => { btn.innerHTML = original; btn.disabled = false; });
         }
 
         function cerrarModalGestion() {
