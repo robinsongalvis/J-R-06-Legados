@@ -112,6 +112,11 @@ class PerfilDifunto(Base):
     estado_pago = Column(String, default="pendiente")  # pendiente | pagado | cortesia
     notas_internas = Column(Text, default="")
 
+    # Cuándo se le avisó por última vez a la familia de un recuerdo nuevo.
+    # Sirve para no mandarles veinte correos la tarde del funeral: ver
+    # ESPERA_ENTRE_AVISOS en notificaciones.py.
+    ultimo_aviso = Column(DateTime, nullable=True)
+
     # Relaciones con otras tablas
     #
     # order_by explícito: sin ORDER BY, Postgres puede devolver las filas en el
@@ -293,6 +298,7 @@ _COLUMNAS_GESTION = [
     "contacto_email VARCHAR DEFAULT ''",
     "estado_pago VARCHAR DEFAULT 'pendiente'",
     "notas_internas TEXT DEFAULT ''",
+    "ultimo_aviso TIMESTAMP",
 ]
 
 for _columna in _COLUMNAS_GESTION:

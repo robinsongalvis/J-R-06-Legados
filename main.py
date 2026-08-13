@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, Response
+from fastapi import FastAPI, Request, Depends, HTTPException, File, UploadFile, Response, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -199,6 +199,7 @@ cloudinary.config(
 )
 
 import database
+import notificaciones
 
 app = FastAPI(title="Memorial Digital QR")
 
@@ -880,13 +881,16 @@ def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db))
 
 # --- RUTAS DE RECUERDOS Y MOMENTOS ---
 @app.post("/dejar_mensaje/{identificador}")
-def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, request: Request, db: Session = Depends(get_db)):
+def dejar_mensaje(identificador: str, mensaje: MensajeNuevo, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "dejar_mensaje", max_calls=10, window=60)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
     nuevo_msj = database.MensajeRecuerdo(autor=mensaje.autor, texto=mensaje.texto[:150], perfil_id=perfil.id)
     db.add(nuevo_msj)
     registrar_interaccion(perfil, db)
+    # El aviso sale despues de responder: si el correo tarda o falla, el visitante
+    # ya vio su recuerdo guardado.
+    tareas.add_task(notificaciones.avisar_nuevo_recuerdo, perfil.id, "mensaje", mensaje.autor, mensaje.texto)
     return {"mensaje": "Recuerdo guardado"}
 
 @app.post("/likear_mensaje/{mensaje_id}")
@@ -972,14 +976,16 @@ def likear_foto(foto_id: int, request: Request, db: Session = Depends(get_db)):
     return {"likes": foto.likes}
 
 @app.post("/api/comentar_foto/{foto_id}")
-def comentar_foto(foto_id: int, comentario: ComentarioNuevo, request: Request, db: Session = Depends(get_db)):
+def comentar_foto(foto_id: int, comentario: ComentarioNuevo, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "comentar", max_calls=10, window=60)
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     nuevo_comentario = database.ComentarioFoto(texto=comentario.texto[:120], foto_id=foto.id)
     db.add(nuevo_comentario)
     db.commit()
-    if foto.perfil: registrar_interaccion(foto.perfil, db)
+    if foto.perfil:
+        registrar_interaccion(foto.perfil, db)
+        tareas.add_task(notificaciones.avisar_nuevo_recuerdo, foto.perfil.id, "comentario", "Alguien", comentario.texto)
     return {"mensaje": "Comentario agregado"}
 
 # --- ADMIN: GESTIÓN DE PERFILES (PROTEGIDO) ---
@@ -1192,6 +1198,65 @@ def actualizar_gestion(identificador: str, datos: GestionUpdate, request: Reques
     db.commit()
     return {"mensaje": "Datos de gestión actualizados", "estado_pago": perfil.estado_pago}
 
+@app.get("/api/admin/estado_avisos")
+def estado_avisos(request: Request, admin: bool = Depends(verificar_admin)):
+    """Dice qué canales de aviso están configurados, sin revelar credenciales."""
+    return {
+        "correo": notificaciones.correo_configurado(),
+        "whatsapp": notificaciones.whatsapp_configurado(),
+        "remitente": notificaciones.SMTP_REMITENTE if notificaciones.correo_configurado() else "",
+        "espera_minutos": notificaciones.ESPERA_ENTRE_AVISOS,
+    }
+
+
+@app.post("/api/admin/probar_aviso/{identificador}")
+def probar_aviso(identificador: str, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Manda un aviso de prueba al contacto de ese memorial.
+
+    Sin esto habría que configurar las credenciales a ciegas y esperar a que un
+    visitante real deje un recuerdo para saber si funcionan. Va en primer plano
+    (no en segundo) justamente para poder devolver el error si algo falla.
+    """
+    perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
+    if not perfil: raise HTTPException(status_code=404, detail="Memorial no encontrado.")
+
+    if not (notificaciones.correo_configurado() or notificaciones.whatsapp_configurado()):
+        raise HTTPException(status_code=400, detail="No hay ningún canal de avisos configurado en el servidor.")
+
+    destino_correo = (perfil.contacto_email or "").strip()
+    destino_wa = (perfil.contacto_telefono or "").strip()
+    if not destino_correo and not destino_wa:
+        raise HTTPException(status_code=400, detail=f"{perfil.nombre} no tiene datos de contacto guardados.")
+
+    enlace = f"{notificaciones.URL_BASE}/perfil/{perfil.identificador}"
+    texto = "Este es un aviso de prueba. Si lo recibiste, los avisos ya funcionan."
+    resultados = []
+
+    if destino_correo:
+        ok = notificaciones.enviar_correo(
+            destino_correo,
+            f"Prueba de avisos · {perfil.nombre}",
+            notificaciones._cuerpo_correo(perfil.nombre, "un recuerdo", "Legados Angels", texto, enlace),
+            f"{texto}\n\nVer el memorial: {enlace}",
+        )
+        resultados.append(("correo", destino_correo, ok))
+
+    if destino_wa:
+        ok = notificaciones.enviar_whatsapp(destino_wa, ["Legados Angels", perfil.nombre, texto, enlace])
+        resultados.append(("WhatsApp", destino_wa, ok))
+
+    enviados = [f"{canal} a {destino}" for canal, destino, ok in resultados if ok]
+    fallidos = [canal for canal, _, ok in resultados if not ok]
+
+    if not enviados:
+        raise HTTPException(status_code=502, detail=f"No se pudo enviar por {' ni '.join(fallidos)}. Revisa las credenciales en Render.")
+
+    aviso = "Enviado por " + " y ".join(enviados)
+    if fallidos:
+        aviso += f". Falló por {' y '.join(fallidos)}."
+    return {"mensaje": aviso}
+
+
 @app.get("/api/admin/respaldo")
 def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
     """Exporta TODA la plataforma a un archivo JSON descargable.
@@ -1355,7 +1420,7 @@ def listar_velas_muro(identificador: str, db: Session = Depends(get_db)):
     return {"velas": velas_activas, "total": len(velas_activas)}
 
 @app.post("/api/velas_muro/{identificador}")
-def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request, db: Session = Depends(get_db)):
+def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request, tareas: BackgroundTasks, db: Session = Depends(get_db)):
     rate_limit_check(request, "vela_muro", max_calls=3, window=300)
     perfil = db.query(database.PerfilDifunto).filter(database.PerfilDifunto.identificador == identificador).first()
     if not perfil: raise HTTPException(status_code=404)
@@ -1369,6 +1434,10 @@ def encender_vela_muro(identificador: str, datos: VelaRequest, request: Request,
     db.add(nueva_vela)
     perfil.velas = (perfil.velas or 0) + 1
     registrar_interaccion(perfil, db)
+    tareas.add_task(
+        notificaciones.avisar_nuevo_recuerdo, perfil.id, "vela",
+        nueva_vela.nombre, nueva_vela.mensaje or "Encendió una vela en su memoria"
+    )
     return {"mensaje": "Vela encendida", "velas_total": perfil.velas}
 
 # ==========================================
