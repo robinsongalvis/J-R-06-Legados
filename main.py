@@ -633,6 +633,33 @@ def comprimir_imagen(file_content):
         print(f"Aviso en compresión: {e}")
         return io.BytesIO(file_content)
 
+def borrar_de_cloudinary(url: str):
+    """Borra de Cloudinary el archivo al que apunta una URL nuestra.
+
+    Existe porque al reemplazar la foto de perfil, las portadas o el audio, el
+    archivo anterior quedaba huérfano en la nube para siempre: la cuota gratuita
+    se iba llenando de fotos que ya nadie puede ver.
+
+    Se llama SIEMPRE después de que el reemplazo nuevo ya subió y quedó guardado
+    en la base de datos — si esta limpieza falla, lo único que pasa es que queda
+    un huérfano más (como hasta ahora); jamás puede costarle una foto a una
+    familia. Por eso también se traga cualquier error, dejando registro.
+    """
+    if not url or "res.cloudinary.com" not in url or "/memoriales/" not in url:
+        return  # Placeholder externo (Unsplash, Pixabay) o vacío: no es nuestro
+
+    try:
+        # De .../image/upload/v123/memoriales/demo/perfiles/abc.jpg
+        # el public_id es memoriales/demo/perfiles/abc (sin extensión).
+        partes = url.split("/")
+        public_id = "/".join(partes[partes.index("memoriales"):]).rsplit(".", 1)[0]
+        # El tipo va en la propia URL: audio y video viven bajo /video/upload/.
+        tipo = "video" if "/video/upload/" in url else "image"
+        cloudinary.uploader.destroy(public_id, resource_type=tipo)
+    except Exception as e:
+        print(f"Aviso: no se pudo limpiar el archivo anterior de Cloudinary ({url[:80]}): {e}")
+
+
 def registrar_interaccion(perfil, db):
     # El día se corta a la medianoche de Colombia, no a las 7 de la noche, que
     # es cuando cambia la fecha en UTC.
@@ -797,8 +824,11 @@ async def cambiar_foto_perfil(identificador: str, request: Request, archivo: Upl
             file_obj = comprimir_imagen(contenido)
             respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/perfiles", resource_type="image")
         
+        url_anterior = perfil.foto_perfil
         perfil.foto_perfil = respuesta_cloud['secure_url']
         db.commit()
+        # Solo cuando el reemplazo ya está a salvo se limpia el anterior
+        borrar_de_cloudinary(url_anterior)
         return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
     except Exception as e:
         print(f"Error en Cloudinary Perfil: {e}")
@@ -819,8 +849,13 @@ async def cambiar_foto_portada(identificador: str, request: Request, archivos: L
             else: 
                 file_obj = comprimir_imagen(contenido)
                 urls_guardadas.append(cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
+        urls_anteriores = (perfil.foto_portada or "").split(",")
         perfil.foto_portada = ",".join(urls_guardadas)
         db.commit()
+        # Solo cuando las nuevas ya están a salvo se limpian las anteriores
+        for url_vieja in urls_anteriores:
+            if url_vieja.strip() and url_vieja.strip() not in urls_guardadas:
+                borrar_de_cloudinary(url_vieja.strip())
         return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
     except Exception as e:
         print(f"Error en Cloudinary Portada: {e}")
@@ -859,8 +894,10 @@ async def subir_audio_voz(identificador: str, request: Request, archivo: UploadF
         contenido = await archivo.read()
         file_obj = io.BytesIO(contenido)
         respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/audio", resource_type="video") # Cloudinary procesa audio como video
+        url_anterior = getattr(perfil, "audio_voz", "")
         perfil.audio_voz = respuesta_cloud['secure_url']
         db.commit()
+        borrar_de_cloudinary(url_anterior)
         return {"mensaje": "Audio subido correctamente", "url": respuesta_cloud['secure_url']}
     except Exception as e:
         print(f"Error en Audio: {e}")
@@ -871,10 +908,7 @@ def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db))
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     exigir_pin_o_admin(request, foto.perfil)
-    try:
-        url_partes = foto.url_foto.split('/')
-        cloudinary.uploader.destroy("/".join(url_partes[url_partes.index("memoriales"):]).split('.')[0], resource_type="image")
-    except: pass
+    borrar_de_cloudinary(foto.url_foto)
     db.delete(foto)
     db.commit()
     return {"mensaje": "Foto eliminada"}
@@ -1358,9 +1392,72 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
 
 @app.get("/api/admin/moderacion")
 def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Todo el contenido que dejan los visitantes, para poder vigilarlo y borrarlo.
+
+    Cubre los CUATRO tipos de contenido ajeno: fotos, mensajes de recuerdo,
+    velas dedicadas y comentarios de fotos. Antes solo traía los dos primeros:
+    un mensaje cruel en una vela no se podía borrar desde ninguna parte.
+    """
     fotos = db.query(database.FotoGaleria).all()
     mensajes = db.query(database.MensajeRecuerdo).all()
-    return {"fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil], "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]}
+    # Solo las velas del muro (dedicadas, con nombre y mensaje). Los clics de
+    # /api/encender_vela crean filas anónimas con duracion_horas=0 SOLO para
+    # dejar constancia de la fecha; no llevan texto moderable y su volumen es
+    # órdenes de magnitud mayor. Traerlas al panel esconde las dedicatorias
+    # reales bajo cientos de tarjetas '(sin mensaje)'.
+    velas = (
+        db.query(database.VelaEncendida)
+        .filter(database.VelaEncendida.duracion_horas > 0)
+        .order_by(database.VelaEncendida.id.desc())
+        .all()
+    )
+    comentarios = db.query(database.ComentarioFoto).order_by(database.ComentarioFoto.id.desc()).all()
+    return {
+        "fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil],
+        "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil],
+        "velas": [
+            {"id": v.id, "nombre": v.nombre, "mensaje": v.mensaje, "perfil": v.perfil.nombre,
+             "fecha": v.fecha_encendida.strftime("%d/%m/%Y") if v.fecha_encendida else ""}
+            for v in velas if v.perfil
+        ],
+        "comentarios": [
+            {"id": c.id, "texto": c.texto, "foto_url": c.foto.url_foto, "perfil": c.foto.perfil.nombre}
+            for c in comentarios if c.foto and c.foto.perfil
+        ],
+    }
+
+
+@app.delete("/api/admin/eliminar_vela/{vela_id}")
+def eliminar_vela(vela_id: int, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Borra una vela DEDICADA (con nombre y mensaje). No toca los clics anónimos.
+
+    Solo se puede eliminar contenido con autor y texto — que es lo que se
+    modera. Un clic anónimo de encender vela no lleva contenido, así que no
+    tiene sentido "borrarlo": haría bajar el contador público '344 velas' →
+    '343' sin ninguna razón visible para la familia, y ese daño no se repara.
+
+    Cuando borramos una dedicatoria, el contador SÍ baja: la dedicatoria
+    contaba como vela, y si no merecía estar tampoco merece seguir sumando.
+    """
+    vela = db.query(database.VelaEncendida).filter(database.VelaEncendida.id == vela_id).first()
+    if not vela: raise HTTPException(status_code=404)
+    if vela.duracion_horas == 0:
+        raise HTTPException(status_code=400, detail="Los clics anónimos de encender vela no se moderan; solo las dedicatorias con nombre y mensaje.")
+    if vela.perfil and (vela.perfil.velas or 0) > 0:
+        vela.perfil.velas -= 1
+    db.delete(vela)
+    db.commit()
+    return {"mensaje": "Vela eliminada"}
+
+
+@app.delete("/api/admin/eliminar_comentario/{comentario_id}")
+def eliminar_comentario(comentario_id: int, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Borra un comentario de foto desde el panel de moderación."""
+    comentario = db.query(database.ComentarioFoto).filter(database.ComentarioFoto.id == comentario_id).first()
+    if not comentario: raise HTTPException(status_code=404)
+    db.delete(comentario)
+    db.commit()
+    return {"mensaje": "Comentario eliminado"}
 
 # ==========================================
 # 🎨 PREMIUM: TEMA VISUAL

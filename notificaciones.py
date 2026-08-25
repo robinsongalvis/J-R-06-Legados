@@ -37,9 +37,28 @@ log = logging.getLogger("legados.avisos")
 # CONFIGURACIÓN (todo por variables de entorno)
 # ==========================================
 
+def _entero_env(clave: str, por_defecto: int) -> int:
+    """Lee un entero de la env sin explotar si viene vacío o mal escrito.
+
+    os.getenv(clave, default) solo devuelve el default cuando la variable NO
+    ESTÁ DEFINIDA. Si el admin la agrega en Render y la deja vacía, o pone un
+    valor no numérico, int() lanza ValueError EN EL IMPORT y toda la app deja
+    de arrancar — no solo esta feature opcional. Aquí caemos al valor por
+    defecto y dejamos rastro en el log.
+    """
+    crudo = (os.getenv(clave) or "").strip()
+    if not crudo:
+        return por_defecto
+    try:
+        return int(crudo)
+    except ValueError:
+        log.warning("Variable %s='%s' no es un número; se usa el valor por defecto %d.", clave, crudo, por_defecto)
+        return por_defecto
+
+
 # --- Correo (SMTP: sirve Gmail, Zoho, Hostinger, el que sea) ---
 SMTP_HOST = os.getenv("SMTP_HOST", "")
-SMTP_PUERTO = int(os.getenv("SMTP_PORT", "587"))
+SMTP_PUERTO = _entero_env("SMTP_PORT", 587)
 SMTP_USUARIO = os.getenv("SMTP_USER", "")
 SMTP_CLAVE = os.getenv("SMTP_PASSWORD", "")
 SMTP_REMITENTE = os.getenv("SMTP_FROM", SMTP_USUARIO)
@@ -52,7 +71,7 @@ WA_PLANTILLA = os.getenv("WHATSAPP_TEMPLATE", "")
 WA_IDIOMA_PLANTILLA = os.getenv("WHATSAPP_TEMPLATE_LANG", "es")
 
 # Espera mínima entre avisos del MISMO memorial, en minutos.
-ESPERA_ENTRE_AVISOS = int(os.getenv("MINUTOS_ENTRE_AVISOS", "180"))
+ESPERA_ENTRE_AVISOS = _entero_env("MINUTOS_ENTRE_AVISOS", 180)
 
 # URL pública del sitio, para armar el enlace del memorial.
 URL_BASE = os.getenv("URL_PUBLICA", "https://j-r-legados.onrender.com").rstrip("/")
