@@ -633,6 +633,33 @@ def comprimir_imagen(file_content):
         print(f"Aviso en compresión: {e}")
         return io.BytesIO(file_content)
 
+def borrar_de_cloudinary(url: str):
+    """Borra de Cloudinary el archivo al que apunta una URL nuestra.
+
+    Existe porque al reemplazar la foto de perfil, las portadas o el audio, el
+    archivo anterior quedaba huérfano en la nube para siempre: la cuota gratuita
+    se iba llenando de fotos que ya nadie puede ver.
+
+    Se llama SIEMPRE después de que el reemplazo nuevo ya subió y quedó guardado
+    en la base de datos — si esta limpieza falla, lo único que pasa es que queda
+    un huérfano más (como hasta ahora); jamás puede costarle una foto a una
+    familia. Por eso también se traga cualquier error, dejando registro.
+    """
+    if not url or "res.cloudinary.com" not in url or "/memoriales/" not in url:
+        return  # Placeholder externo (Unsplash, Pixabay) o vacío: no es nuestro
+
+    try:
+        # De .../image/upload/v123/memoriales/demo/perfiles/abc.jpg
+        # el public_id es memoriales/demo/perfiles/abc (sin extensión).
+        partes = url.split("/")
+        public_id = "/".join(partes[partes.index("memoriales"):]).rsplit(".", 1)[0]
+        # El tipo va en la propia URL: audio y video viven bajo /video/upload/.
+        tipo = "video" if "/video/upload/" in url else "image"
+        cloudinary.uploader.destroy(public_id, resource_type=tipo)
+    except Exception as e:
+        print(f"Aviso: no se pudo limpiar el archivo anterior de Cloudinary ({url[:80]}): {e}")
+
+
 def registrar_interaccion(perfil, db):
     # El día se corta a la medianoche de Colombia, no a las 7 de la noche, que
     # es cuando cambia la fecha en UTC.
@@ -797,8 +824,11 @@ async def cambiar_foto_perfil(identificador: str, request: Request, archivo: Upl
             file_obj = comprimir_imagen(contenido)
             respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/perfiles", resource_type="image")
         
+        url_anterior = perfil.foto_perfil
         perfil.foto_perfil = respuesta_cloud['secure_url']
         db.commit()
+        # Solo cuando el reemplazo ya está a salvo se limpia el anterior
+        borrar_de_cloudinary(url_anterior)
         return {"mensaje": "Medio de perfil actualizado", "url": respuesta_cloud['secure_url']}
     except Exception as e:
         print(f"Error en Cloudinary Perfil: {e}")
@@ -819,8 +849,13 @@ async def cambiar_foto_portada(identificador: str, request: Request, archivos: L
             else: 
                 file_obj = comprimir_imagen(contenido)
                 urls_guardadas.append(cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/portadas", resource_type="image")['secure_url'])
+        urls_anteriores = (perfil.foto_portada or "").split(",")
         perfil.foto_portada = ",".join(urls_guardadas)
         db.commit()
+        # Solo cuando las nuevas ya están a salvo se limpian las anteriores
+        for url_vieja in urls_anteriores:
+            if url_vieja.strip() and url_vieja.strip() not in urls_guardadas:
+                borrar_de_cloudinary(url_vieja.strip())
         return {"mensaje": "Portadas actualizadas", "urls": urls_guardadas}
     except Exception as e:
         print(f"Error en Cloudinary Portada: {e}")
@@ -859,8 +894,10 @@ async def subir_audio_voz(identificador: str, request: Request, archivo: UploadF
         contenido = await archivo.read()
         file_obj = io.BytesIO(contenido)
         respuesta_cloud = cloudinary.uploader.upload(file_obj, folder=f"memoriales/{identificador}/audio", resource_type="video") # Cloudinary procesa audio como video
+        url_anterior = getattr(perfil, "audio_voz", "")
         perfil.audio_voz = respuesta_cloud['secure_url']
         db.commit()
+        borrar_de_cloudinary(url_anterior)
         return {"mensaje": "Audio subido correctamente", "url": respuesta_cloud['secure_url']}
     except Exception as e:
         print(f"Error en Audio: {e}")
@@ -871,10 +908,7 @@ def eliminar_foto(foto_id: int, request: Request, db: Session = Depends(get_db))
     foto = db.query(database.FotoGaleria).filter(database.FotoGaleria.id == foto_id).first()
     if not foto: raise HTTPException(status_code=404)
     exigir_pin_o_admin(request, foto.perfil)
-    try:
-        url_partes = foto.url_foto.split('/')
-        cloudinary.uploader.destroy("/".join(url_partes[url_partes.index("memoriales"):]).split('.')[0], resource_type="image")
-    except: pass
+    borrar_de_cloudinary(foto.url_foto)
     db.delete(foto)
     db.commit()
     return {"mensaje": "Foto eliminada"}
