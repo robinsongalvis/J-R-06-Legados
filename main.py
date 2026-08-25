@@ -1400,7 +1400,17 @@ def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: boo
     """
     fotos = db.query(database.FotoGaleria).all()
     mensajes = db.query(database.MensajeRecuerdo).all()
-    velas = db.query(database.VelaEncendida).order_by(database.VelaEncendida.id.desc()).all()
+    # Solo las velas del muro (dedicadas, con nombre y mensaje). Los clics de
+    # /api/encender_vela crean filas anónimas con duracion_horas=0 SOLO para
+    # dejar constancia de la fecha; no llevan texto moderable y su volumen es
+    # órdenes de magnitud mayor. Traerlas al panel esconde las dedicatorias
+    # reales bajo cientos de tarjetas '(sin mensaje)'.
+    velas = (
+        db.query(database.VelaEncendida)
+        .filter(database.VelaEncendida.duracion_horas > 0)
+        .order_by(database.VelaEncendida.id.desc())
+        .all()
+    )
     comentarios = db.query(database.ComentarioFoto).order_by(database.ComentarioFoto.id.desc()).all()
     return {
         "fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil],
@@ -1419,13 +1429,20 @@ def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: boo
 
 @app.delete("/api/admin/eliminar_vela/{vela_id}")
 def eliminar_vela(vela_id: int, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
-    """Borra una vela dedicada (por ejemplo, con un mensaje ofensivo).
+    """Borra una vela DEDICADA (con nombre y mensaje). No toca los clics anónimos.
 
-    También descuenta el contador del memorial: si la vela no merecía estar,
-    tampoco merece seguir sumando en "N velas iluminan este memorial".
+    Solo se puede eliminar contenido con autor y texto — que es lo que se
+    modera. Un clic anónimo de encender vela no lleva contenido, así que no
+    tiene sentido "borrarlo": haría bajar el contador público '344 velas' →
+    '343' sin ninguna razón visible para la familia, y ese daño no se repara.
+
+    Cuando borramos una dedicatoria, el contador SÍ baja: la dedicatoria
+    contaba como vela, y si no merecía estar tampoco merece seguir sumando.
     """
     vela = db.query(database.VelaEncendida).filter(database.VelaEncendida.id == vela_id).first()
     if not vela: raise HTTPException(status_code=404)
+    if vela.duracion_horas == 0:
+        raise HTTPException(status_code=400, detail="Los clics anónimos de encender vela no se moderan; solo las dedicatorias con nombre y mensaje.")
     if vela.perfil and (vela.perfil.velas or 0) > 0:
         vela.perfil.velas -= 1
     db.delete(vela)
