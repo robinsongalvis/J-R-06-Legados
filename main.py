@@ -1392,9 +1392,55 @@ def descargar_respaldo(request: Request, db: Session = Depends(get_db), admin: b
 
 @app.get("/api/admin/moderacion")
 def datos_moderacion(request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Todo el contenido que dejan los visitantes, para poder vigilarlo y borrarlo.
+
+    Cubre los CUATRO tipos de contenido ajeno: fotos, mensajes de recuerdo,
+    velas dedicadas y comentarios de fotos. Antes solo traía los dos primeros:
+    un mensaje cruel en una vela no se podía borrar desde ninguna parte.
+    """
     fotos = db.query(database.FotoGaleria).all()
     mensajes = db.query(database.MensajeRecuerdo).all()
-    return {"fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil], "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil]}
+    velas = db.query(database.VelaEncendida).order_by(database.VelaEncendida.id.desc()).all()
+    comentarios = db.query(database.ComentarioFoto).order_by(database.ComentarioFoto.id.desc()).all()
+    return {
+        "fotos": [{"id": f.id, "url": f.url_foto, "perfil": f.perfil.nombre} for f in fotos if f.perfil],
+        "mensajes": [{"id": m.id, "autor": m.autor, "texto": m.texto, "perfil": m.perfil.nombre} for m in mensajes if m.perfil],
+        "velas": [
+            {"id": v.id, "nombre": v.nombre, "mensaje": v.mensaje, "perfil": v.perfil.nombre,
+             "fecha": v.fecha_encendida.strftime("%d/%m/%Y") if v.fecha_encendida else ""}
+            for v in velas if v.perfil
+        ],
+        "comentarios": [
+            {"id": c.id, "texto": c.texto, "foto_url": c.foto.url_foto, "perfil": c.foto.perfil.nombre}
+            for c in comentarios if c.foto and c.foto.perfil
+        ],
+    }
+
+
+@app.delete("/api/admin/eliminar_vela/{vela_id}")
+def eliminar_vela(vela_id: int, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Borra una vela dedicada (por ejemplo, con un mensaje ofensivo).
+
+    También descuenta el contador del memorial: si la vela no merecía estar,
+    tampoco merece seguir sumando en "N velas iluminan este memorial".
+    """
+    vela = db.query(database.VelaEncendida).filter(database.VelaEncendida.id == vela_id).first()
+    if not vela: raise HTTPException(status_code=404)
+    if vela.perfil and (vela.perfil.velas or 0) > 0:
+        vela.perfil.velas -= 1
+    db.delete(vela)
+    db.commit()
+    return {"mensaje": "Vela eliminada"}
+
+
+@app.delete("/api/admin/eliminar_comentario/{comentario_id}")
+def eliminar_comentario(comentario_id: int, request: Request, db: Session = Depends(get_db), admin: bool = Depends(verificar_admin)):
+    """Borra un comentario de foto desde el panel de moderación."""
+    comentario = db.query(database.ComentarioFoto).filter(database.ComentarioFoto.id == comentario_id).first()
+    if not comentario: raise HTTPException(status_code=404)
+    db.delete(comentario)
+    db.commit()
+    return {"mensaje": "Comentario eliminado"}
 
 # ==========================================
 # 🎨 PREMIUM: TEMA VISUAL

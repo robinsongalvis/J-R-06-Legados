@@ -460,9 +460,11 @@
                     </div>
                 </div>
 
-                <div class="flex gap-4 mb-6 border-b border-slate-200">
-                    <button class="mod-tab font-bold text-blue-600 border-b-2 border-blue-600 pb-3 px-2 transition-colors" onclick="switchModTab('fotos', this)">Fotos Subidas</button>
-                    <button class="mod-tab font-bold text-slate-400 hover:text-slate-700 pb-3 px-2 transition-colors" onclick="switchModTab('mensajes', this)">Mensajes Escritos</button>
+                <div class="flex gap-4 mb-6 border-b border-slate-200 overflow-x-auto no-scrollbar">
+                    <button class="mod-tab font-bold text-blue-600 border-b-2 border-blue-600 pb-3 px-2 transition-colors whitespace-nowrap" onclick="switchModTab('fotos', this)">Fotos</button>
+                    <button class="mod-tab font-bold text-slate-400 hover:text-slate-700 pb-3 px-2 transition-colors whitespace-nowrap" onclick="switchModTab('mensajes', this)">Mensajes</button>
+                    <button class="mod-tab font-bold text-slate-400 hover:text-slate-700 pb-3 px-2 transition-colors whitespace-nowrap" onclick="switchModTab('velas', this)">Velas</button>
+                    <button class="mod-tab font-bold text-slate-400 hover:text-slate-700 pb-3 px-2 transition-colors whitespace-nowrap" onclick="switchModTab('comentarios', this)">Comentarios</button>
                 </div>
 
                 <div id="mod-fotos" class="mod-content block">
@@ -474,6 +476,18 @@
                 <div id="mod-mensajes" class="mod-content hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="grid-mensajes">
                         <div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i><p class="text-slate-500">Cargando mensajes...</p></div>
+                    </div>
+                </div>
+
+                <div id="mod-velas" class="mod-content hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="grid-velas">
+                        <div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i><p class="text-slate-500">Cargando velas...</p></div>
+                    </div>
+                </div>
+
+                <div id="mod-comentarios" class="mod-content hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="grid-comentarios">
+                        <div class="col-span-full text-center py-10"><i class="fas fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i><p class="text-slate-500">Cargando comentarios...</p></div>
                     </div>
                 </div>
             </div>
@@ -902,6 +916,44 @@
                         </div>
                     `;
                 });
+
+                let gridVelas = document.getElementById('grid-velas');
+                gridVelas.innerHTML = '';
+                if(!data.velas || data.velas.length === 0) gridVelas.innerHTML = '<p class="text-slate-500 col-span-full">No hay velas dedicadas en la plataforma.</p>';
+                (data.velas || []).forEach(v => {
+                    gridVelas.innerHTML += `
+                        <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100 relative flex flex-col justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3 block"><i class="fas fa-fire"></i> ${escapeHtml(v.perfil)}</span>
+                                <p class="font-serif italic text-slate-700 mb-4 text-sm leading-relaxed">${v.mensaje ? '"' + escapeHtml(v.mensaje) + '"' : '<span class="text-slate-400">(sin mensaje)</span>'}</p>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 block text-right mb-4">- ${escapeHtml(v.nombre)}${v.fecha ? ' · ' + escapeHtml(v.fecha) : ''}</span>
+                                <button onclick="borrarElemento('vela', ${v.id})" class="w-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
+                                    <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                let gridComentarios = document.getElementById('grid-comentarios');
+                gridComentarios.innerHTML = '';
+                if(!data.comentarios || data.comentarios.length === 0) gridComentarios.innerHTML = '<p class="text-slate-500 col-span-full">No hay comentarios de fotos en la plataforma.</p>';
+                (data.comentarios || []).forEach(c => {
+                    gridComentarios.innerHTML += `
+                        <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-100 relative flex gap-4 items-start">
+                            <img src="${escapeHtml(c.foto_url)}" alt="Foto comentada del memorial de ${escapeHtml(c.perfil)}" class="w-16 h-16 rounded-xl object-cover shrink-0" loading="lazy">
+                            <div class="flex-1 min-w-0">
+                                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1 block"><i class="fas fa-folder-open"></i> ${escapeHtml(c.perfil)}</span>
+                                <p class="font-serif italic text-slate-700 mb-3 text-sm leading-relaxed">"${escapeHtml(c.texto)}"</p>
+                                <button onclick="borrarElemento('comentario', ${c.id})" class="w-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold py-2 rounded-xl transition-colors text-xs">
+                                    <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
             })
             .catch(() => {
                 const errorHtml = `<div class="col-span-full text-center py-10">
@@ -909,21 +961,29 @@
                     <p class="text-slate-500 mb-4">No se pudo cargar el contenido.</p>
                     <button onclick="cargarModeracion()" class="btn-premium text-sm font-bold"><i class="fas fa-rotate-right mr-1"></i> Reintentar</button>
                 </div>`;
-                document.getElementById('grid-fotos').innerHTML = errorHtml;
-                document.getElementById('grid-mensajes').innerHTML = errorHtml;
+                ['grid-fotos', 'grid-mensajes', 'grid-velas', 'grid-comentarios'].forEach(id => {
+                    document.getElementById(id).innerHTML = errorHtml;
+                });
             });
         }
 
         function borrarElemento(tipo, id) {
-            confirmarAccion(`¿Borrar este ${tipo} de la nube? No se puede recuperar.`, () => {
-                let endpoint = tipo === 'foto' ? `/eliminar_foto/${id}` : `/eliminar_mensaje/${id}`;
-                fetch(endpoint, { method: 'DELETE' })
+            const rutas = {
+                foto: `/eliminar_foto/${id}`,
+                mensaje: `/eliminar_mensaje/${id}`,
+                vela: `/api/admin/eliminar_vela/${id}`,
+                comentario: `/api/admin/eliminar_comentario/${id}`,
+            };
+            const nombres = { foto: 'la foto', mensaje: 'el mensaje', vela: 'la vela', comentario: 'el comentario' };
+
+            confirmarAccion(`¿Borrar ${nombres[tipo]}? No se puede recuperar.`, () => {
+                fetch(rutas[tipo], { method: 'DELETE' })
                     .then(res => {
                         if (!res.ok) throw new Error();
-                        mostrarToast(`El ${tipo} fue eliminado.`, 'exito');
+                        mostrarToast(`Se eliminó ${nombres[tipo]}.`, 'exito');
                         cargarModeracion();
                     })
-                    .catch(() => mostrarToast(`No se pudo eliminar el ${tipo}. Intenta de nuevo.`, 'error'));
+                    .catch(() => mostrarToast(`No se pudo eliminar ${nombres[tipo]}. Intenta de nuevo.`, 'error'));
             });
         }
 
